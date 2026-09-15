@@ -1,0 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;600;800&display=swap');
+@import "tailwindcss";
+
+@layer base {
+  /* Hide default cursor globally on non-touch devices for custom reticle */
+  @media (pointer: fine) {
+    html, body, button, a, input, select, textarea {
+      cursor: none !important;
+    }
+  }
+
+  /* Smooth Scrolling */
+  html {
+    scroll-behavior: smooth;
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: #08080a;
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Custom Typography Default Rules */
+  h1, h2, h3, h4, .font-orbitron {
+    font-family: 'Orbitron', sans-serif;
+  }
+}
+
+/* Sleek Cyber Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(16, 16, 20, 0.8);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(34, 211, 238, 0.4);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 211, 238, 0.8);
+}
