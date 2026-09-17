@@ -29,7 +29,7 @@ const BookingAvailability = ({
   // 15-minute interval blocks generation (11:00 AM to 10:00 PM)
   const generate15MinSlots = () => {
     const slots = [];
-    for (let m = 660; m <= 1320; m += 15) {
+    for (let m = 720; m <= 1320; m += 15) {
       slots.push(m);
     }
     return slots;
@@ -136,8 +136,6 @@ const BookingAvailability = ({
     setShowEndPicker(true);
   };
 
-  // Duration steps: 30m, 1h, 1h 30m, 2h (30m increments)
-  // Stops if any 15-minute block inside or at the end boundary is occupied
   const getDurationOptions = () => {
     if (startTime === null) return [];
 
@@ -147,7 +145,6 @@ const BookingAvailability = ({
     for (let duration = 30; startTime + duration <= maxClosingTime; duration += 30) {
       const proposedEnd = startTime + duration;
 
-      // Ensure every 15-min chunk within this duration is FREE
       let isPathClear = true;
       for (let check = startTime; check < proposedEnd; check += 15) {
         if (get15MinBlockStatus(check) !== 'FREE') {
@@ -157,7 +154,7 @@ const BookingAvailability = ({
       }
 
       if (!isPathClear) {
-        break; // Stop providing higher durations once collision occurs
+        break;
       }
 
       options.push({
@@ -172,13 +169,13 @@ const BookingAvailability = ({
   const allBlocks = generate15MinSlots().slice(0, -1);
 
   return (
-    <>
+    <div className="w-full text-white">
       {/* DATE */}
-      <div className="mt-5">
-        <label className="text-xs font-mono uppercase tracking-widest text-zinc-400">
+      <div className="mt-3 sm:mt-4">
+        <label className="text-[11px] sm:text-xs font-mono uppercase tracking-widest text-zinc-400">
           Select Date
         </label>
-        <div className="grid grid-cols-2 gap-3 mt-2">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 mt-1.5">
           {['Today', 'Tomorrow'].map((day) => (
             <button
               key={day}
@@ -188,13 +185,13 @@ const BookingAvailability = ({
                 setEndTime(null);
                 setShowEndPicker(false);
               }}
-              className={`p-3 rounded-xl font-orbitron text-xs font-bold transition-all border flex items-center justify-center gap-2 cursor-pointer ${
+              className={`p-2.5 sm:p-3 rounded-xl font-orbitron text-xs font-bold transition-all border flex items-center justify-center gap-2 cursor-pointer ${
                 bookingDate === day
                   ? 'bg-purple-600 text-white border-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.4)]'
                   : 'bg-white/5 text-zinc-400 border-white/10 hover:border-white/30'
               }`}
             >
-              <Calendar className="w-4 h-4" />
+              <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               {day}
             </button>
           ))}
@@ -202,11 +199,11 @@ const BookingAvailability = ({
       </div>
 
       {/* PLATFORM */}
-      <div className="mt-5">
-        <label className="text-xs font-mono uppercase tracking-widest text-zinc-400">
+      <div className="mt-4 sm:mt-5">
+        <label className="text-[11px] sm:text-xs font-mono uppercase tracking-widest text-zinc-400">
           1. Select Platform
         </label>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1.5">
           {stations.map((station) => (
             <button
               key={station.id}
@@ -223,7 +220,7 @@ const BookingAvailability = ({
                   setSelectedTeam('1 Player');
                 }
               }}
-              className={`p-3 rounded-xl font-orbitron text-xs font-bold transition-all border cursor-pointer ${
+              className={`p-2.5 sm:p-3 rounded-xl font-orbitron text-[11px] sm:text-xs font-bold transition-all border cursor-pointer truncate ${
                 selectedCategory === station.id
                   ? 'bg-cyan-500 text-black border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)]'
                   : 'bg-white/5 text-zinc-400 border-white/10 hover:border-white/30'
@@ -235,14 +232,14 @@ const BookingAvailability = ({
         </div>
       </div>
 
-      {/* SUB CATEGORY / SCREEN / SIMULATOR TYPE */}
+      {/* SUB CATEGORY / SCREEN */}
       {currentStation?.hasScreens && (
-        <div className="mt-5">
-          <label className="text-xs font-mono uppercase tracking-widest text-zinc-400">
+        <div className="mt-4 sm:mt-5">
+          <label className="text-[11px] sm:text-xs font-mono uppercase tracking-widest text-zinc-400">
             2. Select {selectedCategory === 'Simulator' ? 'Vehicle Type' : 'Display Size'}
           </label>
 
-          <div className="grid grid-cols-2 gap-3 mt-2">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 mt-1.5">
             {currentStation.screens.map((screen) => (
               <button
                 key={screen}
@@ -256,18 +253,18 @@ const BookingAvailability = ({
                     setSelectedTeam('3 Players');
                   }
                 }}
-                className={`p-3 rounded-xl border text-xs font-bold font-orbitron text-left cursor-pointer transition-all ${
+                className={`p-2.5 sm:p-3 rounded-xl border text-[11px] sm:text-xs font-bold font-orbitron text-left cursor-pointer transition-all flex items-center ${
                   selectedScreen === screen
                     ? 'border-cyan-400 bg-cyan-400/10 text-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.2)]'
                     : 'border-white/10 bg-white/5 text-zinc-400 hover:border-white/20'
                 }`}
               >
                 {selectedCategory === 'Simulator' ? (
-                  <Car className="w-4 h-4 inline mr-2 mb-0.5" />
+                  <Car className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 shrink-0" />
                 ) : (
-                  <Monitor className="w-4 h-4 inline mr-2 mb-0.5" />
+                  <Monitor className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 shrink-0" />
                 )}
-                {screen} {selectedCategory === 'Simulator' ? '' : 'Zone'}
+                <span className="truncate">{screen} {selectedCategory === 'Simulator' ? '' : 'Zone'}</span>
               </button>
             ))}
           </div>
@@ -276,22 +273,22 @@ const BookingAvailability = ({
 
       {/* PLAYERS */}
       {currentStation?.multiplayer && (
-        <div className="mt-5">
-          <label className="text-xs font-mono uppercase tracking-widest text-zinc-400">
+        <div className="mt-4 sm:mt-5">
+          <label className="text-[11px] sm:text-xs font-mono uppercase tracking-widest text-zinc-400">
             3. Select Players
           </label>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1.5">
             {getPlayerOptions().map((playerOption) => (
               <button
                 key={playerOption}
                 onClick={() => setSelectedTeam(playerOption)}
-                className={`p-3 rounded-xl border text-center cursor-pointer transition-all ${
+                className={`p-2.5 sm:p-3 rounded-xl border text-center cursor-pointer transition-all ${
                   selectedTeam === playerOption
                     ? 'border-cyan-400 bg-cyan-400/10 text-white shadow-[0_0_12px_rgba(34,211,238,0.2)]'
                     : 'border-white/10 bg-white/5 text-zinc-400 hover:border-white/20'
                 }`}
               >
-                <div className="text-xs font-bold font-orbitron text-cyan-400">
+                <div className="text-[11px] sm:text-xs font-bold font-orbitron text-cyan-400">
                   {playerOption}
                 </div>
               </button>
@@ -301,28 +298,28 @@ const BookingAvailability = ({
       )}
 
       {/* TIMELINE BAR */}
-      <div className="mt-6">
-        <label className="text-xs font-sans text-zinc-400 font-semibold block mb-3">
-          Slide to check availability
+      <div className="mt-5 sm:mt-6">
+        <label className="text-[11px] sm:text-xs font-sans text-zinc-400 font-semibold block mb-2">
+          Slide horizontally to check timeline availability
         </label>
 
-        <div className="relative overflow-x-auto pb-4 pt-2 no-scrollbar">
-          <div className="min-w-[650px] px-2">
+        <div className="relative overflow-x-auto pb-3 pt-1 touch-pan-x scrollbar-thin scrollbar-thumb-zinc-700">
+          <div className="min-w-[580px] sm:min-w-[650px] px-1">
             <div className="flex justify-between items-end mb-1">
               {allBlocks.map((block) => {
                 const isFullHour = block % 60 === 0;
                 return (
-                  <div key={block} className="flex flex-col items-center min-w-[14px]">
-                    <div className="h-4 flex items-center justify-center">
+                  <div key={block} className="flex flex-col items-center min-w-[12px] sm:min-w-[14px]">
+                    <div className="h-3 sm:h-4 flex items-center justify-center">
                       {isFullHour && (
-                        <span className="text-[10px] font-semibold text-zinc-300 font-sans tracking-tight">
+                        <span className="text-[9px] sm:text-[10px] font-semibold text-zinc-300 font-sans tracking-tight">
                           {minutesToTimeString(block).replace(':00', '')}
                         </span>
                       )}
                     </div>
                     <div
                       className={`w-[1px] rounded-full transition-all mt-1 ${
-                        isFullHour ? 'h-3 bg-zinc-300' : 'h-1.5 bg-zinc-600'
+                        isFullHour ? 'h-2.5 sm:h-3 bg-zinc-300' : 'h-1 sm:h-1.5 bg-zinc-600'
                       }`}
                     />
                   </div>
@@ -330,7 +327,7 @@ const BookingAvailability = ({
               })}
             </div>
 
-            <div className="relative w-full h-3 bg-gradient-to-r from-zinc-600 via-zinc-400 to-zinc-600 rounded-sm overflow-hidden flex shadow-inner">
+            <div className="relative w-full h-2.5 sm:h-3 bg-gradient-to-r from-zinc-600 via-zinc-400 to-zinc-600 rounded-sm overflow-hidden flex shadow-inner">
               {allBlocks.map((block) => {
                 const blockStatus = get15MinBlockStatus(block);
                 const isSelected =
@@ -360,29 +357,29 @@ const BookingAvailability = ({
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-3 mt-1 text-[10px] font-mono text-zinc-400 justify-end px-2">
-          <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm bg-zinc-400 inline-block" /> Available
+        <div className="flex flex-wrap gap-2 sm:gap-3 mt-1 text-[9px] sm:text-[10px] font-mono text-zinc-400 justify-end px-1">
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-sm bg-zinc-400 inline-block" /> Available
           </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm bg-amber-400 inline-block" /> Pending
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-sm bg-amber-400 inline-block" /> Pending
           </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm bg-red-500 inline-block" /> Booked
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-sm bg-red-500 inline-block" /> Booked
           </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm bg-emerald-400 inline-block" /> Selected
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" /> Selected
           </span>
         </div>
       </div>
 
-      {/* START TIME (15-MIN INTERVAL BOXES) */}
-      <div className="mt-5">
-        <label className="text-xs font-mono uppercase tracking-widest text-zinc-400">
+      {/* START TIME SLOTS */}
+      <div className="mt-4 sm:mt-5">
+        <label className="text-[11px] sm:text-xs font-mono uppercase tracking-widest text-zinc-400">
           Available Start Slots
         </label>
 
-        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mt-2 max-h-48 overflow-y-auto pr-1">
+        <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 gap-2 mt-2 max-h-44 sm:max-h-48 overflow-y-auto pr-1">
           {allBlocks.map((block) => {
             const blockStatus = get15MinBlockStatus(block);
             const isOccupied = blockStatus !== 'FREE';
@@ -393,7 +390,7 @@ const BookingAvailability = ({
                 key={block}
                 disabled={isOccupied}
                 onClick={() => handleStartSelect(block)}
-                className={`p-2.5 rounded-lg border text-xs font-bold font-mono transition-all ${
+                className={`p-2 sm:p-2.5 min-h-[40px] rounded-lg border text-[11px] sm:text-xs font-bold font-mono transition-all flex items-center justify-center ${
                   isSelected
                     ? 'bg-cyan-500 text-black border-cyan-400 font-extrabold shadow-md'
                     : blockStatus === 'EXPIRED'
@@ -412,19 +409,19 @@ const BookingAvailability = ({
         </div>
       </div>
 
-      {/* SELECT DURATION (30m, 1h, 1h 30m, 2h...) */}
+      {/* SELECT DURATION */}
       {showEndPicker && startTime !== null && (
-        <div className="mt-5 p-4 rounded-2xl bg-zinc-900 border border-cyan-500/40 animate-fade-in">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-mono text-cyan-400 font-bold uppercase flex items-center gap-1">
-              <Clock className="w-4 h-4" /> Select Duration
+        <div className="mt-4 sm:mt-5 p-3 sm:p-4 rounded-2xl bg-zinc-900 border border-cyan-500/40">
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-[11px] sm:text-xs font-mono text-cyan-400 font-bold uppercase flex items-center gap-1">
+              <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Select Duration
             </span>
-            <span className="text-[11px] text-zinc-400 font-mono">
+            <span className="text-[10px] sm:text-[11px] text-zinc-400 font-mono">
               Start: <strong className="text-white">{minutesToTimeString(startTime)}</strong>
             </span>
           </div>
 
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-48 overflow-y-auto pr-1">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-44 sm:max-h-48 overflow-y-auto pr-1">
             {getDurationOptions().map(({ durationMins, endMins }) => {
               const isSelected = endTime === endMins;
 
@@ -432,14 +429,14 @@ const BookingAvailability = ({
                 <button
                   key={endMins}
                   onClick={() => setEndTime(endMins)}
-                  className={`p-2.5 rounded-lg border text-xs font-bold font-mono transition-all ${
+                  className={`p-2 sm:p-2.5 rounded-lg border text-[11px] sm:text-xs font-bold font-mono transition-all text-center ${
                     isSelected
                       ? 'bg-emerald-500 text-black border-emerald-400 font-extrabold shadow-md'
                       : 'bg-white/5 border-white/10 text-zinc-300 hover:border-emerald-400 cursor-pointer'
                   }`}
                 >
-                  {formatDurationText(durationMins)}
-                  <span className="block text-[9px] opacity-75 font-normal">
+                  <div>{formatDurationText(durationMins)}</div>
+                  <span className="block text-[8px] sm:text-[9px] opacity-80 font-normal">
                     (Till {minutesToTimeString(endMins)})
                   </span>
                 </button>
@@ -449,33 +446,33 @@ const BookingAvailability = ({
         </div>
       )}
 
-      {/* SUMMARY */}
+      {/* SUMMARY BAR */}
       {startTime !== null && endTime !== null && (
-        <div className="mt-6 p-4 rounded-2xl bg-gradient-to-r from-cyan-950/80 to-purple-950/80 border border-cyan-500/40 flex items-center justify-between animate-fade-in">
-          <div>
-            <div className="text-[11px] text-cyan-300 font-mono">
+        <div className="mt-5 p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-cyan-950/90 to-purple-950/90 border border-cyan-500/40 flex items-center justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="text-[10px] sm:text-[11px] text-cyan-300 font-mono truncate">
               {bookingDate} • {selectedCategory}{' '}
               {currentStation?.hasScreens ? `(${selectedScreen})` : ''}
             </div>
 
-            <div className="text-base font-black font-orbitron">
-              {minutesToTimeString(startTime)} to {minutesToTimeString(endTime)}
+            <div className="text-sm sm:text-base font-black font-orbitron truncate">
+              {minutesToTimeString(startTime)} - {minutesToTimeString(endTime)}
             </div>
 
-            <div className="text-xs font-bold font-mono text-emerald-400 mt-0.5">
+            <div className="text-[11px] sm:text-xs font-bold font-mono text-emerald-400 mt-0.5">
               Total: ₹{totalAmount} ({formatDurationText(endTime - startTime)})
             </div>
           </div>
 
           <button
             onClick={onNext}
-            className="px-5 py-2.5 rounded-xl bg-cyan-400 text-black font-orbitron text-xs font-black hover:bg-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.5)] cursor-pointer transition-all"
+            className="px-4 sm:px-5 py-2.5 rounded-xl bg-cyan-400 text-black font-orbitron text-xs font-black hover:bg-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.5)] cursor-pointer transition-all shrink-0"
           >
             NEXT &gt;
           </button>
         </div>
       )}
-    </>
+    </div>
   );
 };
 

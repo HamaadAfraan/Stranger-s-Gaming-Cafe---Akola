@@ -8,7 +8,7 @@ export const Navbar = ({ onOpenBooking }) => {
   useEffect(() => {
     const handleScroll = () => {
       const sections = ['home', 'zones', 'pricing', 'games', 'location'];
-      const scrollPosition = window.scrollY + 150; // Offset for navbar height
+      const scrollPosition = window.scrollY + 120; // Adjusted offset for mobile navbar
 
       for (const sectionId of sections) {
         const el = document.getElementById(sectionId);
@@ -25,7 +25,7 @@ export const Navbar = ({ onOpenBooking }) => {
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll(); // Initial check on load
+    handleScroll();
 
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -37,7 +37,7 @@ export const Navbar = ({ onOpenBooking }) => {
 
     const targetElement = document.getElementById(id);
     if (targetElement) {
-      const navbarHeight = 80;
+      const navbarHeight = 70;
       const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
 
       window.scrollTo({
@@ -56,16 +56,17 @@ export const Navbar = ({ onOpenBooking }) => {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 w-full bg-[#08080a]/90 backdrop-blur-md z-50 border-b border-white/10 px-4 sm:px-8 py-3.5 sm:py-4 flex justify-between items-center">
+    <nav className="fixed top-0 left-0 w-full bg-[#08080a]/95 backdrop-blur-lg z-50 border-b border-white/10 px-3.5 sm:px-8 py-3 sm:py-4 flex justify-between items-center font-sans">
+      
       {/* Brand Logo */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 min-w-0 shrink">
         <a 
           href="#home" 
           onClick={(e) => handleNavClick(e, 'home')}
-          className="text-red-500 font-black text-lg sm:text-xl md:text-2xl tracking-tighter flex items-center gap-1.5 font-orbitron"
+          className="text-red-500 font-black text-base xs:text-lg sm:text-xl md:text-2xl tracking-tighter flex items-center gap-1.5 font-orbitron truncate"
         >
           <Crosshair className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" /> 
-          <span>STRANGER'S <span className="text-white hidden sm:inline"> GAMING CAFE</span></span>
+          <span className="truncate">STRANGER'S <span className="text-white hidden sm:inline"> GAMING CAFE</span></span>
         </a>
       </div>
 
@@ -89,10 +90,10 @@ export const Navbar = ({ onOpenBooking }) => {
       </div>
 
       {/* Action Button & Mobile Toggle */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         <button 
           onClick={onOpenBooking}
-          className="bg-red-600 hover:bg-red-500 text-white font-bold px-3.5 sm:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs uppercase tracking-wider shadow-lg shadow-red-600/30 transition transform active:scale-95 sm:hover:scale-105"
+          className="bg-red-600 hover:bg-red-500 text-white font-bold px-3 sm:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs uppercase tracking-wider shadow-lg shadow-red-600/30 transition transform active:scale-95 sm:hover:scale-105 cursor-pointer whitespace-nowrap"
         >
           BOOK A STATION
         </button>
@@ -100,26 +101,29 @@ export const Navbar = ({ onOpenBooking }) => {
         {/* Mobile Menu Toggle Button */}
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="md:hidden text-gray-300 hover:text-white p-1 focus:outline-none"
+          className="md:hidden text-gray-300 hover:text-white p-1.5 focus:outline-none rounded-lg bg-white/5 border border-white/10 active:bg-white/10"
           aria-label="Toggle menu"
         >
-          {isMobileMenuOpen ? <X className="w-6 h-6 text-red-500" /> : <Menu className="w-6 h-6" />}
+          {isMobileMenuOpen ? <X className="w-5 h-5 text-red-500" /> : <Menu className="w-5 h-5" />}
         </button>
       </div>
 
-      {/* Mobile Drawer Navigation */}
+      {/* Mobile Drawer Navigation Overlay */}
       {isMobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 w-full bg-[#0b0c10] border-b border-white/10 px-6 py-6 flex flex-col gap-4 font-orbitron shadow-2xl animate-in slide-in-from-top-2">
+        <div className="md:hidden fixed top-[57px] left-0 w-full bg-[#0b0c10]/98 backdrop-blur-xl border-b border-white/10 px-5 py-5 flex flex-col gap-2 font-orbitron shadow-2xl animate-in slide-in-from-top-2 z-50">
           {navItems.map((item) => (
             <a
               key={item.id}
               href={`#${item.id}`}
               onClick={(e) => handleNavClick(e, item.id)}
-              className={`text-sm font-bold tracking-widest py-2 border-b border-white/5 uppercase transition-colors ${
-                activeTab === item.id ? 'text-red-500 font-extrabold' : 'text-gray-400 hover:text-white'
+              className={`text-xs font-bold tracking-widest py-3 px-3 rounded-lg flex items-center justify-between uppercase transition-all ${
+                activeTab === item.id 
+                  ? 'bg-red-600/15 text-red-400 border border-red-500/30 font-extrabold' 
+                  : 'text-gray-300 hover:text-white hover:bg-white/5'
               }`}
             >
-              {item.label}
+              <span>{item.label}</span>
+              {activeTab === item.id && <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>}
             </a>
           ))}
         </div>

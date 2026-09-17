@@ -181,7 +181,6 @@ export const BookingModal = ({
 
   const currentStation = stations.find((s) => s.id === selectedCategory);
 
-  // Raw base price without platform fee for Step 1
   const rawTotalAmount = calculateBookingPrice({
     stations,
     selectedCategory,
@@ -336,20 +335,20 @@ export const BookingModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[10000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-[#101014] border border-white/20 rounded-3xl w-full max-w-2xl p-6 sm:p-8 relative shadow-2xl my-8 text-white">
+    <div className="fixed inset-0 z-[10000] bg-black/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto w-full max-w-full">
+      <div className="bg-[#101014] border border-white/20 rounded-2xl sm:rounded-3xl w-full max-w-2xl p-4 sm:p-8 relative shadow-2xl my-auto text-white max-h-[92vh] overflow-y-auto">
         <button
           onClick={handleModalClose}
-          className="absolute top-5 right-5 p-2 rounded-full bg-white/5 text-zinc-400 hover:text-white cursor-pointer transition-all"
+          className="absolute top-3 right-3 sm:top-5 sm:right-5 p-2 rounded-full bg-white/10 text-zinc-300 hover:text-white cursor-pointer transition-all z-10"
         >
           <X className="w-5 h-5" />
         </button>
 
-        {/* STEP 1 - Displays ONLY base rate (e.g. ₹100) */}
+        {/* STEP 1 */}
         {paymentStep === 1 && (
-          <div>
-            <h3 className="text-2xl font-black font-orbitron text-cyan-400 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-red-500" />
+          <div className="w-full">
+            <h3 className="text-lg sm:text-2xl font-black font-orbitron text-cyan-400 flex items-center gap-2 mb-2 pr-8">
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 shrink-0" />
               SELECT TIMINGS & RIG
             </h3>
 
@@ -381,92 +380,94 @@ export const BookingModal = ({
           </div>
         )}
 
-        {/* STEP 2 - Calculates & Displays ₹100 + ₹20 Platform Fee = ₹120 */}
+        {/* STEP 2 */}
         {paymentStep === 2 && (
-          <BookingPayment
-            bookingDate={bookingDate}
-            selectedCategory={selectedCategory}
-            selectedScreen={selectedScreen}
-            selectedTeam={selectedTeam}
-            currentStation={currentStation}
-            startTime={startTime}
-            endTime={endTime}
-            totalAmount={rawTotalAmount}
-            formatDurationText={formatDurationText}
-            minutesToTimeString={minutesToTimeString}
-            formData={formData}
-            handleNameChange={handleNameChange}
-            handlePhoneChange={handlePhoneChange}
-            handleUtrChange={handleUtrChange}
-            isNameValid={isNameValid}
-            isPhoneValid={isPhoneValid}
-            isUtrValid={isUtrValid}
-            errorMessage={errorMessage}
-            isSubmitting={isSubmitting}
-            getAppUri={getAppUri}
-            standardUpiUri={getStandardUpiUri}
-            getDynamicUpiQrUrl={getDynamicUpiQrUrl}
-            UPI_ID={UPI_ID}
-            onBack={() => setPaymentStep(1)}
-            onConfirm={handleConfirmBooking}
-          />
+          <div className="w-full">
+            <BookingPayment
+              bookingDate={bookingDate}
+              selectedCategory={selectedCategory}
+              selectedScreen={selectedScreen}
+              selectedTeam={selectedTeam}
+              currentStation={currentStation}
+              startTime={startTime}
+              endTime={endTime}
+              totalAmount={rawTotalAmount}
+              formatDurationText={formatDurationText}
+              minutesToTimeString={minutesToTimeString}
+              formData={formData}
+              handleNameChange={handleNameChange}
+              handlePhoneChange={handlePhoneChange}
+              handleUtrChange={handleUtrChange}
+              isNameValid={isNameValid}
+              isPhoneValid={isPhoneValid}
+              isUtrValid={isUtrValid}
+              errorMessage={errorMessage}
+              isSubmitting={isSubmitting}
+              getAppUri={getAppUri}
+              standardUpiUri={getStandardUpiUri}
+              getDynamicUpiQrUrl={getDynamicUpiQrUrl}
+              UPI_ID={UPI_ID}
+              onBack={() => setPaymentStep(1)}
+              onConfirm={handleConfirmBooking}
+            />
+          </div>
         )}
 
         {/* STEP 3 */}
         {paymentStep === 3 && confirmedBookingDetails && (
-          <div className="text-center py-4">
-            <div className="w-16 h-16 bg-cyan-500/20 text-cyan-400 border border-cyan-400 rounded-full flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(34,211,238,0.4)]">
-              <CheckCircle2 className="w-10 h-10" />
+          <div className="text-center py-2 sm:py-4 w-full">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-cyan-500/20 text-cyan-400 border border-cyan-400 rounded-full flex items-center justify-center mx-auto mb-3 shadow-[0_0_20px_rgba(34,211,238,0.4)]">
+              <CheckCircle2 className="w-8 h-8 sm:w-10 sm:h-10" />
             </div>
 
-            <h3 className="text-2xl font-black font-orbitron text-white">
+            <h3 className="text-xl sm:text-2xl font-black font-orbitron text-white">
               BOOKING SUBMITTED!
             </h3>
 
-            <p className="text-xs text-zinc-400 mt-1 font-mono">
+            <p className="text-[11px] sm:text-xs text-zinc-400 mt-1 font-mono">
               Show this Booking ID at the cafe counter.
             </p>
 
-            <div className="mt-5 p-3 rounded-xl bg-cyan-500/10 border border-cyan-400/40 inline-flex items-center gap-3">
-              <span className="text-xs font-mono text-zinc-400">BOOKING ID:</span>
-              <span className="text-lg font-black font-orbitron text-cyan-300 tracking-wider">
+            <div className="mt-4 p-2.5 sm:p-3 rounded-xl bg-cyan-500/10 border border-cyan-400/40 inline-flex items-center gap-2 sm:gap-3">
+              <span className="text-[10px] sm:text-xs font-mono text-zinc-400">BOOKING ID:</span>
+              <span className="text-base sm:text-lg font-black font-orbitron text-cyan-300 tracking-wider">
                 {confirmedBookingDetails.id}
               </span>
             </div>
 
-            <div className="mt-6 p-5 rounded-2xl bg-white/5 border border-white/10 text-left space-y-2.5 font-mono text-xs">
-              <div className="flex justify-between border-b border-white/10 pb-2">
+            <div className="mt-5 p-3.5 sm:p-5 rounded-2xl bg-white/5 border border-white/10 text-left space-y-2 font-mono text-[11px] sm:text-xs">
+              <div className="flex justify-between border-b border-white/10 pb-1.5">
                 <span className="text-zinc-400">Booking Date:</span>
                 <span className="text-purple-300 font-bold">{confirmedBookingDetails.bookingDate}</span>
               </div>
-              <div className="flex justify-between border-b border-white/10 pb-2">
+              <div className="flex justify-between border-b border-white/10 pb-1.5">
                 <span className="text-zinc-400">Booked At (Time):</span>
                 <span className="text-cyan-300 font-bold">{confirmedBookingDetails.created_time || 'Just now'}</span>
               </div>
-              <div className="flex justify-between border-b border-white/10 pb-2">
+              <div className="flex justify-between border-b border-white/10 pb-1.5">
                 <span className="text-zinc-400">Customer Name:</span>
                 <span className="text-white font-bold">{confirmedBookingDetails.name}</span>
               </div>
-              <div className="flex justify-between border-b border-white/10 pb-2">
+              <div className="flex justify-between border-b border-white/10 pb-1.5">
                 <span className="text-zinc-400">Phone Number:</span>
                 <span className="text-white font-bold">{confirmedBookingDetails.phone}</span>
               </div>
-              <div className="flex justify-between border-b border-white/10 pb-2">
+              <div className="flex justify-between border-b border-white/10 pb-1.5">
                 <span className="text-zinc-400">Platform:</span>
                 <span className="text-cyan-400 font-bold">
                   {confirmedBookingDetails.category}{' '}
                   {confirmedBookingDetails.screen ? `(${confirmedBookingDetails.screen})` : ''}
                 </span>
               </div>
-              <div className="flex justify-between border-b border-white/10 pb-2">
+              <div className="flex justify-between border-b border-white/10 pb-1.5">
                 <span className="text-red-400 font-bold">Reserved Slot:</span>
                 <span className="text-red-400 font-bold">{confirmedBookingDetails.slot}</span>
               </div>
-              <div className="flex justify-between border-b border-white/10 pb-2">
+              <div className="flex justify-between border-b border-white/10 pb-1.5">
                 <span className="text-zinc-400">Duration:</span>
                 <span className="text-amber-300 font-bold">{confirmedBookingDetails.duration}</span>
               </div>
-              <div className="flex justify-between border-b border-white/10 pb-2">
+              <div className="flex justify-between border-b border-white/10 pb-1.5">
                 <span className="text-zinc-400">Transaction Ref / UTR:</span>
                 <span className="text-purple-300 font-bold font-mono tracking-wider break-all">
                   {confirmedBookingDetails.utr}
@@ -482,7 +483,7 @@ export const BookingModal = ({
 
             <button
               onClick={handleModalClose}
-              className="mt-6 w-full py-3.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-orbitron font-black text-xs shadow-[0_0_20px_rgba(34,211,238,0.4)] cursor-pointer transition-all"
+              className="mt-5 w-full py-3 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-orbitron font-black text-xs shadow-[0_0_20px_rgba(34,211,238,0.4)] cursor-pointer transition-all"
             >
               DONE / CLOSE
             </button>

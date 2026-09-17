@@ -11,14 +11,23 @@ export const CustomCursor = () => {
   const pos = useRef({ x: -100, y: -100 });
   const targetPos = useRef({ x: -100, y: -100 });
 
-  // Mobile / Touch device detection
+  // Mobile & Touch Device Detection (Handles Hybrid Laptops & Screen Resize)
   useEffect(() => {
     const checkTouch = () => {
-      if (window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window) {
+      const hasCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+      const hasTouchPoints = navigator.maxTouchPoints > 0;
+      const isSmallScreen = window.innerWidth <= 768;
+
+      if ((hasCoarsePointer || hasTouchPoints) && isSmallScreen) {
         setIsTouchDevice(true);
+      } else {
+        setIsTouchDevice(false);
       }
     };
+
     checkTouch();
+    window.addEventListener('resize', checkTouch);
+    return () => window.removeEventListener('resize', checkTouch);
   }, []);
 
   useEffect(() => {
@@ -74,7 +83,7 @@ export const CustomCursor = () => {
 
     const handleMouseOver = (e) => {
       const isInteractive = Boolean(
-        e.target.closest('button, a, input, select, [role="button"], .group')
+        e.target.closest('button, a, input, select, [role="button"], .group, label')
       );
       setIsHovered(isInteractive);
     };
@@ -83,19 +92,18 @@ export const CustomCursor = () => {
     return () => window.removeEventListener('mouseover', handleMouseOver);
   }, [isTouchDevice]);
 
-  // Touch screen par cursor bilkul render nahi hoga
   if (isTouchDevice) return null;
 
   return (
     <>
-      {/* Center Precision Dot (Z-Index 99999) */}
+      {/* Center Precision Dot */}
       <div
         ref={dotRef}
         className="fixed top-0 left-0 w-1.5 h-1.5 bg-red-500 rounded-full pointer-events-none z-[99999]"
         style={{ willChange: 'transform' }}
       />
 
-      {/* Cyber Square Reticle (Z-Index 99999) */}
+      {/* Cyber Square Reticle */}
       <div
         ref={squareRef}
         className={`fixed top-0 left-0 pointer-events-none z-[99999] transition-all duration-150 ease-out border flex items-center justify-center ${

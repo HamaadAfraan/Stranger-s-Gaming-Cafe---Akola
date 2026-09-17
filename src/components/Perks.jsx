@@ -10,10 +10,10 @@ export const Perks = () => {
   ];
 
   return (
-    <section className="py-12 sm:py-20 px-4 sm:px-6 max-w-6xl mx-auto bg-[#0b0c10] rounded-2xl sm:rounded-3xl border border-white/10 my-8 sm:my-14">
+    <section className="py-10 sm:py-20 px-3.5 sm:px-6 max-w-6xl mx-auto bg-[#0b0c10] rounded-2xl sm:rounded-3xl border border-white/10 my-6 sm:my-14 font-sans">
       {/* Header */}
-      <div className="text-center mb-8 sm:mb-12">
-        <span className="text-cyan-400 text-[11px] sm:text-xs font-bold uppercase tracking-widest block mb-1">
+      <div className="text-center mb-6 sm:mb-12">
+        <span className="text-cyan-400 text-[10px] sm:text-xs font-bold uppercase tracking-widest block mb-1">
           PREMIUM EXPERIENCE
         </span>
         <h2 className="text-2xl sm:text-4xl font-black tracking-wider uppercase font-orbitron text-white">
@@ -22,21 +22,21 @@ export const Perks = () => {
       </div>
 
       {/* Grid Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         {perks.map((perk, idx) => {
           const Icon = perk.icon;
           return (
             <div 
               key={idx} 
-              className="p-5 sm:p-6 bg-[#10121a] rounded-xl sm:rounded-2xl border border-white/10 hover:border-cyan-400/50 text-center transition-all duration-300 group hover:shadow-[0_0_20px_rgba(34,211,238,0.1)] flex flex-col items-center justify-center"
+              className="p-3.5 sm:p-6 bg-[#10121a] rounded-xl sm:rounded-2xl border border-white/10 hover:border-cyan-400/50 text-center transition-all duration-300 group hover:shadow-[0_0_20px_rgba(34,211,238,0.1)] flex flex-col items-center justify-start"
             >
-              <div className="p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-xl mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300">
-                <Icon className="w-6 h-6 sm:w-7 sm:h-7 text-cyan-400" />
+              <div className="p-2.5 sm:p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-xl mb-2.5 sm:mb-4 group-hover:scale-110 transition-transform duration-300 shrink-0">
+                <Icon className="w-5 h-5 sm:w-7 sm:h-7 text-cyan-400" />
               </div>
-              <h3 className="font-bold text-white text-sm sm:text-base mb-1.5 font-orbitron">
+              <h3 className="font-bold text-white text-xs sm:text-base mb-1 font-orbitron leading-tight">
                 {perk.title}
               </h3>
-              <p className="text-[11px] sm:text-xs text-gray-400 leading-relaxed max-w-[240px] sm:max-w-none">
+              <p className="text-[10px] sm:text-xs text-gray-400 leading-relaxed">
                 {perk.desc}
               </p>
             </div>

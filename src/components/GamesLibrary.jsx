@@ -12,8 +12,8 @@ const getCoverImage = (filename) => {
 
 const PLATFORMS = [
   { id: 'all', label: 'All Platforms' },
-  { id: 'ps5-vip-55', label: 'PS5 - (55 Inches TV)' },
-  { id: 'ps5-reg-43', label: 'PS5 - (43 Inches TV)' },
+  { id: 'ps5-vip-55', label: 'PS5 - (55" TV)' },
+  { id: 'ps5-reg-43', label: 'PS5 - (43" TV)' },
   { id: 'ps4', label: 'PS4' },
   { id: 'pc-arena', label: 'PC Arena' },
   { id: 'car-simulator', label: 'Car Simulator' },
@@ -353,25 +353,25 @@ export const GamesLibrary = () => {
   }, [selectedPlatform, selectedGenre, selectedPlayers, searchQuery]);
 
   return (
-    <section id="games" className="py-12 sm:py-20 px-4 sm:px-6 max-w-7xl mx-auto border-t border-white/10 bg-[#070709] text-white font-sans">
+    <section id="games" className="py-10 sm:py-20 px-3 sm:px-6 max-w-7xl mx-auto border-t border-white/10 bg-[#070709] text-white font-sans">
       
       {/* Header */}
-      <div className="mb-8 text-center">
-        <span className="text-cyan-400 text-xs font-bold uppercase tracking-widest block mb-1">
+      <div className="mb-6 sm:mb-8 text-center">
+        <span className="text-cyan-400 text-[10px] sm:text-xs font-bold uppercase tracking-widest block mb-1">
           Pre-Installed Gaming Arena Titles
         </span>
-        <h2 className="text-3xl sm:text-5xl font-black uppercase tracking-tight text-white">
+        <h2 className="text-2xl sm:text-5xl font-black uppercase tracking-tight text-white">
           GAME <span className="text-cyan-400 drop-shadow-[0_0_15px_rgba(34,211,238,0.4)]">LIBRARY</span>
         </h2>
       </div>
 
       {/* Platform Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-4 no-scrollbar mb-6">
+      <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-3 sm:pb-4 no-scrollbar mb-4 sm:mb-6 -mx-3 px-3 sm:mx-0 sm:px-0">
         {PLATFORMS.map((plat) => (
           <button
             key={plat.id}
             onClick={() => setSelectedPlatform(plat.id)}
-            className={`px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg whitespace-nowrap transition-all border ${
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-lg whitespace-nowrap transition-all border cursor-pointer ${
               selectedPlatform === plat.id
                 ? 'bg-cyan-400 text-black border-cyan-400 font-bold shadow-[0_0_15px_rgba(34,211,238,0.4)]'
                 : 'bg-[#121318] text-gray-400 border-white/10 hover:border-cyan-400/40 hover:text-white'
@@ -383,28 +383,28 @@ export const GamesLibrary = () => {
       </div>
 
       {/* Search & Filters */}
-      <div className="bg-[#0e0f14] border border-white/10 p-4 rounded-2xl mb-8 space-y-4">
+      <div className="bg-[#0e0f14] border border-white/10 p-3 sm:p-4 rounded-2xl mb-6 sm:mb-8 space-y-3 sm:space-y-4">
         <div className="relative">
           <input
             type="text"
-            placeholder="Search game title (e.g. Tekken, GTA, Call of Duty)..."
+            placeholder="Search game title (e.g. Tekken, GTA)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[#16171f] border border-white/10 rounded-xl px-4 py-3 pl-10 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition"
+            className="w-full bg-[#16171f] border border-white/10 rounded-xl px-3.5 sm:px-4 py-2.5 sm:py-3 pl-9 sm:pl-10 text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition"
           />
-          <svg className="w-4 h-4 absolute left-3 top-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 absolute left-3 top-3.5 sm:top-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
 
         {/* Genre Tags */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-gray-500 font-mono mr-2">Genre:</span>
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar sm:flex-wrap">
+          <span className="text-[10px] sm:text-xs text-gray-500 font-mono shrink-0 mr-1">Genre:</span>
           {GENRES.map((genre) => (
             <button
               key={genre}
               onClick={() => setSelectedGenre(genre)}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition ${
+              className={`px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-medium transition whitespace-nowrap shrink-0 sm:shrink cursor-pointer ${
                 selectedGenre === genre
                   ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-400/40'
                   : 'bg-[#181920] text-gray-400 border border-white/5 hover:text-white'
@@ -416,13 +416,13 @@ export const GamesLibrary = () => {
         </div>
 
         {/* Player Count Filter */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-gray-500 font-mono mr-2">Players:</span>
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar sm:flex-wrap">
+          <span className="text-[10px] sm:text-xs text-gray-500 font-mono shrink-0 mr-1">Players:</span>
           {PLAYER_COUNTS.map((p) => (
             <button
               key={p}
               onClick={() => setSelectedPlayers(p)}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition ${
+              className={`px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-medium transition whitespace-nowrap shrink-0 sm:shrink cursor-pointer ${
                 selectedPlayers === p
                   ? 'bg-red-500/20 text-red-400 border border-red-500/40 font-bold'
                   : 'bg-[#181920] text-gray-400 border border-white/5 hover:text-white'
@@ -434,23 +434,23 @@ export const GamesLibrary = () => {
         </div>
       </div>
 
-      <div className="text-xs text-gray-400 mb-4 font-mono">
+      <div className="text-[11px] sm:text-xs text-gray-400 mb-3 sm:mb-4 font-mono">
         Showing <span className="text-cyan-400 font-bold">{filteredGames.length}</span> games
       </div>
 
       {/* Game Cards Grid */}
       {filteredGames.length === 0 ? (
-        <div className="text-center py-12 text-gray-500 font-mono">
+        <div className="text-center py-12 text-gray-500 font-mono text-xs sm:text-sm">
           No games found matching your filters.
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5">
           {filteredGames.map((game) => (
             <div
               key={game.id}
               className="bg-[#0d0e12] border border-white/10 rounded-2xl overflow-hidden hover:border-cyan-400/50 transition duration-300 group flex flex-col justify-between"
             >
-              <div className="relative h-48 sm:h-52 w-full overflow-hidden bg-black/50">
+              <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-black/50">
                 <img
                   src={game.coverImage}
                   alt={game.name}
@@ -463,29 +463,29 @@ export const GamesLibrary = () => {
                 />
 
                 {game.isPopular && (
-                  <span className="absolute top-3 right-3 bg-red-600/90 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded shadow">
+                  <span className="absolute top-2.5 right-2.5 bg-red-600/90 text-white text-[9px] sm:text-[10px] font-bold uppercase px-2 py-0.5 rounded shadow">
                     Popular 🔥
                   </span>
                 )}
 
-                <span className="absolute bottom-3 left-3 bg-black/70 backdrop-blur-md text-cyan-400 border border-cyan-400/30 text-[10px] font-bold px-2 py-0.5 rounded">
+                <span className="absolute bottom-2.5 left-2.5 bg-black/70 backdrop-blur-md text-cyan-400 border border-cyan-400/30 text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded">
                   {game.genre}
                 </span>
               </div>
 
-              <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+              <div className="p-3.5 sm:p-4 flex-1 flex flex-col justify-between space-y-2.5 sm:space-y-3">
                 <div>
-                  <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-cyan-400 transition-colors">
+                  <h3 className="text-sm sm:text-lg font-bold text-white group-hover:text-cyan-400 transition-colors line-clamp-1">
                     {game.name}
                   </h3>
-                  <div className="text-xs text-gray-400 flex items-center gap-2 mt-1">
+                  <div className="text-[11px] sm:text-xs text-gray-400 flex items-center gap-2 mt-0.5 sm:mt-1">
                     <span>👥 {game.players}</span>
                   </div>
                 </div>
 
                 <button
                   onClick={() => setActiveModalGame(game)}
-                  className="w-full py-2 bg-cyan-400/10 hover:bg-cyan-400 text-cyan-400 hover:text-black border border-cyan-400/30 font-semibold text-xs rounded-xl transition duration-200 mt-2"
+                  className="w-full py-2 bg-cyan-400/10 hover:bg-cyan-400 text-cyan-400 hover:text-black border border-cyan-400/30 font-semibold text-xs rounded-xl transition duration-200 mt-1 cursor-pointer"
                 >
                   View Details & Consoles
                 </button>
@@ -497,9 +497,9 @@ export const GamesLibrary = () => {
 
       {/* Modal Details */}
       {activeModalGame && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#0f1015] border border-cyan-400/40 rounded-2xl max-w-md w-full overflow-hidden shadow-[0_0_30px_rgba(34,211,238,0.2)]">
-            <div className="relative h-56 w-full">
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-[#0f1015] border border-cyan-400/40 rounded-2xl max-w-md w-full overflow-hidden shadow-[0_0_30px_rgba(34,211,238,0.2)] max-h-[90vh] flex flex-col">
+            <div className="relative h-44 sm:h-56 w-full shrink-0">
               <img
                 src={activeModalGame.mediaUrl}
                 alt={activeModalGame.name}
@@ -507,16 +507,16 @@ export const GamesLibrary = () => {
               />
               <button
                 onClick={() => setActiveModalGame(null)}
-                className="absolute top-3 right-3 bg-black/70 text-white rounded-full p-1.5 hover:bg-red-600 transition"
+                className="absolute top-2.5 right-2.5 bg-black/70 text-white rounded-full p-1.5 hover:bg-red-600 transition cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <div className="p-5 space-y-4">
+            <div className="p-4 sm:p-5 space-y-3.5 sm:space-y-4 overflow-y-auto">
               <div>
-                <h3 className="text-xl font-bold text-white">{activeModalGame.name}</h3>
-                <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
+                <h3 className="text-lg sm:text-xl font-bold text-white">{activeModalGame.name}</h3>
+                <div className="flex items-center gap-2.5 mt-1.5 text-[11px] sm:text-xs text-gray-400">
                   <span className="bg-cyan-400/10 border border-cyan-400/20 text-cyan-400 px-2 py-0.5 rounded">
                     {activeModalGame.genre}
                   </span>
@@ -526,21 +526,21 @@ export const GamesLibrary = () => {
 
               {/* Game Description */}
               <div className="bg-[#14151c] p-3 rounded-xl border border-white/5">
-                <h4 className="text-[11px] font-mono uppercase text-gray-400 mb-1">About Game:</h4>
+                <h4 className="text-[10px] sm:text-[11px] font-mono uppercase text-gray-400 mb-1">About Game:</h4>
                 <p className="text-xs text-gray-300 leading-relaxed">
                   {activeModalGame.description}
                 </p>
               </div>
 
               <div>
-                <h4 className="text-xs font-mono uppercase text-gray-500 mb-2">Available On Consoles:</h4>
-                <div className="flex flex-wrap gap-2">
+                <h4 className="text-[10px] sm:text-xs font-mono uppercase text-gray-500 mb-2">Available On Consoles:</h4>
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
                   {activeModalGame.platforms.map((platId) => {
                     const platName = PLATFORMS.find((p) => p.id === platId)?.label;
                     return (
                       <span
                         key={platId}
-                        className="bg-[#181a22] border border-white/10 text-white text-xs px-3 py-1.5 rounded-lg"
+                        className="bg-[#181a22] border border-white/10 text-white text-[11px] sm:text-xs px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg"
                       >
                         📺 {platName}
                       </span>
@@ -551,7 +551,7 @@ export const GamesLibrary = () => {
 
               <button
                 onClick={() => setActiveModalGame(null)}
-                className="w-full py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl transition"
+                className="w-full py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl transition cursor-pointer"
               >
                 Close
               </button>

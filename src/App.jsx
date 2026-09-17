@@ -57,11 +57,14 @@ export default function App() {
   useEffect(() => {
     if (isBookingOpen) {
       document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none'; // Mobile scroll bleed fix
     } else {
       document.body.style.overflow = 'unset';
+      document.body.style.touchAction = 'auto';
     }
     return () => {
       document.body.style.overflow = 'unset';
+      document.body.style.touchAction = 'auto';
     };
   }, [isBookingOpen]);
 
@@ -77,32 +80,37 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#08080a] text-white relative font-sans selection:bg-red-600 selection:text-white">
-      <CustomCursor />
+    <div className="min-h-screen bg-[#08080a] text-white relative font-sans selection:bg-red-600 selection:text-white w-full overflow-x-hidden">
+      {/* Custom Cursor only on Desktop/Pointer devices */}
+      <div className="hidden md:block">
+        <CustomCursor />
+      </div>
+
       <Navbar onOpenBooking={handleOpenBooking} />
       
-      {/* Har section ke liye specific ID yahan add kar di gayi hai */}
-      <section id="home">
-        <Hero onOpenBooking={handleOpenBooking} />
-        <Stats />
-      </section>
+      <main className="w-full overflow-x-hidden">
+        <section id="home" className="w-full">
+          <Hero onOpenBooking={handleOpenBooking} />
+          <Stats />
+        </section>
 
-      <section id="zones">
-        <Zones />
-      </section>
+        <section id="zones" className="w-full">
+          <Zones />
+        </section>
 
-      <section id="pricing">
-        <Pricing onOpenBooking={handleOpenBooking} />
-        <Perks />
-      </section>
+        <section id="pricing" className="w-full">
+          <Pricing onOpenBooking={handleOpenBooking} />
+          <Perks />
+        </section>
 
-      <section id="games">
-        <GamesLibrary />
-      </section>
+        <section id="games" className="w-full">
+          <GamesLibrary />
+        </section>
 
-      <section id="location">
-        <Location />
-      </section>
+        <section id="location" className="w-full">
+          <Location />
+        </section>
+      </main>
 
       <Footer />
 
