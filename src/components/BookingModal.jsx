@@ -6,6 +6,15 @@ import BookingPayment from './Booking/BookingPayment';
 const UPI_ID = 'hamaad.afraan@ybl';
 const PAYEE_NAME = 'Strangers Gaming Cafe';
 
+// Helper: Local Today's Date String in YYYY-MM-DD
+const getTodayDateString = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${day}-${month}`; // YYYY-MM-DD format
+};
+
 const maxCapacities = {
   'PS5_55" VIP': 2,
   'PS5_43" Standard': 2,
@@ -144,7 +153,8 @@ export const BookingModal = ({
   bookedSlots = [],
   onBookingCreated,
 }) => {
-  const [bookingDate, setBookingDate] = useState('Today');
+  // Hardcoded 'Today' ki jagah dynamic date set karein
+  const [bookingDate, setBookingDate] = useState(getTodayDateString());
   const [selectedCategory, setSelectedCategory] = useState('PS5');
   const [selectedScreen, setSelectedScreen] = useState('55" VIP');
   const [selectedTeam, setSelectedTeam] = useState('1 Player');
@@ -169,6 +179,14 @@ export const BookingModal = ({
     const now = new Date();
     return now.getHours() * 60 + now.getMinutes();
   });
+
+  // Date change hone par timings reset karein
+  const handleDateChange = (newDate) => {
+    setBookingDate(newDate);
+    setStartTime(null);
+    setEndTime(null);
+    setShowEndPicker(false);
+  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -276,7 +294,7 @@ export const BookingModal = ({
       customer_name: formData.name.trim(),
       phone: formData.phone.trim(),
       utr: formData.utr.trim(),
-      bookingDate,
+      bookingDate, // Dynamic selected date YYYY-MM-DD yahan pass hogi
       category: selectedCategory,
       station_id: selectedCategory,
       screen: currentStation?.hasScreens ? selectedScreen : '',
@@ -328,6 +346,7 @@ export const BookingModal = ({
     setEndTime(null);
     setShowEndPicker(false);
     setConfirmedBookingDetails(null);
+    setBookingDate(getTodayDateString());
     setErrorMessage('');
     onClose();
   };
@@ -354,7 +373,7 @@ export const BookingModal = ({
 
             <BookingAvailability
               bookingDate={bookingDate}
-              setBookingDate={setBookingDate}
+              setBookingDate={handleDateChange} // Date change handler pass kiya
               selectedCategory={selectedCategory}
               setSelectedCategory={setSelectedCategory}
               selectedScreen={selectedScreen}

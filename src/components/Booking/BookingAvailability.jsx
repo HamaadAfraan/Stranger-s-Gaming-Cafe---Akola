@@ -26,10 +26,19 @@ const BookingAvailability = ({
   totalAmount,
   onNext,
 }) => {
+  // Today's date string helper YYYY-MM-DD
+  const getTodayDateString = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // 15-minute interval blocks generation (11:00 AM to 10:00 PM)
   const generate15MinSlots = () => {
     const slots = [];
-    for (let m = 720; m <= 1320; m += 15) {
+    for (let m = 660; m <= 1320; m += 15) { // 660 mins = 11:00 AM
       slots.push(m);
     }
     return slots;
@@ -63,9 +72,13 @@ const BookingAvailability = ({
     };
   };
 
+  // Check if slot has passed based on current date
   const isSlotPast = (startMins) => {
-    if (bookingDate === 'Today' && startMins < currentMinutes) {
-      return true;
+    const todayStr = getTodayDateString();
+    
+    // Sirf agar bookingDate aaj ki date hai tabhi time check hoga
+    if (bookingDate === todayStr || bookingDate === 'Today') {
+      return startMins < currentMinutes;
     }
     return false;
   };
@@ -90,7 +103,7 @@ const BookingAvailability = ({
 
       if (status !== 'APPROVED' && status !== 'PENDING') return;
 
-      const bDay = (booking.bookingDate || booking.booking_date || booking.day || 'Today')
+      const bDay = (booking.bookingDate || booking.booking_date || booking.day || '')
         .toString()
         .trim()
         .toLowerCase();
@@ -170,31 +183,21 @@ const BookingAvailability = ({
 
   return (
     <div className="w-full text-white">
-      {/* DATE */}
+      {/* DATE SELECTOR */}
       <div className="mt-3 sm:mt-4">
-        <label className="text-[11px] sm:text-xs font-mono uppercase tracking-widest text-zinc-400">
-          Select Date
+        <label className="text-[11px] sm:text-xs font-mono uppercase tracking-widest text-zinc-400 flex items-center gap-1.5 mb-1.5">
+          <Calendar className="w-3.5 h-3.5 text-cyan-400" /> Select Date
         </label>
-        <div className="grid grid-cols-2 gap-2 sm:gap-3 mt-1.5">
-          {['Today', 'Tomorrow'].map((day) => (
-            <button
-              key={day}
-              onClick={() => {
-                setBookingDate(day);
-                setStartTime(null);
-                setEndTime(null);
-                setShowEndPicker(false);
-              }}
-              className={`p-2.5 sm:p-3 rounded-xl font-orbitron text-xs font-bold transition-all border flex items-center justify-center gap-2 cursor-pointer ${
-                bookingDate === day
-                  ? 'bg-purple-600 text-white border-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.4)]'
-                  : 'bg-white/5 text-zinc-400 border-white/10 hover:border-white/30'
-              }`}
-            >
-              <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              {day}
-            </button>
-          ))}
+        <div className="relative">
+          <input
+            type="date"
+            min={getTodayDateString()}
+            value={bookingDate}
+            onChange={(e) => {
+              setBookingDate(e.target.value);
+            }}
+            className="w-full bg-white/5 border border-white/20 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-mono text-white focus:outline-none focus:border-cyan-400 transition-all cursor-pointer shadow-sm [color-scheme:dark]"
+          />
         </div>
       </div>
 

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import mortalTrailer from '../assets/trailer/mortal_kombat.gif';
 
 // Helper function: Resolves local asset image path (Vite / React support)
 const getCoverImage = (filename) => {
@@ -158,7 +159,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['ps5-vip-55', 'ps5-reg-43', 'ps4'],
     description: "Visceral 1v1 fighter featuring cinematic Fatalities, Kameo assistance, and a rebooted universe story.",
-    mediaUrl: "https://media.giphy.com/media/l3vR1v8T6kSndc6eY/giphy.gif",
+    mediaUrl: mortalTrailer,
     coverImage: getCoverImage("mortal.avif")
   },
 
