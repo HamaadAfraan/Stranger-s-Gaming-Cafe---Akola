@@ -34,7 +34,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['car-simulator', 'pc-arena', 'ps5-vip-55'],
     description: "High-speed open-world racing game featuring breathtaking Mexican landscapes and ultimate supercar drives.",
-    mediaUrl: "https://media.giphy.com/media/3o7527pa7qs9kCG78A/giphy.gif",
+    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
     coverImage: getCoverImage("forza.jpg")
   },
   {
@@ -45,7 +45,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['car-simulator', 'ps5-vip-55', 'ps5-reg-43'],
     description: "Ultra-realistic driving simulator delivering authentic motorsport racing across real-world circuits.",
-    mediaUrl: "https://media.giphy.com/media/xT39Cvc2pAagI3iJzO/giphy.gif",
+    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
     coverImage: getCoverImage("gran-tourismo.jpg")
   },
   {
@@ -56,7 +56,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['truck-simulator', 'pc-arena'],
     description: "Drive heavy trucks across European highways, deliver cargo, and expand your freight company.",
-    mediaUrl: "https://media.giphy.com/media/3oKIPnAiaMCws8nOsE/giphy.gif",
+    mediaUrl: "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop",
     coverImage: getCoverImage("ets2.jpg")
   },
   {
@@ -67,7 +67,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['car-simulator', 'pc-arena', 'ps5-vip-55', 'ps5-reg-43'],
     description: "Operate city buses, manage timetable routes, and follow realistic city traffic regulations.",
-    mediaUrl: "https://media.giphy.com/media/3oKIPnAiaMCws8nOsE/giphy.gif",
+    mediaUrl: "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop",
     coverImage: getCoverImage("bus.jpg")
   },
   {
@@ -78,7 +78,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['truck-simulator', 'pc-arena'],
     description: "Conquer hazardous terrain with heavy off-road vehicles through deep mud, snow, and steep inclines.",
-    mediaUrl: "https://media.giphy.com/media/l41YkFIiBxQdRlMnC/giphy.gif",
+    mediaUrl: "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop",
     coverImage: getCoverImage("snow.jpg")
   },
   {
@@ -89,7 +89,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['car-simulator', 'ps5-vip-55', 'ps5-reg-43', 'ps4', 'pc-arena'],
     description: "High-octane arcade racing featuring wild stunts, nitro boosts, and local split-screen multiplayer action.",
-    mediaUrl: "https://media.giphy.com/media/3o7527pa7qs9kCG78A/giphy.gif",
+    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
     coverImage: getCoverImage("asphalt.jpg")
   },
 
@@ -102,7 +102,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['ps5-vip-55', 'ps5-reg-43', 'ps4'],
     description: "Premier football simulation featuring world-class clubs and competitive local multiplayer matches.",
-    mediaUrl: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExOHJ2eGt1aG53YXV4eXRiaTJic3B1Y3Fxcnd3NG84ZzRjYWhuNmptdiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/26vUxJ9rqfwuIEk00/giphy.gif",
+    mediaUrl: "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?q=80&w=800&auto=format&fit=crop",
     coverImage: getCoverImage("fc26.jpg")
   },
   {
@@ -113,7 +113,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['ps4'],
     description: "Nostalgic arcade wrestling classic featuring legendary WWE superstars and chaotic ring action.",
-    mediaUrl: "https://media.giphy.com/media/l3vR1v8T6kSndc6eY/giphy.gif",
+    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
     coverImage: getCoverImage("wwe-pain.avif")
   },
   {
@@ -124,7 +124,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['ps5-vip-55', 'ps5-reg-43', 'ps4'],
     description: "Modern professional wrestling simulator built with realistic combat physics and stunning visuals.",
-    mediaUrl: "https://media.giphy.com/media/l3vR1v8T6kSndc6eY/giphy.gif",
+    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
     coverImage: getCoverImage("wwe.jpg")
   },
 
@@ -137,7 +137,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['ps4', 'ps5-vip-55', 'ps5-reg-43'],
     description: "Fast-paced street brawl game featuring multi-fighter team battles and devastating combo moves.",
-    mediaUrl: "https://media.giphy.com/media/l3vR1v8T6kSndc6eY/giphy.gif",
+    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
     coverImage: getCoverImage("urban.jpg")
   },
   {
@@ -148,7 +148,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['ps5-vip-55', 'ps5-reg-43'],
     description: "Next-gen 3D fighting tournament with aggressive Heat System mechanics and legendary martial artists.",
-    mediaUrl: "https://media.giphy.com/media/l3vR1v8T6kSndc6eY/giphy.gif",
+    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
     coverImage: getCoverImage("tekken.webp")
   },
   {
@@ -172,7 +172,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['pc-arena'],
     description: "5v5 character-based tactical shooter combining precise gunplay with tactical character abilities.",
-    mediaUrl: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnFlOXQxeWdhdWNpNm45OWdhaGJxcTRic2c3YzgyaXpydnRzbnN3dyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3oKIPnAiaMCws8nOsE/giphy.gif",
+    mediaUrl: "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop",
     coverImage: getCoverImage("valorant.jpg")
   },
   {
@@ -183,7 +183,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['pc-arena', 'ps5-vip-55', 'ps5-reg-43'],
     description: "Action-packed tactical shooter with thrilling stealth combat, military campaign, and zombie survival.",
-    mediaUrl: "https://media.giphy.com/media/3oKIPnAiaMCws8nOsE/giphy.gif",
+    mediaUrl: "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop",
     coverImage: getCoverImage("call-of-duty.jpg")
   },
   {
@@ -194,7 +194,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['pc-arena', 'ps5-vip-55', 'ps5-reg-43', 'ps4'],
     description: "Modern military shooter delivering high-speed gunfights, campaign missions, and multiplayer warfare.",
-    mediaUrl: "https://media.giphy.com/media/3oKIPnAiaMCws8nOsE/giphy.gif",
+    mediaUrl: "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop",
     coverImage: getCoverImage("call_of_duty_mw3.webp")
   },
 
@@ -207,7 +207,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['pc-arena', 'ps5-vip-55', 'ps5-reg-43', 'ps4'],
     description: "Massive open-world action title filled with driving, shooting, bank heists, and vast exploration.",
-    mediaUrl: "https://media.giphy.com/media/l41YkFIiBxQdRlMnC/giphy.gif",
+    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
     coverImage: getCoverImage("gta-v.jpg")
   },
   {
@@ -218,7 +218,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['pc-arena', 'ps5-vip-55', 'ps5-reg-43', 'ps4'],
     description: "Iconic crime saga where CJ navigates gang warfare, drive-bys, and story missions across San Andreas.",
-    mediaUrl: "https://media.giphy.com/media/l41YkFIiBxQdRlMnC/giphy.gif",
+    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
     coverImage: getCoverImage("gta-sa.jpg")
   },
   {
@@ -229,7 +229,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['pc-arena', 'ps5-vip-55', 'ps5-reg-43', 'ps4'],
     description: "80s-themed crime adventure following Tommy Vercetti's rise through neon-lit Vice City.",
-    mediaUrl: "https://media.giphy.com/media/l41YkFIiBxQdRlMnC/giphy.gif",
+    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
     coverImage: getCoverImage("gtavc.png")
   },
 
@@ -242,7 +242,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['ps5-vip-55', 'ps5-reg-43', 'ps4', 'pc-arena'],
     description: "High-octane hybrid of arcade-style soccer and rocket-powered vehicular mayhem.",
-    mediaUrl: "https://media.giphy.com/media/3oTKSjRrfIPjeiVyM/giphy.gif",
+    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
     coverImage: getCoverImage("rocket.jpg")
   },
   {
@@ -253,7 +253,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['ps5-vip-55', 'ps5-reg-43', 'pc-arena'],
     description: "Pure cooperative platformer adventure designed strictly for two players to solve creative puzzles.",
-    mediaUrl: "https://media.giphy.com/media/3oTKSjRrfIPjeiVyM/giphy.gif",
+    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
     coverImage: getCoverImage("it2.webp")
   },
   {
@@ -264,7 +264,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['ps5-vip-55', 'ps5-reg-43', 'ps4'],
     description: "Split-screen story adventure centered around two inmates attempting a daring prison breakout.",
-    mediaUrl: "https://media.giphy.com/media/3oTKSjRrfIPjeiVyM/giphy.gif",
+    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
     coverImage: getCoverImage("a_way_out.jpg")
   },
   {
@@ -275,7 +275,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['ps5-vip-55', 'ps5-reg-43', 'ps4', 'pc-arena'],
     description: "Chaotic party cooking action where players team up to prepare meals in absurd, moving kitchens.",
-    mediaUrl: "https://media.giphy.com/media/3oTKSjRrfIPjeiVyM/giphy.gif",
+    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
     coverImage: getCoverImage("overcook.webp")
   },
   {
@@ -286,7 +286,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['ps5-vip-55', 'ps5-reg-43', 'ps4'],
     description: "Charming 3D platforming adventure filled with fun obstacle courses and multiplayer co-op.",
-    mediaUrl: "https://media.giphy.com/media/3oTKSjRrfIPjeiVyM/giphy.gif",
+    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
     coverImage: getCoverImage("sack.jpg")
   },
 
@@ -299,7 +299,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['ps5-vip-55', 'ps5-reg-43'],
     description: "Epic Norse saga following Kratos and Atreus as they battle legendary gods and mythical monsters.",
-    mediaUrl: "https://media.giphy.com/media/l41YkFIiBxQdRlMnC/giphy.gif",
+    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
     coverImage: getCoverImage("god-of-war.webp")
   },
   {
@@ -310,7 +310,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['ps4'],
     description: "Classic hack-and-slash adventure featuring Kratos' vengeance against the Greek Olympian gods.",
-    mediaUrl: "https://media.giphy.com/media/l41YkFIiBxQdRlMnC/giphy.gif",
+    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
     coverImage: getCoverImage("god2.jpg")
   },
   {
@@ -321,7 +321,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['ps5-vip-55', 'ps5-reg-43'],
     description: "Swing through Marvel's New York as Peter Parker & Miles Morales to fight formidable villains like Venom.",
-    mediaUrl: "https://media.giphy.com/media/l41YkFIiBxQdRlMnC/giphy.gif",
+    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
     coverImage: getCoverImage("spiderman.jpeg")
   }
 ];
@@ -393,8 +393,9 @@ export const GamesLibrary = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-[#16171f] border border-white/10 rounded-xl px-3.5 sm:px-4 py-2.5 sm:py-3 pl-9 sm:pl-10 text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition"
           />
+          {/* Fixed SVG Path Command Error */}
           <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 absolute left-3 top-3.5 sm:top-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
 

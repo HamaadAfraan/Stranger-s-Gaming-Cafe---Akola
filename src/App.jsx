@@ -10,54 +10,71 @@ import { GamesLibrary } from './components/GamesLibrary';
 import { Location } from './components/Location';
 import { Footer } from './components/Footer';
 import { BookingModal } from './components/BookingModal';
+import Login from './components/Login';
+import ProfilePage from './components/ProfilePage';
+import { supabase } from './supabaseClient';
 
 export default function App() {
+  const [currentView, setCurrentView] = useState('home'); // 'home' or 'profile'
+  const [session, setSession] = useState(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [bookedSlots, setBookedSlots] = useState([]);
 
-  // Backend se latest booked slots fetch karne ka complete function
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Direct Supabase se latest booked slots fetch karne ka function
   const fetchBookings = async () => {
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://handiwork-pegboard-rebuild.ngrok-free.dev';
-      
-      const response = await fetch(`${API_BASE_URL}/api/bookings`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'ngrok-skip-browser-warning': 'true' // Ngrok initial warning bypass
-        }
-      });
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('*');
 
-      if (response.ok) {
-        const data = await response.json();
-        // API response format normalization
-        const slotsArray = Array.isArray(data) ? data : (data.bookings || data.data || []);
-        console.log('SYNCED BOOKINGS DATA:', slotsArray);
-        setBookedSlots(slotsArray);
+      if (error) {
+        console.error('Error fetching bookings from Supabase:', error);
       } else {
-        console.error('Server responded with status:', response.status);
+        setBookedSlots(Array.isArray(data) ? data : []);
       }
     } catch (error) {
       console.error('Failed to fetch booked slots in App.jsx:', error);
     }
   };
 
-  // Initial load aur 5-second interval automatic background re-sync
+  // Initial load aur Realtime Subscription
   useEffect(() => {
     fetchBookings();
 
-    const intervalId = setInterval(() => {
-      fetchBookings();
-    }, 5000); // Har 5 second me auto update
+    const channel = supabase
+      .channel('public:bookings')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'bookings' },
+        () => {
+          fetchBookings();
+        }
+      )
+      .subscribe();
 
-    return () => clearInterval(intervalId);
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   // Modal open hote hi body scroll prevent karna
   useEffect(() => {
     if (isBookingOpen) {
       document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none'; // Mobile scroll bleed fix
+      document.body.style.touchAction = 'none';
     } else {
       document.body.style.overflow = 'unset';
       document.body.style.touchAction = 'auto';
@@ -69,14 +86,13 @@ export default function App() {
   }, [isBookingOpen]);
 
   const handleOpenBooking = () => {
-    fetchBookings(); // Modal open hone se pehle fast re-fetch
+    fetchBookings();
     setIsBookingOpen(true);
   };
 
-  // Nayi booking confirmation par instant state update callback
   const handleBookingCreated = (newBooking) => {
     setBookedSlots((prevSlots) => [...prevSlots, newBooking]);
-    fetchBookings(); // Immediate background re-fetch for perfect sync
+    fetchBookings();
   };
 
   return (
@@ -86,43 +102,74 @@ export default function App() {
         <CustomCursor />
       </div>
 
-      <Navbar onOpenBooking={handleOpenBooking} />
-      
-      <main className="w-full overflow-x-hidden">
-        <section id="home" className="w-full">
-          <Hero onOpenBooking={handleOpenBooking} />
-          <Stats />
-        </section>
+      <Navbar
+        onOpenBooking={handleOpenBooking}
+        onOpenLogin={() => setShowLoginModal(true)}
+        session={session}
+        onOpenProfile={() => setCurrentView('profile')}
+      />
 
-        <section id="zones" className="w-full">
-          <Zones />
-        </section>
+      {/* Conditionally render Profile Page or Homepage */}
+      {currentView === 'profile' && session ? (
+        <ProfilePage
+          session={session}
+          bookedSlots={bookedSlots}
+          onBack={() => setCurrentView('home')}
+          onOpenBooking={handleOpenBooking} // Fixed: Prop connected for opening booking modal
+          onLogout={async () => {
+            await supabase.auth.signOut();
+            setSession(null);
+            setCurrentView('home');
+          }}
+        />
+      ) : (
+        <main className="w-full overflow-x-hidden">
+          <section id="home" className="w-full">
+            <Hero onOpenBooking={handleOpenBooking} />
+            <Stats />
+          </section>
 
-        <section id="pricing" className="w-full">
-          <Pricing onOpenBooking={handleOpenBooking} />
-          <Perks />
-        </section>
+          <section id="zones" className="w-full">
+            <Zones />
+          </section>
 
-        <section id="games" className="w-full">
-          <GamesLibrary />
-        </section>
+          <section id="pricing" className="w-full">
+            <Pricing onOpenBooking={handleOpenBooking} />
+            <Perks />
+          </section>
 
-        <section id="location" className="w-full">
-          <Location />
-        </section>
-      </main>
+          <section id="games" className="w-full">
+            <GamesLibrary />
+          </section>
+
+          <section id="location" className="w-full">
+            <Location />
+          </section>
+        </main>
+      )}
 
       <Footer />
 
-      <BookingModal 
-        isOpen={isBookingOpen} 
+      <BookingModal
+        isOpen={isBookingOpen}
         onClose={() => {
           setIsBookingOpen(false);
-          fetchBookings(); // Modal close hone par turant re-sync
-        }} 
-        bookedSlots={bookedSlots} 
+          fetchBookings();
+        }}
+        bookedSlots={bookedSlots}
         onBookingCreated={handleBookingCreated}
       />
+
+      {/* Login / Signup Modal */}
+      {showLoginModal && (
+        <Login
+          onClose={() => setShowLoginModal(false)}
+          onLoginSuccess={(user) => {
+            setSession(user);
+            setShowLoginModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
-import React from 'react';
-import { Monitor, Calendar, Clock, Car } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Monitor, Calendar, Clock, Car, Gamepad2 } from 'lucide-react';
+import { supabase } from "../../supabaseClient";
 
 const BookingAvailability = ({
   bookingDate,
@@ -10,6 +11,8 @@ const BookingAvailability = ({
   setSelectedScreen,
   selectedTeam,
   setSelectedTeam,
+  selectedGame,
+  setSelectedGame,
   startTime,
   setStartTime,
   endTime,
@@ -26,7 +29,6 @@ const BookingAvailability = ({
   totalAmount,
   onNext,
 }) => {
-  // Today's date string helper YYYY-MM-DD
   const getTodayDateString = () => {
     const d = new Date();
     const year = d.getFullYear();
@@ -35,10 +37,104 @@ const BookingAvailability = ({
     return `${year}-${month}-${day}`;
   };
 
-  // 15-minute interval blocks generation (11:00 AM to 10:00 PM)
+  const getTomorrowDateString = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const todayStr = getTodayDateString();
+  const tomorrowStr = getTomorrowDateString();
+
+  // Dynamic Cafe Timing state (Default: 11:00 AM to 10:00 PM)
+  const [openingMinutes, setOpeningMinutes] = useState(660);
+  const [closingMinutes, setClosingMinutes] = useState(1320);
+
+  const timeStringToMinutes = (timeStr) => {
+    if (!timeStr) return null;
+    const [h, m] = timeStr.split(':').map(Number);
+    return h * 60 + m;
+  };
+
+  useEffect(() => {
+    if (selectedCategory === 'PS5' && selectedGame === 'GTA 6') {
+      setSelectedTeam('1 Player');
+    }
+  }, [selectedCategory, selectedGame, setSelectedTeam]);
+
+ // Fetch dynamic Cafe Timing directly from Supabase
+  useEffect(() => {
+    setStartTime(null);
+    setEndTime(null);
+    setShowEndPicker(false);
+
+    const fetchCafeTimingFromSupabase = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('cafe_settings')
+          .select('open_time, close_time')
+          .eq('id', 1)
+          .maybeSingle();
+
+        if (error) {
+          console.warn("Supabase timing fetch warning, fallback to defaults:", error);
+          return;
+        }
+
+        if (data) {
+          const openMins = timeStringToMinutes(data.open_time);
+          const closeMins = timeStringToMinutes(data.close_time);
+
+          if (openMins !== null) setOpeningMinutes(openMins);
+          if (closeMins !== null) {
+            // Agar close time midnight ke pass cross ho raha hai to +1440 mins adjustment
+            setClosingMinutes(closeMins <= (openMins || 660) ? closeMins + 1440 : closeMins);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to load cafe timing from Supabase:", e);
+      }
+    };
+
+    fetchCafeTimingFromSupabase();
+  }, [bookingDate]);
+
+
+  // Available games list for PS5
+  const gameOptions = [
+    { id: 'GTA 6', name: 'GTA VI (Special)', badge: 'HOT' },
+    { id: 'Standard', name: 'Other Games (FC 24, Spider-Man 2, Tekken etc.)', badge: 'REGULAR' }
+  ];
+
+  // Calculate dynamic price if GTA 6 is selected
+  const calculateFinalPrice = () => {
+    if (!startTime || !endTime) return 0;
+    const durationMins = endTime - startTime;
+
+    if (selectedCategory === 'PS5' && selectedGame === 'GTA 6') {
+      const hours = durationMins / 60;
+      if (selectedScreen?.includes('55"')) {
+        // 55" Zone GTA 6 Pricing: ₹150 for 30m, ₹250 for 1 hr
+        if (durationMins === 30) return 150;
+        return Math.round(hours * 250);
+      } else {
+        // 43" Zone GTA 6 Pricing: ₹120 for 30m, ₹200 for 1 hr
+        if (durationMins === 30) return 120;
+        return Math.round(hours * 200);
+      }
+    }
+
+    return totalAmount; // Fallback to standard calculated price passed from parent
+  };
+
+  const dynamicTotalAmount = calculateFinalPrice();
+
   const generate15MinSlots = () => {
     const slots = [];
-    for (let m = 660; m <= 1320; m += 15) { // 660 mins = 11:00 AM
+    for (let m = openingMinutes; m <= closingMinutes; m += 15) {
       slots.push(m);
     }
     return slots;
@@ -72,23 +168,17 @@ const BookingAvailability = ({
     };
   };
 
-  // Check if slot has passed based on current date
   const isSlotPast = (startMins) => {
-    const todayStr = getTodayDateString();
-    
-    // Sirf agar bookingDate aaj ki date hai tabhi time check hoga
     if (bookingDate === todayStr || bookingDate === 'Today') {
       return startMins < currentMinutes;
     }
     return false;
   };
 
-  // Checks status for a 15-minute block
   const get15MinBlockStatus = (startMins) => {
     if (isSlotPast(startMins)) return 'EXPIRED';
 
     const endMins = startMins + 15;
-
     const capacityKey = currentStation?.hasScreens
       ? `${selectedCategory}_${selectedScreen}`
       : selectedCategory;
@@ -100,18 +190,13 @@ const BookingAvailability = ({
 
     bookedSlots.forEach((booking) => {
       const status = (booking.status || '').toString().toUpperCase();
-
       if (status !== 'APPROVED' && status !== 'PENDING') return;
 
       const bDay = (booking.bookingDate || booking.booking_date || booking.day || '')
-        .toString()
-        .trim()
-        .toLowerCase();
-
+        .toString().trim().toLowerCase();
       if (bDay !== bookingDate.trim().toLowerCase()) return;
 
       const bCat = (booking.station_id || booking.category || '').toString().trim().toLowerCase();
-
       if (bCat !== selectedCategory.toLowerCase()) return;
 
       if (currentStation?.hasScreens) {
@@ -136,7 +221,11 @@ const BookingAvailability = ({
     return 'FREE';
   };
 
+  // Restrict to '1 Player' when GTA 6 is selected on PS5
   const getPlayerOptions = () => {
+    if (selectedCategory === 'PS5' && selectedGame === 'GTA 6') {
+      return ['1 Player'];
+    }
     if (selectedCategory === 'PS5' && selectedScreen === '43" Standard') {
       return ['1 Player', '2 Players', '3 Players'];
     }
@@ -153,7 +242,7 @@ const BookingAvailability = ({
     if (startTime === null) return [];
 
     const options = [];
-    const maxClosingTime = 1320; // 10:00 PM
+    const maxClosingTime = closingMinutes;
 
     for (let duration = 30; startTime + duration <= maxClosingTime; duration += 30) {
       const proposedEnd = startTime + duration;
@@ -191,11 +280,10 @@ const BookingAvailability = ({
         <div className="relative">
           <input
             type="date"
-            min={getTodayDateString()}
+            min={todayStr}
+            max={tomorrowStr}
             value={bookingDate}
-            onChange={(e) => {
-              setBookingDate(e.target.value);
-            }}
+            onChange={(e) => setBookingDate(e.target.value)}
             className="w-full bg-white/5 border border-white/20 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-mono text-white focus:outline-none focus:border-cyan-400 transition-all cursor-pointer shadow-sm [color-scheme:dark]"
           />
         </div>
@@ -222,6 +310,8 @@ const BookingAvailability = ({
                 if (station.multiplayer) {
                   setSelectedTeam('1 Player');
                 }
+                // Default game set to Standard
+                if (setSelectedGame) setSelectedGame('Standard');
               }}
               className={`p-2.5 sm:p-3 rounded-xl font-orbitron text-[11px] sm:text-xs font-bold transition-all border cursor-pointer truncate ${
                 selectedCategory === station.id
@@ -274,11 +364,42 @@ const BookingAvailability = ({
         </div>
       )}
 
+      {/* GAME SELECTION OPTION (Specifically for PS5) */}
+      {selectedCategory === 'PS5' && (
+        <div className="mt-4 sm:mt-5">
+          <label className="text-[11px] sm:text-xs font-mono uppercase tracking-widest text-zinc-400 flex items-center gap-1.5">
+            <Gamepad2 className="w-3.5 h-3.5 text-cyan-400" /> 3. Select Game / Title
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1.5">
+            {gameOptions.map((game) => (
+              <button
+                key={game.id}
+                onClick={() => {
+                  if (setSelectedGame) setSelectedGame(game.id);
+                }}
+                className={`p-3 rounded-xl border text-[11px] sm:text-xs font-bold font-orbitron text-left transition-all flex items-center justify-between cursor-pointer ${
+                  (selectedGame || 'Standard') === game.id
+                    ? 'border-purple-400 bg-purple-500/20 text-purple-300 shadow-[0_0_12px_rgba(168,85,247,0.3)]'
+                    : 'border-white/10 bg-white/5 text-zinc-400 hover:border-white/20'
+                }`}
+              >
+                <span className="truncate">{game.name}</span>
+                <span className={`text-[9px] px-2 py-0.5 rounded font-mono font-extrabold ${
+                  game.id === 'GTA 6' ? 'bg-amber-400 text-black' : 'bg-zinc-700 text-zinc-300'
+                }`}>
+                  {game.badge}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* PLAYERS */}
       {currentStation?.multiplayer && (
         <div className="mt-4 sm:mt-5">
           <label className="text-[11px] sm:text-xs font-mono uppercase tracking-widest text-zinc-400">
-            3. Select Players
+            {selectedCategory === 'PS5' ? '4.' : '3.'} Select Players
           </label>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1.5">
             {getPlayerOptions().map((playerOption) => (
@@ -320,11 +441,9 @@ const BookingAvailability = ({
                         </span>
                       )}
                     </div>
-                    <div
-                      className={`w-[1px] rounded-full transition-all mt-1 ${
-                        isFullHour ? 'h-2.5 sm:h-3 bg-zinc-300' : 'h-1 sm:h-1.5 bg-zinc-600'
-                      }`}
-                    />
+                    <div className={`w-[1px] rounded-full transition-all mt-1 ${
+                      isFullHour ? 'h-2.5 sm:h-3 bg-zinc-300' : 'h-1 sm:h-1.5 bg-zinc-600'
+                    }`} />
                   </div>
                 );
               })}
@@ -333,11 +452,7 @@ const BookingAvailability = ({
             <div className="relative w-full h-2.5 sm:h-3 bg-gradient-to-r from-zinc-600 via-zinc-400 to-zinc-600 rounded-sm overflow-hidden flex shadow-inner">
               {allBlocks.map((block) => {
                 const blockStatus = get15MinBlockStatus(block);
-                const isSelected =
-                  startTime !== null &&
-                  endTime !== null &&
-                  block >= startTime &&
-                  block < endTime;
+                const isSelected = startTime !== null && endTime !== null && block >= startTime && block < endTime;
 
                 return (
                   <div
@@ -358,21 +473,6 @@ const BookingAvailability = ({
               })}
             </div>
           </div>
-        </div>
-
-        <div className="flex flex-wrap gap-2 sm:gap-3 mt-1 text-[9px] sm:text-[10px] font-mono text-zinc-400 justify-end px-1">
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-sm bg-zinc-400 inline-block" /> Available
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-sm bg-amber-400 inline-block" /> Pending
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-sm bg-red-500 inline-block" /> Booked
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" /> Selected
-          </span>
         </div>
       </div>
 
@@ -454,8 +554,8 @@ const BookingAvailability = ({
         <div className="mt-5 p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-cyan-950/90 to-purple-950/90 border border-cyan-500/40 flex items-center justify-between gap-2">
           <div className="min-w-0 flex-1">
             <div className="text-[10px] sm:text-[11px] text-cyan-300 font-mono truncate">
-              {bookingDate} • {selectedCategory}{' '}
-              {currentStation?.hasScreens ? `(${selectedScreen})` : ''}
+              {bookingDate} • {selectedCategory} {currentStation?.hasScreens ? `(${selectedScreen})` : ''} 
+              {selectedCategory === 'PS5' && selectedGame ? ` • ${selectedGame}` : ''}
             </div>
 
             <div className="text-sm sm:text-base font-black font-orbitron truncate">
@@ -463,7 +563,7 @@ const BookingAvailability = ({
             </div>
 
             <div className="text-[11px] sm:text-xs font-bold font-mono text-emerald-400 mt-0.5">
-              Total: ₹{totalAmount} ({formatDurationText(endTime - startTime)})
+              Total: ₹{dynamicTotalAmount} ({formatDurationText(endTime - startTime)})
             </div>
           </div>
 

@@ -2,17 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { X, Sparkles, CheckCircle2 } from 'lucide-react';
 import BookingAvailability from './Booking/BookingAvailability';
 import BookingPayment from './Booking/BookingPayment';
+import { supabase } from '../supabaseClient';
 
 const UPI_ID = 'hamaad.afraan@ybl';
 const PAYEE_NAME = 'Strangers Gaming Cafe';
 
-// Helper: Local Today's Date String in YYYY-MM-DD
 const getTodayDateString = () => {
   const d = new Date();
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${day}-${month}`; // YYYY-MM-DD format
+  return `${year}-${month}-${day}`;
 };
 
 const maxCapacities = {
@@ -110,15 +110,32 @@ const calculateBookingPrice = ({
   selectedCategory,
   selectedScreen,
   selectedTeam,
+  selectedGame,
   startTime,
   endTime,
 }) => {
   if (startTime === null || endTime === null) return 0;
 
+  const totalMinutes = endTime - startTime;
+
+  if (selectedCategory === 'PS5' && selectedGame === 'GTA 6') {
+    const fullHours = Math.floor(totalMinutes / 60);
+    const remainingMins = totalMinutes % 60;
+
+    if (selectedScreen === '55" VIP') {
+      let price = fullHours * 250;
+      if (remainingMins === 30) price += 150;
+      return price;
+    } else {
+      let price = fullHours * 200;
+      if (remainingMins === 30) price += 120;
+      return price;
+    }
+  }
+
   const currentStation = stations.find((s) => s.id === selectedCategory);
   if (!currentStation) return 0;
 
-  const totalMinutes = endTime - startTime;
   let rateObj = null;
 
   if (selectedCategory === 'PS5') {
@@ -153,11 +170,11 @@ export const BookingModal = ({
   bookedSlots = [],
   onBookingCreated,
 }) => {
-  // Hardcoded 'Today' ki jagah dynamic date set karein
   const [bookingDate, setBookingDate] = useState(getTodayDateString());
   const [selectedCategory, setSelectedCategory] = useState('PS5');
   const [selectedScreen, setSelectedScreen] = useState('55" VIP');
   const [selectedTeam, setSelectedTeam] = useState('1 Player');
+  const [selectedGame, setSelectedGame] = useState('Standard');
 
   const [startTime, setStartTime] = useState(null);
   const [endTime, setEndTime] = useState(null);
@@ -180,7 +197,50 @@ export const BookingModal = ({
     return now.getHours() * 60 + now.getMinutes();
   });
 
-  // Date change hone par timings reset karein
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (isOpen) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user) {
+            const userId = session.user.id;
+            
+            let profileData = null;
+            try {
+              const { data, error } = await supabase
+                .from('profiles')
+                .select('name, phone')
+                .eq('id', userId)
+                .single();
+              
+              if (!error) {
+                profileData = data;
+              }
+            } catch (profileError) {
+              console.warn("Profile table missing or error:", profileError);
+            }
+
+            setFormData((prev) => ({
+              ...prev,
+              name: profileData?.name || session.user.user_metadata?.full_name || '',
+              phone: profileData?.phone || session.user.user_metadata?.phone || '',
+            }));
+          }
+        } catch (authError) {
+          console.warn("Session error:", authError);
+        }
+      }
+    };
+
+    fetchUserData();
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (selectedCategory === 'PS5' && selectedGame === 'GTA 6') {
+      setSelectedTeam('1 Player');
+    }
+  }, [selectedGame, selectedCategory]);
+
   const handleDateChange = (newDate) => {
     setBookingDate(newDate);
     setStartTime(null);
@@ -204,18 +264,10 @@ export const BookingModal = ({
     selectedCategory,
     selectedScreen,
     selectedTeam,
+    selectedGame,
     startTime,
     endTime,
   });
-
-  const getApiBaseUrl = () => {
-    if (typeof window !== 'undefined') {
-      const envUrl = import.meta.env?.VITE_API_BASE_URL;
-      if (envUrl) return envUrl;
-      return `${window.location.protocol}//${window.location.hostname}:5000`;
-    }
-    return 'http://localhost:5000';
-  };
 
   const getStandardUpiUri = (amount) => {
     return (
@@ -253,8 +305,8 @@ export const BookingModal = ({
   };
 
   const handlePhoneChange = (e) => {
-    const rawValue = e.target.value.replace(/[^0-9]/g, '');
-    if (rawValue.length <= 10) {
+    const rawValue = e.target.value.replace(/[^0-9+\-\s]/g, '');
+    if (rawValue.length <= 20) {
       setFormData((prev) => ({ ...prev, phone: rawValue }));
     }
   };
@@ -267,14 +319,14 @@ export const BookingModal = ({
   };
 
   const isNameValid = formData.name.trim().length >= 2;
-  const isPhoneValid = formData.phone.trim().length === 10;
+  const isPhoneValid = formData.phone.trim().replace(/[\s+\-]/g, '').length >= 7;
   const isUtrValid = formData.utr.trim().length >= 6;
 
   const handleConfirmBooking = async (finalPayAmount) => {
     setErrorMessage('');
 
     if (!isNameValid || !isPhoneValid || !isUtrValid) {
-      alert('Please fill all details correctly!');
+      setErrorMessage('Please fill all fields correctly. Name (2+ letters), Phone, and UTR (min 6 chars).');
       return;
     }
 
@@ -288,55 +340,100 @@ export const BookingModal = ({
       hour12: true,
     });
 
+    let userEmail = '';
+    let currentUserId = null;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      userEmail = session?.user?.email || '';
+      currentUserId = session?.user?.id || null;
+    } catch (e) {
+      console.warn('Session fetch warning:', e);
+    }
+
+    const bookingPrice = typeof finalPayAmount === 'number' ? finalPayAmount : rawTotalAmount;
+
     const bookingDetails = {
       id: bookingId,
+      user_id: currentUserId,
       name: formData.name.trim(),
       customer_name: formData.name.trim(),
       phone: formData.phone.trim(),
+      email: userEmail,
       utr: formData.utr.trim(),
-      bookingDate, // Dynamic selected date YYYY-MM-DD yahan pass hogi
+      bookingDate,
       category: selectedCategory,
       station_id: selectedCategory,
       screen: currentStation?.hasScreens ? selectedScreen : '',
       team: currentStation?.multiplayer ? selectedTeam : '1 Player',
+      selectedGame: selectedCategory === 'PS5' ? selectedGame : '',
       duration: formatDurationText(endTime - startTime),
       slot: timeSlotString,
       slot_time: timeSlotString,
-      price: typeof finalPayAmount === 'number' ? finalPayAmount : rawTotalAmount,
+      price: bookingPrice,
       created_time: createdTimeString,
       status: 'PENDING',
       createdAt: now.toISOString(),
     };
 
-    try {
-      const response = await fetch(`${getApiBaseUrl()}/api/bookings`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'ngrok-skip-browser-warning': 'true',
-        },
-        body: JSON.stringify(bookingDetails),
-      });
+    let success = false;
+    let attempts = 0;
+    const maxAttempts = 3;
 
-      const data = await response.json();
+    while (attempts < maxAttempts && !success) {
+      try {
+        attempts++;
+        const { error } = await supabase
+          .from('bookings')
+          .insert([bookingDetails]);
 
-      if (!response.ok || data.status === 'error') {
-        setErrorMessage(data.message || 'Booking failed. Slot may already be taken.');
-        setIsSubmitting(false);
-        return;
+        if (error) {
+          throw new Error(error.message || 'Database insert error');
+        }
+
+        success = true;
+      } catch (error) {
+        console.warn(`Booking attempt ${attempts} failed:`, error);
+        if (attempts >= maxAttempts) {
+          setErrorMessage('Connection failed. Please check your internet and try again.');
+          setIsSubmitting(false);
+          return;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+
+    if (success) {
+      // PERMANENT DIAMOND POINTS UPDATE DIRECT IN user_profiles TABLE
+      try {
+        const userPhone = formData.phone.trim();
+        if (userPhone && userPhone.length >= 7) {
+          const { data: existingProfile } = await supabase
+            .from('user_profiles')
+            .select('diamond_points')
+            .eq('phone', userPhone)
+            .maybeSingle();
+
+          const currentPoints = existingProfile?.diamond_points || 0;
+          const updatedPoints = currentPoints + Math.floor(Number(bookingPrice));
+
+          await supabase.from('user_profiles').upsert({
+            phone: userPhone,
+            name: formData.name.trim(),
+            email: userEmail,
+            diamond_points: updatedPoints,
+            updated_at: new Date().toISOString()
+          });
+        }
+      } catch (ptsError) {
+        console.warn("Error updating user_profiles points:", ptsError);
       }
 
-      const finalSavedBooking = data.booking || bookingDetails;
-      if (typeof onBookingCreated === 'function') onBookingCreated(finalSavedBooking);
-      setConfirmedBookingDetails(finalSavedBooking);
-      setPaymentStep(3);
-    } catch (error) {
       if (typeof onBookingCreated === 'function') onBookingCreated(bookingDetails);
       setConfirmedBookingDetails(bookingDetails);
       setPaymentStep(3);
-    } finally {
-      setIsSubmitting(false);
     }
+    
+    setIsSubmitting(false);
   };
 
   const handleModalClose = () => {
@@ -347,6 +444,7 @@ export const BookingModal = ({
     setShowEndPicker(false);
     setConfirmedBookingDetails(null);
     setBookingDate(getTodayDateString());
+    setSelectedGame('Standard');
     setErrorMessage('');
     onClose();
   };
@@ -363,7 +461,6 @@ export const BookingModal = ({
           <X className="w-5 h-5" />
         </button>
 
-        {/* STEP 1 */}
         {paymentStep === 1 && (
           <div className="w-full">
             <h3 className="text-lg sm:text-2xl font-black font-orbitron text-cyan-400 flex items-center gap-2 mb-2 pr-8">
@@ -373,13 +470,15 @@ export const BookingModal = ({
 
             <BookingAvailability
               bookingDate={bookingDate}
-              setBookingDate={handleDateChange} // Date change handler pass kiya
+              setBookingDate={handleDateChange}
               selectedCategory={selectedCategory}
               setSelectedCategory={setSelectedCategory}
               selectedScreen={selectedScreen}
               setSelectedScreen={setSelectedScreen}
               selectedTeam={selectedTeam}
               setSelectedTeam={setSelectedTeam}
+              selectedGame={selectedGame}
+              setSelectedGame={setSelectedGame}
               startTime={startTime}
               setStartTime={setStartTime}
               endTime={endTime}
@@ -399,7 +498,6 @@ export const BookingModal = ({
           </div>
         )}
 
-        {/* STEP 2 */}
         {paymentStep === 2 && (
           <div className="w-full">
             <BookingPayment
@@ -407,6 +505,7 @@ export const BookingModal = ({
               selectedCategory={selectedCategory}
               selectedScreen={selectedScreen}
               selectedTeam={selectedTeam}
+              selectedGame={selectedGame}
               currentStation={currentStation}
               startTime={startTime}
               endTime={endTime}
@@ -432,7 +531,6 @@ export const BookingModal = ({
           </div>
         )}
 
-        {/* STEP 3 */}
         {paymentStep === 3 && confirmedBookingDetails && (
           <div className="text-center py-2 sm:py-4 w-full">
             <div className="w-12 h-12 sm:w-16 sm:h-16 bg-cyan-500/20 text-cyan-400 border border-cyan-400 rounded-full flex items-center justify-center mx-auto mb-3 shadow-[0_0_20px_rgba(34,211,238,0.4)]">
@@ -472,10 +570,11 @@ export const BookingModal = ({
                 <span className="text-white font-bold">{confirmedBookingDetails.phone}</span>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-1.5">
-                <span className="text-zinc-400">Platform:</span>
+                <span className="text-zinc-400">Platform & Game:</span>
                 <span className="text-cyan-400 font-bold">
                   {confirmedBookingDetails.category}{' '}
                   {confirmedBookingDetails.screen ? `(${confirmedBookingDetails.screen})` : ''}
+                  {confirmedBookingDetails.selectedGame ? ` - ${confirmedBookingDetails.selectedGame}` : ''}
                 </span>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-1.5">

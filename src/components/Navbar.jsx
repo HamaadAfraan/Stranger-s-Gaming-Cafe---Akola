@@ -1,14 +1,59 @@
 import React, { useState, useEffect } from 'react';
-import { Crosshair, Menu, X } from 'lucide-react';
+import { Crosshair, Menu, X, User } from 'lucide-react';
+import { supabase } from '../supabaseClient';
+import profileImg from '../assets/profile.jpeg';
 
-export const Navbar = ({ onOpenBooking }) => {
+export const Navbar = ({ onOpenBooking, onOpenLogin, session, onOpenProfile }) => {
   const [activeTab, setActiveTab] = useState('home');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [currentAvatar, setCurrentAvatar] = useState(profileImg);
 
+  // Safe Supabase fetch with error fallback
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchLatestAvatar = async () => {
+      if (!session?.user?.id) {
+        if (isMounted) setCurrentAvatar(profileImg);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('avatar_url')
+          .eq('id', session.user.id)
+          .maybeSingle(); // .single() ki jagah .maybeSingle() use karein taaki profile na milne par crash na ho
+
+        if (error) throw error;
+
+        if (isMounted) {
+          if (data && data.avatar_url) {
+            setCurrentAvatar(data.avatar_url);
+          } else {
+            setCurrentAvatar(session.user?.user_metadata?.avatar_url || profileImg);
+          }
+        }
+      } catch (err) {
+        console.warn("Avatar fetch skipped/failed:", err.message);
+        if (isMounted) {
+          setCurrentAvatar(session.user?.user_metadata?.avatar_url || profileImg);
+        }
+      }
+    };
+
+    fetchLatestAvatar();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [session]);
+
+  // Active section detection on scroll
   useEffect(() => {
     const handleScroll = () => {
       const sections = ['home', 'zones', 'pricing', 'games', 'location'];
-      const scrollPosition = window.scrollY + 120; // Adjusted offset for mobile navbar
+      const scrollPosition = window.scrollY + 120;
 
       for (const sectionId of sections) {
         const el = document.getElementById(sectionId);
@@ -89,10 +134,34 @@ export const Navbar = ({ onOpenBooking }) => {
         ))}
       </div>
 
-      {/* Action Button & Mobile Toggle */}
+      {/* Action Buttons & Mobile Toggle */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        
+        {/* Gamer Profile Avatar */}
+        {session && (
+          <button 
+            onClick={onOpenProfile}
+            title="Gamer Profile & Bookings"
+            className="p-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition duration-200 cursor-pointer overflow-hidden"
+          >
+            <img 
+              src={currentAvatar} 
+              onError={() => setCurrentAvatar(profileImg)} // Fallback if image load fails
+              alt="Gamer Avatar" 
+              className="w-8 h-8 rounded-full object-cover border border-red-500"
+            />
+          </button>
+        )}
+
+        {/* Book a Station Button */}
         <button 
-          onClick={onOpenBooking}
+          onClick={() => {
+            if (!session) {
+              onOpenLogin();
+            } else {
+              onOpenBooking();
+            }
+          }}
           className="bg-red-600 hover:bg-red-500 text-white font-bold px-3 sm:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs uppercase tracking-wider shadow-lg shadow-red-600/30 transition transform active:scale-95 sm:hover:scale-105 cursor-pointer whitespace-nowrap"
         >
           BOOK A STATION
@@ -108,9 +177,9 @@ export const Navbar = ({ onOpenBooking }) => {
         </button>
       </div>
 
-      {/* Mobile Drawer Navigation Overlay */}
+      {/* Mobile Drawer Navigation */}
       {isMobileMenuOpen && (
-        <div className="md:hidden fixed top-[57px] left-0 w-full bg-[#0b0c10]/98 backdrop-blur-xl border-b border-white/10 px-5 py-5 flex flex-col gap-2 font-orbitron shadow-2xl animate-in slide-in-from-top-2 z-50">
+        <div className="md:hidden fixed top-[57px] left-0 w-full bg-[#0b0c10]/98 backdrop-blur-xl border-b border-white/10 px-5 py-5 flex flex-col gap-2 font-orbitron shadow-2xl z-50">
           {navItems.map((item) => (
             <a
               key={item.id}
@@ -126,6 +195,30 @@ export const Navbar = ({ onOpenBooking }) => {
               {activeTab === item.id && <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>}
             </a>
           ))}
+
+          {session ? (
+            <button
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                onOpenProfile();
+              }}
+              className="mt-2 text-xs font-bold tracking-widest py-3 px-3 rounded-lg flex items-center gap-2 text-gray-300 hover:text-white bg-white/5 border border-white/10 uppercase transition-all"
+            >
+              <User className="w-4 h-4 text-red-500" />
+              <span>Gamer Profile & Bookings</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                onOpenLogin();
+              }}
+              className="mt-2 text-xs font-bold tracking-widest py-3 px-3 rounded-lg flex items-center gap-2 text-gray-300 hover:text-white bg-white/5 border border-white/10 uppercase transition-all"
+            >
+              <User className="w-4 h-4 text-red-500" />
+              <span>Login / Signup</span>
+            </button>
+          )}
         </div>
       )}
     </nav>
