@@ -182,6 +182,10 @@ export const BookingModal = ({
 
   const [paymentStep, setPaymentStep] = useState(1);
 
+  // User Diamond Balances State
+  const [userGamerPoints, setUserGamerPoints] = useState(0);
+  const [userRedeemableDiamonds, setUserRedeemableDiamonds] = useState(0);
+
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -205,26 +209,25 @@ export const BookingModal = ({
           if (session?.user) {
             const userId = session.user.id;
             
-            let profileData = null;
             try {
               const { data, error } = await supabase
                 .from('profiles')
-                .select('name, phone')
+                .select('name, phone, gamer_points, redeemable_diamonds')
                 .eq('id', userId)
                 .single();
               
-              if (!error) {
-                profileData = data;
+              if (!error && data) {
+                setFormData((prev) => ({
+                  ...prev,
+                  name: data.name || session.user.user_metadata?.full_name || '',
+                  phone: data.phone || session.user.user_metadata?.phone || '',
+                }));
+                setUserGamerPoints(parseInt(data.gamer_points, 10) || 0);
+                setUserRedeemableDiamonds(parseInt(data.redeemable_diamonds, 10) || 0);
               }
             } catch (profileError) {
-              console.warn("Profile table missing or error:", profileError);
+              console.warn("Profile table error:", profileError);
             }
-
-            setFormData((prev) => ({
-              ...prev,
-              name: profileData?.name || session.user.user_metadata?.full_name || '',
-              phone: profileData?.phone || session.user.user_metadata?.phone || '',
-            }));
           }
         } catch (authError) {
           console.warn("Session error:", authError);
@@ -320,13 +323,23 @@ export const BookingModal = ({
 
   const isNameValid = formData.name.trim().length >= 2;
   const isPhoneValid = formData.phone.trim().replace(/[\s+\-]/g, '').length >= 7;
-  const isUtrValid = formData.utr.trim().length >= 6;
 
-  const handleConfirmBooking = async (finalPayAmount) => {
+  // Confirm Booking Handler (UPI pay par 10 diamonds earn, Diamonds pay par 5 diamonds earn)
+  const handleConfirmBooking = async ({ paymentMethod, finalPayAmount, utrValue }) => {
     setErrorMessage('');
 
-    if (!isNameValid || !isPhoneValid || !isUtrValid) {
-      setErrorMessage('Please fill all fields correctly. Name (2+ letters), Phone, and UTR (min 6 chars).');
+    if (!isNameValid || !isPhoneValid) {
+      setErrorMessage('Please fill name (2+ letters) and valid mobile number.');
+      return;
+    }
+
+    if (paymentMethod === 'upi' && (!utrValue || utrValue.trim().length < 6)) {
+      setErrorMessage('Please enter a valid 6+ digit UTR/Transaction Ref Number for UPI payment.');
+      return;
+    }
+
+    if (paymentMethod === 'diamonds' && userRedeemableDiamonds < finalPayAmount) {
+      setErrorMessage(`Insufficient Redeemable Diamonds! You have ${userRedeemableDiamonds} diamonds, but need ${finalPayAmount}.`);
       return;
     }
 
@@ -352,6 +365,17 @@ export const BookingModal = ({
 
     const bookingPrice = typeof finalPayAmount === 'number' ? finalPayAmount : rawTotalAmount;
 
+    // Diamond calculation: UPI pay par 0.1 rate (₹100 = 10 Diamonds), Diamonds pay par fixed 5 diamonds earn
+    const earnedDiamonds = paymentMethod === 'upi' ? Math.floor(Number(bookingPrice) * 0.1) : 5;
+
+    let finalUtRDisplay = '';
+    if (paymentMethod === 'diamonds') {
+      const remainingDiamonds = userRedeemableDiamonds - bookingPrice;
+      finalUtRDisplay = `${userRedeemableDiamonds}-${bookingPrice}=${remainingDiamonds} (diamond)`;
+    } else {
+      finalUtRDisplay = utrValue.trim();
+    }
+
     const bookingDetails = {
       id: bookingId,
       user_id: currentUserId,
@@ -359,7 +383,7 @@ export const BookingModal = ({
       customer_name: formData.name.trim(),
       phone: formData.phone.trim(),
       email: userEmail,
-      utr: formData.utr.trim(),
+      utr: finalUtRDisplay,
       bookingDate,
       category: selectedCategory,
       station_id: selectedCategory,
@@ -371,61 +395,53 @@ export const BookingModal = ({
       slot_time: timeSlotString,
       price: bookingPrice,
       created_time: createdTimeString,
-      status: 'PENDING',
+      status: paymentMethod === 'diamonds' ? 'CONFIRMED' : 'PENDING',
       createdAt: now.toISOString(),
     };
 
     let success = false;
-    let attempts = 0;
-    const maxAttempts = 3;
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .insert([bookingDetails]);
 
-    while (attempts < maxAttempts && !success) {
-      try {
-        attempts++;
-        const { error } = await supabase
-          .from('bookings')
-          .insert([bookingDetails]);
-
-        if (error) {
-          throw new Error(error.message || 'Database insert error');
-        }
-
-        success = true;
-      } catch (error) {
-        console.warn(`Booking attempt ${attempts} failed:`, error);
-        if (attempts >= maxAttempts) {
-          setErrorMessage('Connection failed. Please check your internet and try again.');
-          setIsSubmitting(false);
-          return;
-        }
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
+      if (error) throw new Error(error.message);
+      success = true;
+    } catch (error) {
+      console.error('Booking insertion error:', error);
+      setErrorMessage('Connection failed. Please check your internet and try again.');
+      setIsSubmitting(false);
+      return;
     }
 
-    if (success) {
-      // PERMANENT DIAMOND POINTS UPDATE DIRECT IN user_profiles TABLE
+    if (success && currentUserId) {
       try {
-        const userPhone = formData.phone.trim();
-        if (userPhone && userPhone.length >= 7) {
-          const { data: existingProfile } = await supabase
-            .from('user_profiles')
-            .select('diamond_points')
-            .eq('phone', userPhone)
-            .maybeSingle();
+        let newGamerPoints = userGamerPoints;
+        let newRedeemableDiamonds = userRedeemableDiamonds;
 
-          const currentPoints = existingProfile?.diamond_points || 0;
-          const updatedPoints = currentPoints + Math.floor(Number(bookingPrice));
-
-          await supabase.from('user_profiles').upsert({
-            phone: userPhone,
-            name: formData.name.trim(),
-            email: userEmail,
-            diamond_points: updatedPoints,
-            updated_at: new Date().toISOString()
-          });
+        if (paymentMethod === 'diamonds') {
+          // Diamonds se pay kiya toh pehle balance minus hoga aur fir 5 diamonds add honge
+          newRedeemableDiamonds = Math.max(0, userRedeemableDiamonds - bookingPrice) + earnedDiamonds;
+          newGamerPoints = userGamerPoints + earnedDiamonds;
+        } else {
+          // UPI pay kiya toh gamer points aur redeemable dono mein 0.1 rate se add honge
+          newGamerPoints = userGamerPoints + earnedDiamonds;
+          newRedeemableDiamonds = userRedeemableDiamonds + earnedDiamonds;
         }
+
+        await supabase
+          .from('profiles')
+          .update({
+            gamer_points: newGamerPoints,
+            redeemable_diamonds: newRedeemableDiamonds,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', currentUserId);
+
+        setUserGamerPoints(newGamerPoints);
+        setUserRedeemableDiamonds(newRedeemableDiamonds);
       } catch (ptsError) {
-        console.warn("Error updating user_profiles points:", ptsError);
+        console.warn("Error updating profile balances:", ptsError);
       }
 
       if (typeof onBookingCreated === 'function') onBookingCreated(bookingDetails);
@@ -510,6 +526,7 @@ export const BookingModal = ({
               startTime={startTime}
               endTime={endTime}
               totalAmount={rawTotalAmount}
+              userRedeemableDiamonds={userRedeemableDiamonds}
               formatDurationText={formatDurationText}
               minutesToTimeString={minutesToTimeString}
               formData={formData}
@@ -518,7 +535,6 @@ export const BookingModal = ({
               handleUtrChange={handleUtrChange}
               isNameValid={isNameValid}
               isPhoneValid={isPhoneValid}
-              isUtrValid={isUtrValid}
               errorMessage={errorMessage}
               isSubmitting={isSubmitting}
               getAppUri={getAppUri}
@@ -586,13 +602,13 @@ export const BookingModal = ({
                 <span className="text-amber-300 font-bold">{confirmedBookingDetails.duration}</span>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-1.5">
-                <span className="text-zinc-400">Transaction Ref / UTR:</span>
+                <span className="text-zinc-400">Transaction Mode / UTR:</span>
                 <span className="text-purple-300 font-bold font-mono tracking-wider break-all">
                   {confirmedBookingDetails.utr}
                 </span>
               </div>
               <div className="flex justify-between pt-1">
-                <span className="text-zinc-400">Total Amount Paid:</span>
+                <span className="text-zinc-400">Total Amount:</span>
                 <span className="text-emerald-400 font-black text-sm font-orbitron">
                   ₹{confirmedBookingDetails.price}
                 </span>

@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
 import { supabase } from '../supabaseClient';
-import { X } from 'lucide-react';
+import { X, Eye, EyeOff } from 'lucide-react';
 
 export default function Login({ onClose, onLoginSuccess }) {
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -16,7 +21,35 @@ export default function Login({ onClose, onLoginSuccess }) {
     setErrorMsg('');
     setSuccessMsg('');
 
+    if (isForgotPassword) {
+      // Forgot Password Handler
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin,
+      });
+
+      setLoading(false);
+      if (error) {
+        setErrorMsg(error.message);
+      } else {
+        setSuccessMsg('Password reset link sent to your registered email!');
+      }
+      return;
+    }
+
     if (isSignUp) {
+      // Check if passwords match
+      if (password !== confirmPassword) {
+        setLoading(false);
+        setErrorMsg('Please check password: Passwords do not match!');
+        return;
+      }
+
+      if (password.length < 6) {
+        setLoading(false);
+        setErrorMsg('Password must be at least 6 characters long.');
+        return;
+      }
+
       // Sign Up for new gamers
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -29,6 +62,8 @@ export default function Login({ onClose, onLoginSuccess }) {
       } else {
         setSuccessMsg('Account created successfully! You can now log in.');
         setIsSignUp(false);
+        setPassword('');
+        setConfirmPassword('');
       }
     } else {
       // Login for existing gamers
@@ -53,16 +88,18 @@ export default function Login({ onClose, onLoginSuccess }) {
         {/* Close Button */}
         <button 
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white p-1 rounded-lg bg-white/5 border border-white/10"
+          className="absolute top-4 right-4 text-gray-400 hover:text-white p-1 rounded-lg bg-white/5 border border-white/10 cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
 
         <h2 className="text-2xl font-bold mb-2 text-center font-orbitron text-red-500">
-          {isSignUp ? 'Join Stranger’s Gaming' : 'Welcome Back, Gamer'}
+          {isForgotPassword ? 'Reset Password' : (isSignUp ? 'Join Stranger’s Gaming' : 'Welcome Back, Gamer')}
         </h2>
         <p className="text-gray-400 text-xs text-center mb-6">
-          {isSignUp ? 'Create an account to manage your cafe bookings' : 'Log in to your gaming account'}
+          {isForgotPassword 
+            ? 'Enter your registered email to receive password reset link' 
+            : (isSignUp ? 'Create an account to manage your cafe bookings' : 'Log in to your gaming account')}
         </p>
         
         {errorMsg && <p className="text-red-400 text-xs mb-4 bg-red-950/50 p-3 rounded-lg border border-red-800">{errorMsg}</p>}
@@ -81,29 +118,73 @@ export default function Login({ onClose, onLoginSuccess }) {
             />
           </div>
 
-          <div className="mb-6">
-            <label className="block text-xs uppercase tracking-wider mb-2 text-gray-300">Password</label>
-            <input 
-              type="password" 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              required
-              className="w-full p-3 rounded-lg bg-[#1a1a20] border border-white/10 text-white text-sm focus:outline-none focus:border-red-500"
-              placeholder="••••••••"
-            />
-          </div>
+          {!isForgotPassword && (
+            <div className="mb-4 relative">
+              <label className="block text-xs uppercase tracking-wider mb-2 text-gray-300">Password</label>
+              <input 
+                type={showPassword ? "text" : "password"} 
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)} 
+                required
+                className="w-full p-3 pr-12 rounded-lg bg-[#1a1a20] border border-white/10 text-white text-sm focus:outline-none focus:border-red-500 font-mono"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3.5 top-9 text-gray-400 hover:text-white cursor-pointer"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          )}
+
+          {/* Confirm Password Field (Only shown during Sign Up) */}
+          {isSignUp && !isForgotPassword && (
+            <div className="mb-6">
+              <label className="block text-xs uppercase tracking-wider mb-2 text-gray-300">Confirm Password</label>
+              <input 
+                type={showPassword ? "text" : "password"} 
+                value={confirmPassword} 
+                onChange={(e) => setConfirmPassword(e.target.value)} 
+                required
+                className="w-full p-3 rounded-lg bg-[#1a1a20] border border-white/10 text-white text-sm focus:outline-none focus:border-red-500 font-mono"
+                placeholder="••••••••"
+              />
+            </div>
+          )}
+
+          {/* Forgot Password Link */}
+          {!isSignUp && !isForgotPassword && (
+            <div className="text-right mb-6 -mt-2">
+              <button 
+                type="button"
+                onClick={() => { setIsForgotPassword(true); setErrorMsg(''); setSuccessMsg(''); }}
+                className="text-xs text-red-400 hover:underline cursor-pointer"
+              >
+                Forgot Password?
+              </button>
+            </div>
+          )}
 
           <button 
             type="submit" 
             disabled={loading}
             className="w-full py-3 bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase tracking-widest rounded-lg shadow-lg shadow-red-600/30 transition duration-200 cursor-pointer"
           >
-            {loading ? 'Please wait...' : (isSignUp ? 'Create Account' : 'Log In')}
+            {loading ? 'Please wait...' : (isForgotPassword ? 'Send Reset Link' : (isSignUp ? 'Create Account' : 'Log In'))}
           </button>
         </form>
 
         <div className="mt-6 text-center text-xs text-gray-400">
-          {isSignUp ? (
+          {isForgotPassword ? (
+            <p>
+              Remember your password?{' '}
+              <button onClick={() => { setIsForgotPassword(false); setErrorMsg(''); setSuccessMsg(''); }} className="text-red-500 font-bold hover:underline cursor-pointer">
+                Log In
+              </button>
+            </p>
+          ) : isSignUp ? (
             <p>
               Already have an account?{' '}
               <button onClick={() => setIsSignUp(false)} className="text-red-500 font-bold hover:underline cursor-pointer">

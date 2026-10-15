@@ -65,7 +65,7 @@ export const Location = () => {
               <div className="min-w-0">
                 <h4 className="font-bold text-sm sm:text-lg text-white font-orbitron">Timings</h4>
                 <p className="text-gray-400 text-xs mt-0.5 font-mono">
-                  5:00 PM - 10:00 PM (Daily Open)
+                  12:00 PM - 10:00 PM (Daily Open)
                 </p>
               </div>
             </div>
