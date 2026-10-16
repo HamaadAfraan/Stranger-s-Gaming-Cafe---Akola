@@ -29,16 +29,6 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
   // State for Selected Booking Receipt Modal
   const [selectedBooking, setSelectedBooking] = useState(null);
 
-  // State for Direct Cafe Payment Modal
-  const [showPayModal, setShowPayModal] = useState(false);
-  const [payAmount, setPayAmount] = useState('100');
-  const [payUtr, setPayUtr] = useState('');
-  const [payLoading, setPayLoading] = useState(false);
-  const [showUtrHelp, setShowUtrHelp] = useState(false);
-  const [activeAppHelp, setActiveAppHelp] = useState('phonepe');
-
-  const UPI_ID = 'strangersgamingcafe@upi';
-
   // Helper Functions for Format Parsing
   const formatDateString = (rawDate) => {
     if (!rawDate) return 'N/A';
@@ -293,81 +283,6 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     setPwdLoading(false);
   };
 
-  const getStandardUpiUri = (amount) => {
-    const cleanAmount = Number(amount) || 0;
-    return `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent("Stranger's Gaming Cafe")}&am=${cleanAmount}&cu=INR&tn=${encodeURIComponent('Cafe Direct Payment & Diamonds')}`;
-  };
-
-  const getAppUri = (app, amount) => {
-    const standardUri = getStandardUpiUri(amount);
-    if (app === 'phonepe') return `phonepe://${standardUri.replace('upi://', '')}`;
-    if (app === 'gpay') return `gpay://upi/pay?${standardUri.split('?')[1]}`;
-    if (app === 'paytm') return `paytmmp://pay?${standardUri.split('?')[1]}`;
-    return standardUri;
-  };
-
-  const getDynamicUpiQrUrl = (amount) => {
-    const cleanAmount = Number(amount) || 0;
-    const upiData = getStandardUpiUri(cleanAmount);
-    return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(upiData)}`;
-  };
-
-  const handleDirectPaymentConfirm = async (e) => {
-    e.preventDefault();
-    if (!payAmount || Number(payAmount) <= 0 || !payUtr || payUtr.trim().length < 6) {
-      alert('Please enter a valid amount and valid 6+ digit UTR/Transaction Ref Number.');
-      return;
-    }
-
-    setPayLoading(true);
-
-    try {
-      const numericAmt = parseInt(payAmount, 10);
-      const earnedDiamonds = Math.floor(numericAmt * 0.1);
-      
-      const { error: bookingErr } = await supabase.from('bookings').insert([{
-        user_id: session?.user?.id,
-        email: session?.user?.email || '',
-        customer_name: name || 'Gamer',
-        phone: phone || '',
-        amount: numericAmt,
-        utr: payUtr,
-        screen: 'Direct Cafe Pay',
-        team: '1 Player',
-        status: 'CONFIRMED',
-        bookingDate: new Date().toISOString().split('T')[0],
-        slot_time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      }]);
-
-      if (bookingErr) throw bookingErr;
-
-      const newGamerPoints = gamerPoints + earnedDiamonds;
-      const newRedeemable = redeemableDiamonds + earnedDiamonds;
-
-      setGamerPoints(newGamerPoints);
-      setRedeemableDiamonds(newRedeemable);
-
-      await supabase
-        .from('profiles')
-        .update({ 
-          gamer_points: newGamerPoints,
-          redeemable_diamonds: newRedeemable 
-        })
-        .eq('id', session?.user?.id);
-
-      alert(`Payment of ₹${numericAmt} recorded! Earned ${earnedDiamonds} Diamonds.`);
-      setShowPayModal(false);
-      setPayUtr('');
-
-      fetchUserBookings(session?.user?.email, session?.user?.id, phone);
-    } catch (err) {
-      console.error('Payment submitting error:', err);
-      alert('Failed to save payment record.');
-    }
-
-    setPayLoading(false);
-  };
-
   const now = new Date();
 
   const upcomingBookings = userBookings.filter((slot) => {
@@ -439,13 +354,6 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                 <span className="text-xs font-black uppercase tracking-widest">{calculatedTier}</span>
               </div>
             </div>
-
-            <button
-              onClick={() => setShowPayModal(true)}
-              className="px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg transition cursor-pointer flex items-center gap-2"
-            >
-              💳 Pay Cafe
-            </button>
 
             <button 
               onClick={onLogout}
@@ -547,7 +455,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                 <div className="bg-gradient-to-r from-red-950/60 to-purple-950/60 border border-red-500/30 p-6 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xl">
                   <div>
                     <h3 className="text-base font-bold font-orbitron text-white">Ready for a Gaming Session?</h3>
-                    <p className="text-xs text-gray-400 mt-1">Book PS5, Racing Simulator or PC screens and earn 10 Diamond per ₹100 spent (₹1000 = 100 Diamonds).</p>
+                    <p className="text-xs text-gray-400 mt-1">Book PS5, Racing Simulator or PC screens. Diamonds will be credited once admin verifies your payment and approves the booking.</p>
                   </div>
                   <button
                     onClick={onOpenBooking || onBack}
@@ -845,179 +753,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
         </div>
       </div>
 
-      {/* 💳 DIRECT UPI PAYMENT MODAL */}
-      {showPayModal && (
-        <div 
-          className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 z-50 animate-fadeIn"
-          onClick={() => setShowPayModal(false)}
-        >
-          <div 
-            className="bg-[#121216] border border-green-500/40 rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-4 shadow-2xl relative text-white max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-start border-b border-white/10 pb-3">
-              <div>
-                <h2 className="text-base font-black font-orbitron text-green-400 uppercase tracking-wider">
-                  PAY TO STRANGER'S GAMING CAFE
-                </h2>
-                <p className="text-[11px] text-gray-400 mt-0.5">
-                  Direct UPI Pay & Earn Diamonds
-                </p>
-              </div>
-              <button
-                onClick={() => setShowPayModal(false)}
-                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white text-lg transition cursor-pointer"
-              >
-                &times;
-              </button>
-            </div>
-
-            <div>
-              <label className="block text-xs uppercase tracking-wider mb-1 text-gray-300 font-mono">
-                Enter Amount to Pay (₹)
-              </label>
-              <input 
-                type="number"
-                min="1"
-                value={payAmount}
-                onChange={(e) => setPayAmount(e.target.value)}
-                className="w-full p-2.5 rounded-xl bg-[#1a1a20] border border-white/10 text-white font-mono font-bold text-base focus:outline-none focus:border-green-500"
-                placeholder="100"
-              />
-            </div>
-
-            <div className="bg-white/5 p-3 rounded-2xl border border-white/10 space-y-3">
-              <p className="text-[11px] font-mono text-cyan-400 font-bold text-center uppercase tracking-wider">
-                ⚡ Select App to Pay Directly
-              </p>
-
-              <div className="grid grid-cols-2 gap-2">
-                <a
-                  href={getAppUri('phonepe', payAmount)}
-                  className="p-2.5 rounded-xl bg-purple-900/60 border border-purple-500/50 hover:bg-purple-800 text-white font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
-                >
-                  <span>💜</span> PhonePe
-                </a>
-
-                <a
-                  href={getAppUri('gpay', payAmount)}
-                  className="p-2.5 rounded-xl bg-blue-900/60 border border-blue-500/50 hover:bg-blue-800 text-white font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
-                >
-                  <span>🌐</span> Google Pay
-                </a>
-
-                <a
-                  href={getAppUri('paytm', payAmount)}
-                  className="p-2.5 rounded-xl bg-cyan-900/60 border border-cyan-500/50 hover:bg-cyan-800 text-white font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
-                >
-                  <span>💙</span> Paytm
-                </a>
-
-                <a
-                  href={getStandardUpiUri(payAmount)}
-                  className="p-2.5 rounded-xl bg-emerald-900/60 border border-emerald-500/50 hover:bg-emerald-800 text-white font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
-                >
-                  <span>⚡</span> Any UPI App
-                </a>
-              </div>
-
-              <div className="text-center pt-2">
-                <div className="w-28 h-28 bg-white p-1.5 rounded-xl mx-auto flex items-center justify-center shadow-lg">
-                  <img
-                    src={getDynamicUpiQrUrl(payAmount)}
-                    alt="Dynamic Payment QR Code"
-                    className="w-24 h-24 object-contain mx-auto"
-                  />
-                </div>
-                <div className="text-sm font-black font-orbitron mt-2 text-emerald-400">
-                  Scan to Pay: ₹{payAmount || 0}
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-xs text-gray-300 font-mono font-semibold">
-                  Transaction Ref / UTR No. <span className="text-red-500">*</span>
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setShowUtrHelp(true)}
-                  className="text-[10px] text-cyan-400 hover:text-cyan-300 font-mono flex items-center gap-1 bg-cyan-950/60 border border-cyan-500/40 px-2 py-0.5 rounded-md cursor-pointer"
-                >
-                  <HelpCircle className="w-3 h-3 text-cyan-400" />
-                  Where to find?
-                </button>
-              </div>
-
-              <input
-                type="text"
-                placeholder="Enter 12-digit UPI UTR Number"
-                value={payUtr}
-                onChange={(e) => setPayUtr(e.target.value)}
-                className="w-full p-2.5 rounded-xl bg-[#1a1a20] border border-white/10 text-white font-mono text-xs focus:outline-none focus:border-green-500"
-              />
-            </div>
-
-            <button
-              onClick={handleDirectPaymentConfirm}
-              disabled={payLoading || !payUtr || payUtr.trim().length < 6}
-              className="w-full py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition cursor-pointer shadow-lg shadow-green-600/30 disabled:opacity-50"
-            >
-              {payLoading ? 'Processing...' : 'Confirm Payment & Claim Diamonds'}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* UTR HELP POPUP */}
-      {showUtrHelp && (
-        <div className="fixed inset-0 z-[10001] bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
-          <div className="bg-[#18181f] border border-cyan-500/50 rounded-2xl w-full max-w-md p-5 relative text-white shadow-2xl">
-            <button
-              onClick={() => setShowUtrHelp(false)}
-              className="absolute top-3 right-3 p-1.5 rounded-full bg-white/10 text-zinc-400 hover:text-white cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            <h4 className="text-base font-black font-orbitron text-cyan-400 flex items-center gap-2">
-              <HelpCircle className="w-4 h-4 text-purple-400" />
-              Transaction ID / UTR Help
-            </h4>
-
-            <div className="grid grid-cols-2 gap-2 mt-4">
-              {[
-                { id: 'phonepe', name: 'PhonePe' },
-                { id: 'gpay', name: 'Google Pay' },
-                { id: 'paytm', name: 'Paytm' },
-                { id: 'other', name: 'Other BHIM' },
-              ].map((app) => (
-                <button
-                  key={app.id}
-                  onClick={() => setActiveAppHelp(app.id)}
-                  className={`p-2 rounded-xl font-mono text-xs font-bold border transition-all cursor-pointer ${
-                    activeAppHelp === app.id
-                      ? 'bg-cyan-500 text-black border-cyan-400'
-                      : 'bg-white/5 text-zinc-400 border-white/10'
-                  }`}
-                >
-                  {app.name}
-                </button>
-              ))}
-            </div>
-
-            <button
-              onClick={() => setShowUtrHelp(false)}
-              className="mt-4 w-full py-2.5 rounded-xl bg-cyan-500 text-black font-orbitron font-bold text-xs cursor-pointer hover:bg-cyan-400"
-            >
-              GOT IT
-            </button>
-          </div>
-        </div>
-      )}
-
-{/* 🧾 BOOKING DETAILS RECEIPT MODAL */}
+      {/* 🧾 BOOKING DETAILS RECEIPT MODAL */}
       {selectedBooking && (
         <div 
           className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fadeIn"
@@ -1133,5 +869,3 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     </div>
   );
 }
-
-
