@@ -10,7 +10,7 @@ import ets2Trailer from '../assets/trailer/Euro Truck Simulator.mp4';
 import fc26Trailer from '../assets/trailer/fc.mp4';
 import wwePainTrailer from '../assets/trailer/wwe htwp.mp4';
 import wwe2k26Trailer from '../assets/trailer/wwe 2k26.mp4';
-import cricketTrailer from '../assets/trailer/cricket.mp4';
+import cricketTrailer from '../assets/trailer/Cricket.mp4';
 
 import tekken from '../assets/trailer/tekken.mp4';
 import mortalTrailer from '../assets/trailer/mortal kombat.mp4'; 
