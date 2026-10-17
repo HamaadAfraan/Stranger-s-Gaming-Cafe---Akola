@@ -36,7 +36,6 @@ import gow2Trailer from '../assets/trailer/god of war 3 remastered.mp4';
 import spiderman2Trailer from '../assets/trailer/spiderman.mp4';
 import ghostTrailer from '../assets/trailer/ghost.mp4';
 import unchartedTrailer from '../assets/trailer/unchartered.mp4';
-import React, { useState, useMemo, useRef } from 'react';
 
 // Helper function: Resolves local asset image path (Vite / React support)
 const getCoverImage = (filename) => {
