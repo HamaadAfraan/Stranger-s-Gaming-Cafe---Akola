@@ -36,6 +36,7 @@ import gow2Trailer from '../assets/trailer/god of war 3 remastered.mp4';
 import spiderman2Trailer from '../assets/trailer/spiderman.mp4';
 import ghostTrailer from '../assets/trailer/ghost.mp4';
 import unchartedTrailer from '../assets/trailer/unchartered.mp4';
+import React, { useState, useMemo, useRef } from 'react';
 
 // Helper function: Resolves local asset image path (Vite / React support)
 const getCoverImage = (filename) => {
@@ -381,7 +382,7 @@ const isVideoUrl = (url) => {
   return str.endsWith('.mp4') || str.includes('.mp4?') || str.includes('data:video/mp4');
 };
 
-// Reusable Game Card Component to handle hover play/pause lifecycle cleanly
+// Reusable Game Card Component - Optimized with preload="auto" for instant hover playback
 const GameCard = ({ game, onOpenModal }) => {
   const videoRef = useRef(null);
 
@@ -419,7 +420,7 @@ const GameCard = ({ game, onOpenModal }) => {
             muted
             loop
             playsInline
-            preload="none"
+            preload="auto" /* <-- Instant loading for fast playback */
             className="w-full h-full object-cover hidden group-hover:block transition-opacity duration-300"
           />
         ) : (
@@ -468,7 +469,7 @@ export const GamesLibrary = () => {
   const [selectedPlayers, setSelectedPlayers] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeModalGame, setActiveModalGame] = useState(null);
-  const [showAll, setShowAll] = useState(false); // State for Show More / Show Less
+  const [showAll, setShowAll] = useState(false);
 
   // Accurate Player Filter Logic
   const checkPlayerMatch = (gamePlayers, selectedFilter) => {
@@ -490,7 +491,6 @@ export const GamesLibrary = () => {
     });
   }, [selectedPlatform, selectedGenre, selectedPlayers, searchQuery]);
 
-  // Slicing games to show only top 8 initially unless search/filters are applied or 'showAll' is true
   const isFilteringActive = selectedPlatform !== 'all' || selectedGenre !== 'All' || selectedPlayers !== 'All' || searchQuery.trim() !== '';
   const displayedGames = showAll || isFilteringActive ? filteredGames : filteredGames.slice(0, 8);
 
