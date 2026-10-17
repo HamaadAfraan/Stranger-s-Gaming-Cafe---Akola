@@ -1,12 +1,47 @@
-import React, { useState, useMemo } from 'react';
-import mortalTrailer from '../assets/trailer/mortal_kombat.gif';
+import React, { useState, useMemo, useRef } from 'react';
+
+// ==========================================
+// ALL TRAILER VIDEO / GIF IMPORTS
+// ==========================================
+import forzaTrailer from '../assets/trailer/forza.mp4';
+import gt7Trailer from '../assets/trailer/gran tourismo.mp4';
+import ets2Trailer from '../assets/trailer/Euro Truck Simulator.mp4';
+
+import fc26Trailer from '../assets/trailer/fc.mp4';
+import wwePainTrailer from '../assets/trailer/wwe htwp.mp4';
+import wwe2k26Trailer from '../assets/trailer/wwe 2k26.mp4';
+import cricketTrailer from '../assets/trailer/cricket.mp4';
+
+import tekken from '../assets/trailer/tekken.mp4';
+import mortalTrailer from '../assets/trailer/mortal kombat.mp4'; 
+
+import valorantTrailer from '../assets/trailer/valorant.mp4';
+import pubgTrailer from '../assets/trailer/pubg.mp4';
+import codBoTrailer from '../assets/trailer/Call_of_Duty.mp4';
+import codMw3Trailer from '../assets/trailer/Call_of_Duty.mp4';
+
+import gta5Trailer from '../assets/trailer/gta v.mp4';
+import gta6Trailer from '../assets/trailer/gta v.mp4';
+import gtaSaTrailer from '../assets/trailer/gta sa.mp4';
+import gtaVcTrailer from '../assets/trailer/gta vc.mp4';
+import rdr2Trailer from '../assets/trailer/red dead.mp4';
+import farCry6Trailer from '../assets/trailer/Far_Cry.mp4';
+import assassinTrailer from '../assets/trailer/Assassins_Creed.mp4';
+
+import it2Trailer from '../assets/trailer/it takes two.mp4';
+import aWayOutTrailer from '../assets/trailer/A_Way_Out.mp4';
+
+import gowRagTrailer from '../assets/trailer/god of war ragnarok.mp4';
+import gow2Trailer from '../assets/trailer/god of war 3 remastered.mp4';
+import spiderman2Trailer from '../assets/trailer/spiderman.mp4';
+import ghostTrailer from '../assets/trailer/ghost.mp4';
+import unchartedTrailer from '../assets/trailer/unchartered.mp4';
 
 // Helper function: Resolves local asset image path (Vite / React support)
 const getCoverImage = (filename) => {
   try {
     return new URL(`../assets/games/${filename}`, import.meta.url).href;
   } catch (e) {
-    // Fallback placeholder image if local asset is missing
     return "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop";
   }
 };
@@ -24,307 +59,408 @@ const PLATFORMS = [
 const GENRES = ['All', 'Action/Adventure', 'Fighting', 'Sports', 'Racing', 'FPS', 'Open World', 'Co-Op / Arcade', 'Simulation'];
 const PLAYER_COUNTS = ['All', '1P', '2P', '3P-4P'];
 
+// --- SORTED WITH TRENDING / POPULAR GAMES FIRST ---
 const GAMES_DATA = [
-  // --- RACING & SIMULATION ---
+  // Top Trending / Popular Block
   {
     id: 1,
-    name: "Forza Horizon 5",
-    genre: "Racing",
-    players: "1P",
-    isPopular: true,
-    platforms: ['car-simulator', 'pc-arena', 'ps5-vip-55'],
-    description: "High-speed open-world racing game featuring breathtaking Mexican landscapes and ultimate supercar drives.",
-    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
-    coverImage: getCoverImage("forza.jpg")
-  },
-  {
-    id: 2,
-    name: "Gran Turismo 7",
-    genre: "Simulation",
-    players: "1-2P",
-    isPopular: true,
-    platforms: ['car-simulator', 'ps5-vip-55', 'ps5-reg-43'],
-    description: "Ultra-realistic driving simulator delivering authentic motorsport racing across real-world circuits.",
-    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
-    coverImage: getCoverImage("gran-tourismo.jpg")
-  },
-  {
-    id: 32,
-    name: "Euro Truck Simulator 2",
-    genre: "Simulation",
-    players: "1P",
-    isPopular: true,
-    platforms: ['truck-simulator', 'pc-arena'],
-    description: "Drive heavy trucks across European highways, deliver cargo, and expand your freight company.",
-    mediaUrl: "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop",
-    coverImage: getCoverImage("ets2.jpg")
-  },
-  {
-    id: 3,
-    name: "Bus Simulator 21: Next Stop",
-    genre: "Simulation",
-    players: "1P",
-    isPopular: false,
-    platforms: ['car-simulator', 'pc-arena', 'ps5-vip-55', 'ps5-reg-43'],
-    description: "Operate city buses, manage timetable routes, and follow realistic city traffic regulations.",
-    mediaUrl: "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop",
-    coverImage: getCoverImage("bus.jpg")
-  },
-  {
-    id: 4,
-    name: "SnowRunner",
-    genre: "Simulation",
-    players: "1P",
-    isPopular: false,
-    platforms: ['truck-simulator', 'pc-arena'],
-    description: "Conquer hazardous terrain with heavy off-road vehicles through deep mud, snow, and steep inclines.",
-    mediaUrl: "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop",
-    coverImage: getCoverImage("snow.jpg")
-  },
-  {
-    id: 21,
-    name: "Asphalt Legends Unite",
-    genre: "Racing",
-    players: "1-4P",
-    isPopular: true,
-    platforms: ['car-simulator', 'ps5-vip-55', 'ps5-reg-43', 'ps4', 'pc-arena'],
-    description: "High-octane arcade racing featuring wild stunts, nitro boosts, and local split-screen multiplayer action.",
-    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
-    coverImage: getCoverImage("asphalt.jpg")
-  },
-
-  // --- SPORTS & WRESTLING ---
-  {
-    id: 5,
-    name: "EA Sports FC 26",
-    genre: "Sports",
-    players: "1-4P",
-    isPopular: true,
-    platforms: ['ps5-vip-55', 'ps5-reg-43', 'ps4'],
-    description: "Premier football simulation featuring world-class clubs and competitive local multiplayer matches.",
-    mediaUrl: "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?q=80&w=800&auto=format&fit=crop",
-    coverImage: getCoverImage("fc26.jpg")
-  },
-  {
-    id: 6,
-    name: "WWE SmackDown! Here Comes the Pain",
-    genre: "Co-Op / Arcade",
-    players: "1-4P",
-    isPopular: true,
-    platforms: ['ps4'],
-    description: "Nostalgic arcade wrestling classic featuring legendary WWE superstars and chaotic ring action.",
-    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
-    coverImage: getCoverImage("wwe-pain.avif")
-  },
-  {
-    id: 7,
-    name: "WWE 2K26",
-    genre: "Sports",
-    players: "1-4P",
-    isPopular: true,
-    platforms: ['ps5-vip-55', 'ps5-reg-43', 'ps4'],
-    description: "Modern professional wrestling simulator built with realistic combat physics and stunning visuals.",
-    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
-    coverImage: getCoverImage("wwe.jpg")
-  },
-
-  // --- FIGHTING GAMES ---
-  {
-    id: 28,
-    name: "Urban Reign",
-    genre: "Fighting",
-    players: "1-4P",
-    isPopular: true,
-    platforms: ['ps4', 'ps5-vip-55', 'ps5-reg-43'],
-    description: "Fast-paced street brawl game featuring multi-fighter team battles and devastating combo moves.",
-    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
-    coverImage: getCoverImage("urban.jpg")
-  },
-  {
-    id: 9,
-    name: "Tekken 8",
-    genre: "Fighting",
-    players: "1-2P",
-    isPopular: true,
-    platforms: ['ps5-vip-55', 'ps5-reg-43'],
-    description: "Next-gen 3D fighting tournament with aggressive Heat System mechanics and legendary martial artists.",
-    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
-    coverImage: getCoverImage("tekken.webp")
-  },
-  {
-    id: 10,
-    name: "Mortal Kombat 1",
-    genre: "Fighting",
-    players: "1-2P",
-    isPopular: true,
-    platforms: ['ps5-vip-55', 'ps5-reg-43', 'ps4'],
-    description: "Visceral 1v1 fighter featuring cinematic Fatalities, Kameo assistance, and a rebooted universe story.",
-    mediaUrl: mortalTrailer,
-    coverImage: getCoverImage("mortal.avif")
-  },
-
-  // --- ESPORTS & FPS ---
-  {
-    id: 12,
-    name: "Valorant",
-    genre: "FPS",
-    players: "1P",
-    isPopular: true,
-    platforms: ['pc-arena'],
-    description: "5v5 character-based tactical shooter combining precise gunplay with tactical character abilities.",
-    mediaUrl: "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop",
-    coverImage: getCoverImage("valorant.jpg")
-  },
-  {
-    id: 14,
-    name: "Call of Duty: Black Ops",
-    genre: "FPS",
-    players: "1-4P",
-    isPopular: true,
-    platforms: ['pc-arena', 'ps5-vip-55', 'ps5-reg-43'],
-    description: "Action-packed tactical shooter with thrilling stealth combat, military campaign, and zombie survival.",
-    mediaUrl: "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop",
-    coverImage: getCoverImage("call-of-duty.jpg")
-  },
-  {
-    id: 29,
-    name: "Call of Duty: Modern Warfare III",
-    genre: "FPS",
-    players: "1-2P",
-    isPopular: true,
-    platforms: ['pc-arena', 'ps5-vip-55', 'ps5-reg-43', 'ps4'],
-    description: "Modern military shooter delivering high-speed gunfights, campaign missions, and multiplayer warfare.",
-    mediaUrl: "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop",
-    coverImage: getCoverImage("call_of_duty_mw3.webp")
-  },
-
-  // --- OPEN WORLD & GTA TITLES ---
-  {
-    id: 15,
     name: "GTA V",
     genre: "Open World",
     players: "1P",
     isPopular: true,
     platforms: ['pc-arena', 'ps5-vip-55', 'ps5-reg-43', 'ps4'],
     description: "Massive open-world action title filled with driving, shooting, bank heists, and vast exploration.",
-    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
+    mediaUrl: gta5Trailer,
     coverImage: getCoverImage("gta-v.jpg")
   },
   {
-    id: 30,
-    name: "GTA: San Andreas",
-    genre: "Open World",
-    players: "1P",
-    isPopular: true,
-    platforms: ['pc-arena', 'ps5-vip-55', 'ps5-reg-43', 'ps4'],
-    description: "Iconic crime saga where CJ navigates gang warfare, drive-bys, and story missions across San Andreas.",
-    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
-    coverImage: getCoverImage("gta-sa.jpg")
-  },
-  {
-    id: 31,
-    name: "GTA: Vice City",
-    genre: "Open World",
-    players: "1P",
-    isPopular: true,
-    platforms: ['pc-arena', 'ps5-vip-55', 'ps5-reg-43', 'ps4'],
-    description: "80s-themed crime adventure following Tommy Vercetti's rise through neon-lit Vice City.",
-    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
-    coverImage: getCoverImage("gtavc.png")
-  },
-
-  // --- CO-OP, PARTY & ARCADE ---
-  {
-    id: 24,
-    name: "Rocket League",
-    genre: "Co-Op / Arcade",
-    players: "1-4P",
-    isPopular: true,
-    platforms: ['ps5-vip-55', 'ps5-reg-43', 'ps4', 'pc-arena'],
-    description: "High-octane hybrid of arcade-style soccer and rocket-powered vehicular mayhem.",
-    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
-    coverImage: getCoverImage("rocket.jpg")
-  },
-  {
-    id: 16,
-    name: "It Takes Two",
-    genre: "Co-Op / Arcade",
-    players: "2P",
-    isPopular: true,
-    platforms: ['ps5-vip-55', 'ps5-reg-43', 'pc-arena'],
-    description: "Pure cooperative platformer adventure designed strictly for two players to solve creative puzzles.",
-    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
-    coverImage: getCoverImage("it2.webp")
-  },
-  {
-    id: 19,
-    name: "A Way Out",
-    genre: "Co-Op / Arcade",
-    players: "2P",
-    isPopular: true,
-    platforms: ['ps5-vip-55', 'ps5-reg-43', 'ps4'],
-    description: "Split-screen story adventure centered around two inmates attempting a daring prison breakout.",
-    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
-    coverImage: getCoverImage("a_way_out.jpg")
-  },
-  {
-    id: 25,
-    name: "Overcooked! All You Can Eat",
-    genre: "Co-Op / Arcade",
-    players: "1-4P",
-    isPopular: true,
-    platforms: ['ps5-vip-55', 'ps5-reg-43', 'ps4', 'pc-arena'],
-    description: "Chaotic party cooking action where players team up to prepare meals in absurd, moving kitchens.",
-    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
-    coverImage: getCoverImage("overcook.webp")
-  },
-  {
-    id: 26,
-    name: "Sackboy: A Big Adventure",
-    genre: "Co-Op / Arcade",
-    players: "1-4P",
-    isPopular: true,
-    platforms: ['ps5-vip-55', 'ps5-reg-43', 'ps4'],
-    description: "Charming 3D platforming adventure filled with fun obstacle courses and multiplayer co-op.",
-    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
-    coverImage: getCoverImage("sack.jpg")
-  },
-
-  // --- STORY & ACTION / ADVENTURE ---
-  {
-    id: 17,
-    name: "God of War Ragnarök",
+    id: 2,
+    name: "GTA 6",
     genre: "Action/Adventure",
     players: "1P",
     isPopular: true,
     platforms: ['ps5-vip-55', 'ps5-reg-43'],
-    description: "Epic Norse saga following Kratos and Atreus as they battle legendary gods and mythical monsters.",
-    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
-    coverImage: getCoverImage("god-of-war.webp")
+    description: "Experience the open-world action and adventure of the next installment in the Grand Theft Auto series.",
+    mediaUrl: gta6Trailer,
+    coverImage: getCoverImage("gta-6.avif")
   },
   {
-    id: 76,
-    name: "God of War 2",
-    genre: "Action/Adventure",
-    players: "1P",
+    id: 3,
+    name: "Tekken 8",
+    genre: "Fighting",
+    players: "1-2P",
     isPopular: true,
-    platforms: ['ps4'],
-    description: "Classic hack-and-slash adventure featuring Kratos' vengeance against the Greek Olympian gods.",
-    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
-    coverImage: getCoverImage("god2.jpg")
+    platforms: ['ps5-vip-55', 'ps5-reg-43'],
+    description: "Next-gen 3D fighting tournament with aggressive Heat System mechanics and legendary martial artists.",
+    mediaUrl: tekken,
+    coverImage: getCoverImage("tekken.webp")
   },
   {
-    id: 18,
+    id: 4,
     name: "Spider-Man 2",
     genre: "Action/Adventure",
     players: "1P",
     isPopular: true,
     platforms: ['ps5-vip-55', 'ps5-reg-43'],
     description: "Swing through Marvel's New York as Peter Parker & Miles Morales to fight formidable villains like Venom.",
-    mediaUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop",
+    mediaUrl: spiderman2Trailer,
     coverImage: getCoverImage("spiderman.jpeg")
+  },
+  {
+    id: 5,
+    name: "God of War Ragnarök",
+    genre: "Action/Adventure",
+    players: "1P",
+    isPopular: true,
+    platforms: ['ps5-vip-55', 'ps5-reg-43'],
+    description: "Epic Norse saga following Kratos and Atreus as they battle legendary gods and mythical monsters.",
+    mediaUrl: gowRagTrailer,
+    coverImage: getCoverImage("god-of-war.webp")
+  },
+  {
+    id: 6,
+    name: "Red Dead Redemption 2",
+    genre: "Open World",
+    players: "1P",
+    isPopular: true,
+    platforms: ['ps4'],
+    description: "Epic tale of outlaw Arthur Morgan and the Van der Linde gang across the dying American frontier.",
+    mediaUrl: rdr2Trailer,
+    coverImage: getCoverImage("rdr2.jpeg")
+  },
+  {
+    id: 7,
+    name: "Valorant",
+    genre: "FPS",
+    players: "1P",
+    isPopular: true,
+    platforms: ['pc-arena'],
+    description: "5v5 character-based tactical shooter combining precise gunplay with tactical character abilities.",
+    mediaUrl: valorantTrailer,
+    coverImage: getCoverImage("valorant.jpg")
+  },
+  {
+    id: 8,
+    name: "PUBG: Battlegrounds",
+    genre: "FPS",
+    players: "1-4P",
+    isPopular: true,
+    platforms: ['pc-arena', 'ps5-vip-55'],
+    description: "Intense battle royale shooter where 100 players fight for survival on sprawling tactical maps.",
+    mediaUrl: pubgTrailer,
+    coverImage: getCoverImage("pubg.jpg")
+  },
+
+  // Other Games
+  {
+    id: 9,
+    name: "Forza Horizon 5",
+    genre: "Racing",
+    players: "1P",
+    isPopular: false,
+    platforms: ['car-simulator', 'truck-simulator'],
+    description: "High-speed open-world racing game featuring breathtaking Mexican landscapes and ultimate supercar drives.",
+    mediaUrl: forzaTrailer,
+    coverImage: getCoverImage("forza.jpg")
+  },
+  {
+    id: 10,
+    name: "Gran Turismo 7",
+    genre: "Simulation",
+    players: "1-2P",
+    isPopular: false,
+    platforms: ['car-simulator'],
+    description: "Ultra-realistic driving simulator delivering authentic motorsport racing across real-world circuits.",
+    mediaUrl: gt7Trailer,
+    coverImage: getCoverImage("gran-tourismo.jpg")
+  },
+  {
+    id: 11,
+    name: "Euro Truck Simulator 2",
+    genre: "Simulation",
+    players: "1P",
+    isPopular: false,
+    platforms: ['truck-simulator'],
+    description: "Drive heavy trucks across European highways, deliver cargo, and expand your freight company.",
+    mediaUrl: ets2Trailer,
+    coverImage: getCoverImage("ets2.jpg")
+  },
+  {
+    id: 12,
+    name: "EA Sports FC 26",
+    genre: "Sports",
+    players: "1-4P",
+    isPopular: false,
+    platforms: ['ps5-vip-55', 'ps5-reg-43', 'ps4'],
+    description: "Premier football simulation featuring world-class clubs and competitive local multiplayer matches.",
+    mediaUrl: fc26Trailer,
+    coverImage: getCoverImage("fc26.jpg")
+  },
+  {
+    id: 13,
+    name: "Cricket 24",
+    genre: "Sports",
+    players: "1-4P",
+    isPopular: false,
+    platforms: ['ps5-vip-55', 'ps5-reg-43'],
+    description: "Authentic professional cricket simulation featuring deep career modes, licensed teams, and stadium action.",
+    mediaUrl: cricketTrailer,
+    coverImage: getCoverImage("cricket24.jpg")
+  },
+  {
+    id: 14,
+    name: "WWE SmackDown! Here Comes the Pain",
+    genre: "Co-Op / Arcade",
+    players: "1-4P",
+    isPopular: false,
+    platforms: ['ps4'],
+    description: "Nostalgic arcade wrestling classic featuring legendary WWE superstars and chaotic ring action.",
+    mediaUrl: wwePainTrailer,
+    coverImage: getCoverImage("wwe-pain.avif")
+  },
+  {
+    id: 15,
+    name: "WWE 2K26",
+    genre: "Sports",
+    players: "1-4P",
+    isPopular: false,
+    platforms: ['ps5-vip-55', 'ps5-reg-43'],
+    description: "Modern professional wrestling simulator built with realistic combat physics and stunning visuals.",
+    mediaUrl: wwe2k26Trailer,
+    coverImage: getCoverImage("wwe.jpg")
+  },
+  {
+    id: 16,
+    name: "Mortal Kombat 1",
+    genre: "Fighting",
+    players: "1-2P",
+    isPopular: false,
+    platforms: ['ps5-vip-55', 'ps5-reg-43'],
+    description: "Visceral 1v1 fighter featuring cinematic Fatalities, Kameo assistance, and a rebooted universe story.",
+    mediaUrl: mortalTrailer,
+    coverImage: getCoverImage("mortal.avif")
+  },
+  {
+    id: 17,
+    name: "Call of Duty: Black Ops",
+    genre: "FPS",
+    players: "1-4P",
+    isPopular: false,
+    platforms: ['ps5-vip-55'],
+    description: "Action-packed tactical shooter with thrilling stealth combat, military campaign, and zombie survival.",
+    mediaUrl: codBoTrailer,
+    coverImage: getCoverImage("call-of-duty.jpg")
+  },
+  {
+    id: 18,
+    name: "Call of Duty: Modern Warfare III",
+    genre: "FPS",
+    players: "1-2P",
+    isPopular: false,
+    platforms: ['pc-arena', 'ps5-vip-55', 'ps4'],
+    description: "Modern military shooter delivering high-speed gunfights, campaign missions, and multiplayer warfare.",
+    mediaUrl: codMw3Trailer,
+    coverImage: getCoverImage("call_of_duty_mw3.webp")
+  },
+  {
+    id: 19,
+    name: "GTA: San Andreas",
+    genre: "Open World",
+    players: "1P",
+    isPopular: false,
+    platforms: ['pc-arena', 'ps4'],
+    description: "Iconic crime saga where CJ navigates gang warfare, drive-bys, and story missions across San Andreas.",
+    mediaUrl: gtaSaTrailer,
+    coverImage: getCoverImage("gta-sa.jpg")
+  },
+  {
+    id: 20,
+    name: "GTA: Vice City",
+    genre: "Open World",
+    players: "1P",
+    isPopular: false,
+    platforms: ['ps4'],
+    description: "80s-themed crime adventure following Tommy Vercetti's rise through neon-lit Vice City.",
+    mediaUrl: gtaVcTrailer,
+    coverImage: getCoverImage("gtavc.png")
+  },
+  {
+    id: 21,
+    name: "Red Dead Redemption 3",
+    genre: "Open World",
+    players: "1P",
+    isPopular: false,
+    platforms: ['pc-arena', 'ps5-vip-55'],
+    description: "Epic tale of outlaw Arthur Morgan and the Van der Linde gang across the dying American frontier.",
+    mediaUrl: rdr2Trailer,
+    coverImage: getCoverImage("red-dead-redemption.jpg")
+  },
+  {
+    id: 22,
+    name: "Far Cry 6",
+    genre: "Open World",
+    players: "1-2P",
+    isPopular: false,
+    platforms: ['pc-arena', 'ps5-vip-55'],
+    description: "Join a guerrilla revolution to liberate a tropical paradise from a ruthless modern dictator.",
+    mediaUrl: farCry6Trailer,
+    coverImage: getCoverImage("far cry 6.jpg")
+  },
+  {
+    id: 23,
+    name: "Assassin's Creed Valhalla",
+    genre: "Open World",
+    players: "1P",
+    isPopular: false,
+    platforms: ['pc-arena', 'ps5-vip-55'],
+    description: "Become Eivor, a legendary Viking raider, and lead your clan to build a new home in Dark Age England.",
+    mediaUrl: assassinTrailer,
+    coverImage: getCoverImage("assasian.jpg")
+  },
+  {
+    id: 24,
+    name: "It Takes Two",
+    genre: "Co-Op / Arcade",
+    players: "2P",
+    isPopular: false,
+    platforms: ['ps5-reg-43', 'ps4'],
+    description: "Pure cooperative platformer adventure designed strictly for two players to solve creative puzzles.",
+    mediaUrl: it2Trailer,
+    coverImage: getCoverImage("it2.webp")
+  },
+  {
+    id: 25,
+    name: "A Way Out",
+    genre: "Co-Op / Arcade",
+    players: "2P",
+    isPopular: false,
+    platforms: ['ps5-reg-43'],
+    description: "Split-screen story adventure centered around two inmates attempting a daring prison breakout.",
+    mediaUrl: aWayOutTrailer,
+    coverImage: getCoverImage("a_way_out.jpg")
+  },
+  {
+    id: 26,
+    name: "God of War 2",
+    genre: "Action/Adventure",
+    players: "1P",
+    isPopular: false,
+    platforms: ['ps4'],
+    description: "Classic hack-and-slash adventure featuring Kratos' vengeance against the Greek Olympian gods.",
+    mediaUrl: gow2Trailer,
+    coverImage: getCoverImage("god2.jpg")
+  },
+  {
+    id: 27,
+    name: "Ghost of Tsushima",
+    genre: "Action/Adventure",
+    players: "1P",
+    isPopular: false,
+    platforms: ['ps5-vip-55'],
+    description: "Forge a new path and wage an unconventional war for the freedom of Tsushima as samurai Jin Sakai.",
+    mediaUrl: ghostTrailer,
+    coverImage: getCoverImage("ghost of tsushima.png")
+  },
+  {
+    id: 28,
+    name: "Uncharted: Legacy of Thieves Collection",
+    genre: "Action/Adventure",
+    players: "1P",
+    isPopular: false,
+    platforms: ['ps5-vip-55', 'ps5-reg-43'],
+    description: "Seek fortune and leave your mark on the map in thrilling cinematic treasure-hunting adventures.",
+    mediaUrl: unchartedTrailer,
+    coverImage: getCoverImage("uncharted.jpg")
   }
 ];
+
+// Helper function to detect if media URL is a video file (.mp4, blob, or imported asset)
+const isVideoUrl = (url) => {
+  if (!url) return false;
+  const str = String(url).toLowerCase();
+  return str.endsWith('.mp4') || str.includes('.mp4?') || str.includes('data:video/mp4');
+};
+
+// Reusable Game Card Component to handle hover play/pause lifecycle cleanly
+const GameCard = ({ game, onOpenModal }) => {
+  const videoRef = useRef(null);
+
+  const handleMouseEnter = () => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.play().catch(() => {});
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+    }
+  };
+
+  return (
+    <div
+      className="bg-[#0d0e12] border border-white/10 rounded-2xl overflow-hidden hover:border-cyan-400/50 transition duration-300 group flex flex-col justify-between"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-black/50">
+        <img
+          src={game.coverImage}
+          alt={game.name}
+          className="w-full h-full object-cover group-hover:hidden transition-opacity duration-300"
+        />
+
+        {isVideoUrl(game.mediaUrl) ? (
+          <video
+            ref={videoRef}
+            src={game.mediaUrl}
+            muted
+            loop
+            playsInline
+            preload="none"
+            className="w-full h-full object-cover hidden group-hover:block transition-opacity duration-300"
+          />
+        ) : (
+          <img
+            src={game.mediaUrl}
+            alt={`${game.name} Preview`}
+            className="w-full h-full object-cover hidden group-hover:block transition-opacity duration-300"
+          />
+        )}
+
+        {game.isPopular && (
+          <span className="absolute top-2.5 right-2.5 bg-red-600/90 text-white text-[9px] sm:text-[10px] font-bold uppercase px-2 py-0.5 rounded shadow">
+            Popular 🔥
+          </span>
+        )}
+
+        <span className="absolute bottom-2.5 left-2.5 bg-black/70 backdrop-blur-md text-cyan-400 border border-cyan-400/30 text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded">
+          {game.genre}
+        </span>
+      </div>
+
+      <div className="p-3.5 sm:p-4 flex-1 flex flex-col justify-between space-y-2.5 sm:space-y-3">
+        <div>
+          <h3 className="text-sm sm:text-lg font-bold text-white group-hover:text-cyan-400 transition-colors line-clamp-1">
+            {game.name}
+          </h3>
+          <div className="text-[11px] sm:text-xs text-gray-400 flex items-center gap-2 mt-0.5 sm:mt-1">
+            <span>👥 {game.players}</span>
+          </div>
+        </div>
+
+        <button
+          onClick={() => onOpenModal(game)}
+          className="w-full py-2 bg-cyan-400/10 hover:bg-cyan-400 text-cyan-400 hover:text-black border border-cyan-400/30 font-semibold text-xs rounded-xl transition duration-200 mt-1 cursor-pointer"
+        >
+          View Details & Consoles
+        </button>
+      </div>
+    </div>
+  );
+};
 
 export const GamesLibrary = () => {
   const [selectedPlatform, setSelectedPlatform] = useState('all');
@@ -332,6 +468,7 @@ export const GamesLibrary = () => {
   const [selectedPlayers, setSelectedPlayers] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeModalGame, setActiveModalGame] = useState(null);
+  const [showAll, setShowAll] = useState(false); // State for Show More / Show Less
 
   // Accurate Player Filter Logic
   const checkPlayerMatch = (gamePlayers, selectedFilter) => {
@@ -353,6 +490,10 @@ export const GamesLibrary = () => {
     });
   }, [selectedPlatform, selectedGenre, selectedPlayers, searchQuery]);
 
+  // Slicing games to show only top 8 initially unless search/filters are applied or 'showAll' is true
+  const isFilteringActive = selectedPlatform !== 'all' || selectedGenre !== 'All' || selectedPlayers !== 'All' || searchQuery.trim() !== '';
+  const displayedGames = showAll || isFilteringActive ? filteredGames : filteredGames.slice(0, 8);
+
   return (
     <section id="games" className="py-10 sm:py-20 px-3 sm:px-6 max-w-7xl mx-auto border-t border-white/10 bg-[#070709] text-white font-sans">
       
@@ -371,7 +512,7 @@ export const GamesLibrary = () => {
         {PLATFORMS.map((plat) => (
           <button
             key={plat.id}
-            onClick={() => setSelectedPlatform(plat.id)}
+            onClick={() => { setSelectedPlatform(plat.id); setShowAll(false); }}
             className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-lg whitespace-nowrap transition-all border cursor-pointer ${
               selectedPlatform === plat.id
                 ? 'bg-cyan-400 text-black border-cyan-400 font-bold shadow-[0_0_15px_rgba(34,211,238,0.4)]'
@@ -390,10 +531,9 @@ export const GamesLibrary = () => {
             type="text"
             placeholder="Search game title (e.g. Tekken, GTA)..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => { setSearchQuery(e.target.value); setShowAll(false); }}
             className="w-full bg-[#16171f] border border-white/10 rounded-xl px-3.5 sm:px-4 py-2.5 sm:py-3 pl-9 sm:pl-10 text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition"
           />
-          {/* Fixed SVG Path Command Error */}
           <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 absolute left-3 top-3.5 sm:top-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
@@ -405,7 +545,7 @@ export const GamesLibrary = () => {
           {GENRES.map((genre) => (
             <button
               key={genre}
-              onClick={() => setSelectedGenre(genre)}
+              onClick={() => { setSelectedGenre(genre); setShowAll(false); }}
               className={`px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-medium transition whitespace-nowrap shrink-0 sm:shrink cursor-pointer ${
                 selectedGenre === genre
                   ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-400/40'
@@ -423,7 +563,7 @@ export const GamesLibrary = () => {
           {PLAYER_COUNTS.map((p) => (
             <button
               key={p}
-              onClick={() => setSelectedPlayers(p)}
+              onClick={() => { setSelectedPlayers(p); setShowAll(false); }}
               className={`px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-medium transition whitespace-nowrap shrink-0 sm:shrink cursor-pointer ${
                 selectedPlayers === p
                   ? 'bg-red-500/20 text-red-400 border border-red-500/40 font-bold'
@@ -437,7 +577,7 @@ export const GamesLibrary = () => {
       </div>
 
       <div className="text-[11px] sm:text-xs text-gray-400 mb-3 sm:mb-4 font-mono">
-        Showing <span className="text-cyan-400 font-bold">{filteredGames.length}</span> games
+        Showing <span className="text-cyan-400 font-bold">{displayedGames.length}</span> of <span className="text-white font-bold">{filteredGames.length}</span> games
       </div>
 
       {/* Game Cards Grid */}
@@ -446,70 +586,52 @@ export const GamesLibrary = () => {
           No games found matching your filters.
         </div>
       ) : (
-        <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5">
-          {filteredGames.map((game) => (
-            <div
-              key={game.id}
-              className="bg-[#0d0e12] border border-white/10 rounded-2xl overflow-hidden hover:border-cyan-400/50 transition duration-300 group flex flex-col justify-between"
-            >
-              <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-black/50">
-                <img
-                  src={game.coverImage}
-                  alt={game.name}
-                  className="w-full h-full object-cover group-hover:hidden transition-opacity duration-300"
-                />
-                <img
-                  src={game.mediaUrl}
-                  alt={`${game.name} Preview`}
-                  className="w-full h-full object-cover hidden group-hover:block transition-opacity duration-300"
-                />
+        <>
+          <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5">
+            {displayedGames.map((game) => (
+              <GameCard key={game.id} game={game} onOpenModal={setActiveModalGame} />
+            ))}
+          </div>
 
-                {game.isPopular && (
-                  <span className="absolute top-2.5 right-2.5 bg-red-600/90 text-white text-[9px] sm:text-[10px] font-bold uppercase px-2 py-0.5 rounded shadow">
-                    Popular 🔥
-                  </span>
-                )}
-
-                <span className="absolute bottom-2.5 left-2.5 bg-black/70 backdrop-blur-md text-cyan-400 border border-cyan-400/30 text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded">
-                  {game.genre}
-                </span>
-              </div>
-
-              <div className="p-3.5 sm:p-4 flex-1 flex flex-col justify-between space-y-2.5 sm:space-y-3">
-                <div>
-                  <h3 className="text-sm sm:text-lg font-bold text-white group-hover:text-cyan-400 transition-colors line-clamp-1">
-                    {game.name}
-                  </h3>
-                  <div className="text-[11px] sm:text-xs text-gray-400 flex items-center gap-2 mt-0.5 sm:mt-1">
-                    <span>👥 {game.players}</span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => setActiveModalGame(game)}
-                  className="w-full py-2 bg-cyan-400/10 hover:bg-cyan-400 text-cyan-400 hover:text-black border border-cyan-400/30 font-semibold text-xs rounded-xl transition duration-200 mt-1 cursor-pointer"
-                >
-                  View Details & Consoles
-                </button>
-              </div>
+          {/* Show More / Show Less Button */}
+          {!isFilteringActive && filteredGames.length > 8 && (
+            <div className="mt-8 text-center">
+              <button
+                onClick={() => setShowAll(!showAll)}
+                className="px-6 py-3 bg-[#121318] hover:bg-cyan-400 text-cyan-400 hover:text-black border border-cyan-400/40 font-bold text-xs sm:text-sm rounded-xl transition duration-300 shadow-[0_0_15px_rgba(34,211,238,0.15)] cursor-pointer"
+              >
+                {showAll ? "Show Less ⬆️" : `Show More (${filteredGames.length - 8} More Games) ⬇️`}
+              </button>
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
 
       {/* Modal Details */}
       {activeModalGame && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
           <div className="bg-[#0f1015] border border-cyan-400/40 rounded-2xl max-w-md w-full overflow-hidden shadow-[0_0_30px_rgba(34,211,238,0.2)] max-h-[90vh] flex flex-col">
-            <div className="relative h-44 sm:h-56 w-full shrink-0">
-              <img
-                src={activeModalGame.mediaUrl}
-                alt={activeModalGame.name}
-                className="w-full h-full object-cover"
-              />
+            <div className="relative h-44 sm:h-56 w-full shrink-0 bg-black">
+              {isVideoUrl(activeModalGame.mediaUrl) ? (
+                <video
+                  src={activeModalGame.mediaUrl}
+                  autoPlay
+                  loop
+                  muted
+                  controls
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <img
+                  src={activeModalGame.mediaUrl}
+                  alt={activeModalGame.name}
+                  className="w-full h-full object-cover"
+                />
+              )}
               <button
                 onClick={() => setActiveModalGame(null)}
-                className="absolute top-2.5 right-2.5 bg-black/70 text-white rounded-full p-1.5 hover:bg-red-600 transition cursor-pointer"
+                className="absolute top-2.5 right-2.5 bg-black/70 text-white rounded-full p-1.5 hover:bg-red-600 transition cursor-pointer z-10"
               >
                 ✕
               </button>
