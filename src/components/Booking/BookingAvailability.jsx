@@ -49,9 +49,9 @@ const BookingAvailability = ({
   const todayStr = getTodayDateString();
   const maxDateStr = getFutureMaxDateString();
 
-  // Dynamic Cafe Timing state (Default: 11:00 AM to 10:00 PM)
+  // Dynamic Cafe Timing state (Default: 11:00 AM to 11:00 PM)
   const [openingMinutes, setOpeningMinutes] = useState(660);
-  const [closingMinutes, setClosingMinutes] = useState(1320);
+  const [closingMinutes, setClosingMinutes] = useState(1380);
 
   const timeStringToMinutes = (timeStr) => {
     if (!timeStr) return null;
@@ -65,7 +65,7 @@ const BookingAvailability = ({
     }
   }, [selectedCategory, selectedGame, setSelectedTeam]);
 
-  // Fetch dynamic Cafe Timing from Supabase and check if selected date is Friday
+  // Fetch dynamic Cafe Timing from Supabase based on Regular (id: 1) or Friday (id: 2)
   useEffect(() => {
     setStartTime(null);
     setEndTime(null);
@@ -73,21 +73,14 @@ const BookingAvailability = ({
 
     const fetchCafeTimingFromSupabase = async () => {
       try {
-        // Check if selected date is Friday (getDay() === 5)
         const selectedD = new Date(bookingDate);
         const isFriday = !isNaN(selectedD.getTime()) && selectedD.getDay() === 5;
-
-        if (isFriday) {
-          // Friday special timing: 2:30 PM (14:30) to 10:00 PM (22:00)
-          setOpeningMinutes(14 * 60 + 30); // 14:30 -> 870 minutes
-          setClosingMinutes(22 * 60);       // 22:00 -> 1320 minutes
-          return;
-        }
+        const targetId = isFriday ? 2 : 1; // Friday ke liye id = 2, baaki dino ke liye id = 1
 
         const { data, error } = await supabase
           .from('cafe_settings')
           .select('open_time, close_time')
-          .eq('id', 1)
+          .eq('id', targetId)
           .maybeSingle();
 
         if (error) {

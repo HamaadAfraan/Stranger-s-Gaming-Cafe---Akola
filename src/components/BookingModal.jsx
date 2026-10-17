@@ -312,7 +312,7 @@ export const BookingModal = ({
     if (rawValue.length <= 20) {
       setFormData((prev) => ({ ...prev, phone: rawValue }));
     }
-  };
+  }; 
 
   const handleUtrChange = (e) => {
     const rawValue = e.target.value.replace(/[^a-zA-Z0-9\-_]/g, '');
