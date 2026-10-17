@@ -37,9 +37,9 @@ const BookingAvailability = ({
     return `${year}-${month}-${day}`;
   };
 
-  const getTomorrowDateString = () => {
+  const getFutureMaxDateString = () => {
     const d = new Date();
-    d.setDate(d.getDate() + 1);
+    d.setDate(d.getDate() + 7); // Aaj se 7 din aage tak ki booking allowed
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
@@ -47,7 +47,7 @@ const BookingAvailability = ({
   };
 
   const todayStr = getTodayDateString();
-  const tomorrowStr = getTomorrowDateString();
+  const maxDateStr = getFutureMaxDateString();
 
   // Dynamic Cafe Timing state (Default: 11:00 AM to 10:00 PM)
   const [openingMinutes, setOpeningMinutes] = useState(660);
@@ -65,7 +65,7 @@ const BookingAvailability = ({
     }
   }, [selectedCategory, selectedGame, setSelectedTeam]);
 
- // Fetch dynamic Cafe Timing directly from Supabase
+  // Fetch dynamic Cafe Timing from Supabase and check if selected date is Friday
   useEffect(() => {
     setStartTime(null);
     setEndTime(null);
@@ -73,6 +73,17 @@ const BookingAvailability = ({
 
     const fetchCafeTimingFromSupabase = async () => {
       try {
+        // Check if selected date is Friday (getDay() === 5)
+        const selectedD = new Date(bookingDate);
+        const isFriday = !isNaN(selectedD.getTime()) && selectedD.getDay() === 5;
+
+        if (isFriday) {
+          // Friday special timing: 2:30 PM (14:30) to 10:00 PM (22:00)
+          setOpeningMinutes(14 * 60 + 30); // 14:30 -> 870 minutes
+          setClosingMinutes(22 * 60);       // 22:00 -> 1320 minutes
+          return;
+        }
+
         const { data, error } = await supabase
           .from('cafe_settings')
           .select('open_time, close_time')
@@ -90,7 +101,6 @@ const BookingAvailability = ({
 
           if (openMins !== null) setOpeningMinutes(openMins);
           if (closeMins !== null) {
-            // Agar close time midnight ke pass cross ho raha hai to +1440 mins adjustment
             setClosingMinutes(closeMins <= (openMins || 660) ? closeMins + 1440 : closeMins);
           }
         }
@@ -102,14 +112,12 @@ const BookingAvailability = ({
     fetchCafeTimingFromSupabase();
   }, [bookingDate]);
 
-
   // Available games list for PS5
   const gameOptions = [
     { id: 'GTA 6', name: 'GTA VI (Special)', badge: 'HOT' },
     { id: 'Standard', name: 'Other Games (FC 24, Spider-Man 2, Tekken etc.)', badge: 'REGULAR' }
   ];
 
-  // Calculate dynamic price if GTA 6 is selected
   const calculateFinalPrice = () => {
     if (!startTime || !endTime) return 0;
     const durationMins = endTime - startTime;
@@ -117,17 +125,15 @@ const BookingAvailability = ({
     if (selectedCategory === 'PS5' && selectedGame === 'GTA 6') {
       const hours = durationMins / 60;
       if (selectedScreen?.includes('55"')) {
-        // 55" Zone GTA 6 Pricing: ₹150 for 30m, ₹250 for 1 hr
         if (durationMins === 30) return 150;
         return Math.round(hours * 250);
       } else {
-        // 43" Zone GTA 6 Pricing: ₹120 for 30m, ₹200 for 1 hr
         if (durationMins === 30) return 120;
         return Math.round(hours * 200);
       }
     }
 
-    return totalAmount; // Fallback to standard calculated price passed from parent
+    return totalAmount;
   };
 
   const dynamicTotalAmount = calculateFinalPrice();
@@ -221,7 +227,6 @@ const BookingAvailability = ({
     return 'FREE';
   };
 
-  // Restrict to '1 Player' when GTA 6 is selected on PS5
   const getPlayerOptions = () => {
     if (selectedCategory === 'PS5' && selectedGame === 'GTA 6') {
       return ['1 Player'];
@@ -272,16 +277,16 @@ const BookingAvailability = ({
 
   return (
     <div className="w-full text-white">
-      {/* DATE SELECTOR */}
+      {/* DATE SELECTOR (7 Days Advance Allowed) */}
       <div className="mt-3 sm:mt-4">
         <label className="text-[11px] sm:text-xs font-mono uppercase tracking-widest text-zinc-400 flex items-center gap-1.5 mb-1.5">
-          <Calendar className="w-3.5 h-3.5 text-cyan-400" /> Select Date
+          <Calendar className="w-3.5 h-3.5 text-cyan-400" /> Select Date (Up to 7 Days)
         </label>
         <div className="relative">
           <input
             type="date"
             min={todayStr}
-            max={tomorrowStr}
+            max={maxDateStr}
             value={bookingDate}
             onChange={(e) => setBookingDate(e.target.value)}
             className="w-full bg-white/5 border border-white/20 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-mono text-white focus:outline-none focus:border-cyan-400 transition-all cursor-pointer shadow-sm [color-scheme:dark]"
@@ -310,7 +315,6 @@ const BookingAvailability = ({
                 if (station.multiplayer) {
                   setSelectedTeam('1 Player');
                 }
-                // Default game set to Standard
                 if (setSelectedGame) setSelectedGame('Standard');
               }}
               className={`p-2.5 sm:p-3 rounded-xl font-orbitron text-[11px] sm:text-xs font-bold transition-all border cursor-pointer truncate ${
@@ -364,7 +368,7 @@ const BookingAvailability = ({
         </div>
       )}
 
-      {/* GAME SELECTION OPTION (Specifically for PS5) */}
+      {/* GAME SELECTION OPTION */}
       {selectedCategory === 'PS5' && (
         <div className="mt-4 sm:mt-5">
           <label className="text-[11px] sm:text-xs font-mono uppercase tracking-widest text-zinc-400 flex items-center gap-1.5">
