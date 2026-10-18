@@ -285,17 +285,6 @@ const GAMES_DATA = [
     coverImage: getCoverImage("gtavc.png")
   },
   {
-    id: 21,
-    name: "Red Dead Redemption 3",
-    genre: "Open World",
-    players: "1P",
-    isPopular: false,
-    platforms: ['pc-arena', 'ps5-vip-55'],
-    description: "Epic tale of outlaw Arthur Morgan and the Van der Linde gang across the dying American frontier.",
-    mediaUrl: rdr2Trailer,
-    coverImage: getCoverImage("red-dead-redemption.jpg")
-  },
-  {
     id: 22,
     name: "Far Cry 6",
     genre: "Open World",
