@@ -73,6 +73,7 @@ const GAMES_DATA = [
     mediaUrl: gta5Trailer,
     coverImage: getCoverImage("gta-v.jpg")
   },
+  /*
   {
     id: 2,
     name: "GTA 6",
@@ -84,6 +85,7 @@ const GAMES_DATA = [
     mediaUrl: gta6Trailer,
     coverImage: getCoverImage("gta-6.avif")
   },
+  */
   {
     id: 3,
     name: "Tekken 8",

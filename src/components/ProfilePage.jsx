@@ -69,18 +69,41 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     }
   };
 
-  const parseBookingDateTime = (slot) => {
+  // Safe Standardized Upcoming/Past Comparison Logic for Mobile & PC
+  const checkIsUpcoming = (bookingDateStr, slotTimeStr) => {
+    if (!bookingDateStr) return false;
+
+    // Aaj ki local YYYY-MM-DD date nikalo
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${year}-${month}-${day}`;
+
+    // YYYY-MM-DD format exact string comparison
+    if (bookingDateStr > todayStr) return true;  
+    if (bookingDateStr < todayStr) return false; 
+
+    // Agar date aaj ki hi hai (bookingDateStr === todayStr):
+    if (!slotTimeStr || !slotTimeStr.includes('-')) return true;
+
     try {
-      const dateStr = slot.bookingDate || slot.date || slot.created_at || '';
-      let timeStr = slot.slot_time || slot.slot || slot.time || '00:00';
-      if (timeStr.includes('-')) {
-        timeStr = timeStr.split('-')[0].trim();
-      }
-      const fullDateStr = `${dateStr.split('T')[0]} ${timeStr}`;
-      const parsedDate = new Date(fullDateStr);
-      return isNaN(parsedDate.getTime()) ? new Date(dateStr) : parsedDate;
+      const endTimePart = slotTimeStr.split('-')[1].trim(); 
+      const parts = endTimePart.split(' ');
+      const timeParts = parts[0].split(':');
+      let hours = parseInt(timeParts[0], 10);
+      const minutes = parseInt(timeParts[1], 10);
+      const modifier = parts[1];
+
+      if (modifier === 'PM' && hours < 12) hours += 12;
+      if (modifier === 'AM' && hours === 12) hours = 0;
+
+      const slotEndMins = hours * 60 + minutes;
+      const currentMins = today.getHours() * 60 + today.getMinutes();
+
+      return currentMins <= slotEndMins;
     } catch (e) {
-      return new Date();
+      return true;
     }
   };
 
@@ -350,16 +373,16 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     setRechargeLoading(false);
   };
 
-  const now = new Date();
-
   const upcomingBookings = userBookings.filter((slot) => {
-    const bookingDate = parseBookingDateTime(slot);
-    return isNaN(bookingDate.getTime()) || bookingDate >= now;
+    const bDateStr = slot.bookingDate || slot.date || '';
+    const bSlotStr = slot.slot_time || slot.slot || '';
+    return checkIsUpcoming(bDateStr, bSlotStr);
   });
 
   const pastBookings = userBookings.filter((slot) => {
-    const bookingDate = parseBookingDateTime(slot);
-    return !isNaN(bookingDate.getTime()) && bookingDate < now;
+    const bDateStr = slot.bookingDate || slot.date || '';
+    const bSlotStr = slot.slot_time || slot.slot || '';
+    return !checkIsUpcoming(bDateStr, bSlotStr);
   });
 
   const tierBadges = {

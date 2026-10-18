@@ -13,6 +13,67 @@ export const Pricing = ({ onOpenBooking }) => {
         </p>
       </div>
 
+      {/* GTA 6 Launch Mystery Teaser Section */}
+      <div className="mb-6 sm:mb-10 bg-gradient-to-r from-amber-500/15 via-pink-600/20 to-purple-600/15 border-2 border-amber-400/60 p-5 sm:p-8 rounded-2xl sm:rounded-3xl relative overflow-hidden shadow-2xl shadow-pink-500/10">
+        
+        {/* Background Glowing Orb */}
+        <div className="absolute -top-12 -right-12 w-48 h-48 bg-pink-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6 relative z-10">
+          <div>
+            <span className="bg-gradient-to-r from-amber-400 to-pink-500 text-black text-[9px] sm:text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest mb-2 inline-flex items-center gap-1.5 shadow-lg shadow-amber-500/30 animate-pulse">
+              <span>🚀</span> MOST AWAITED LAUNCH
+            </span>
+            <h3 className="text-2xl sm:text-4xl font-black text-white uppercase font-orbitron tracking-wide">
+              GTA VI <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-pink-400 to-purple-400 font-sans text-sm sm:text-base font-normal normal-case block sm:inline mt-1 sm:mt-0">Experience Zone</span>
+            </h3>
+          </div>
+
+          {/* Reveal Tag */}
+          <div className="bg-black/80 border border-amber-400/50 px-4 py-2 rounded-xl text-center shadow-inner">
+            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest block">SPECIAL RATES</span>
+            <span className="text-amber-400 font-black text-xs sm:text-sm tracking-wider font-orbitron animate-pulse">
+              🔒 REVEALING ON LAUNCH DAY
+            </span>
+          </div>
+        </div>
+
+        {/* Teaser Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+          
+          {/* PS5 VIP Zone Preview */}
+          <div className="bg-[#0b0c10]/90 border border-amber-500/30 p-4 sm:p-5 rounded-xl sm:rounded-2xl flex items-center justify-between backdrop-blur-md">
+            <div>
+              <span className="text-amber-400 font-black text-xs uppercase block tracking-wider">PS5 VIP ZONE</span>
+              <span className="text-white font-bold text-sm sm:text-base">55" 4K HDR TV</span>
+            </div>
+            <div className="text-right">
+              <span className="inline-block bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-black px-3 py-1.5 rounded-lg tracking-widest">
+                ???
+              </span>
+            </div>
+          </div>
+
+          {/* PS5 Standard Zone Preview */}
+          <div className="bg-[#0b0c10]/90 border border-cyan-500/30 p-4 sm:p-5 rounded-xl sm:rounded-2xl flex items-center justify-between backdrop-blur-md">
+            <div>
+              <span className="text-cyan-400 font-black text-xs uppercase block tracking-wider">PS5 STANDARD ZONE</span>
+              <span className="text-white font-bold text-sm sm:text-base">43" 4K TV</span>
+            </div>
+            <div className="text-right">
+              <span className="inline-block bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-[11px] font-black px-3 py-1.5 rounded-lg tracking-widest">
+                ???
+              </span>
+            </div>
+          </div>
+
+        </div>
+
+        <p className="text-center text-xs text-gray-400 mt-4 font-medium italic">
+          ⚡ Early slot pre-bookings for GTA 6 Launch Week will open soon!
+        </p>
+      </div>
+
       {/* Main Top Grid: PS5 VIP & Standard */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 mb-4 sm:mb-10">
         

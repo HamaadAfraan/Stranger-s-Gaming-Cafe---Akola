@@ -310,11 +310,10 @@ const BookingAvailability = ({
                 }
                 if (setSelectedGame) setSelectedGame('Standard');
               }}
-              className={`p-2.5 sm:p-3 rounded-xl font-orbitron text-[11px] sm:text-xs font-bold transition-all border cursor-pointer truncate ${
-                selectedCategory === station.id
+              className={`p-2.5 sm:p-3 rounded-xl font-orbitron text-[11px] sm:text-xs font-bold transition-all border cursor-pointer truncate ${selectedCategory === station.id
                   ? 'bg-cyan-500 text-black border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)]'
                   : 'bg-white/5 text-zinc-400 border-white/10 hover:border-white/30'
-              }`}
+                }`}
             >
               {station.id}
             </button>
@@ -343,11 +342,10 @@ const BookingAvailability = ({
                     setSelectedTeam('3 Players');
                   }
                 }}
-                className={`p-2.5 sm:p-3 rounded-xl border text-[11px] sm:text-xs font-bold font-orbitron text-left cursor-pointer transition-all flex items-center ${
-                  selectedScreen === screen
+                className={`p-2.5 sm:p-3 rounded-xl border text-[11px] sm:text-xs font-bold font-orbitron text-left cursor-pointer transition-all flex items-center ${selectedScreen === screen
                     ? 'border-cyan-400 bg-cyan-400/10 text-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.2)]'
                     : 'border-white/10 bg-white/5 text-zinc-400 hover:border-white/20'
-                }`}
+                  }`}
               >
                 {selectedCategory === 'Simulator' ? (
                   <Car className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 shrink-0" />
@@ -362,32 +360,36 @@ const BookingAvailability = ({
       )}
 
       {/* GAME SELECTION OPTION */}
+      {/* GAME SELECTION OPTION */}
       {selectedCategory === 'PS5' && (
         <div className="mt-4 sm:mt-5">
-          <label className="text-[11px] sm:text-xs font-mono uppercase tracking-widest text-zinc-400 flex items-center gap-1.5">
-            <Gamepad2 className="w-3.5 h-3.5 text-cyan-400" /> 3. Select Game / Title
+          <label className="text-[11px] sm:text-xs font-mono uppercase tracking-widest text-zinc-400">
+            2. Select Game / Edition
           </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1.5">
-            {gameOptions.map((game) => (
-              <button
-                key={game.id}
-                onClick={() => {
-                  if (setSelectedGame) setSelectedGame(game.id);
-                }}
-                className={`p-3 rounded-xl border text-[11px] sm:text-xs font-bold font-orbitron text-left transition-all flex items-center justify-between cursor-pointer ${
-                  (selectedGame || 'Standard') === game.id
-                    ? 'border-purple-400 bg-purple-500/20 text-purple-300 shadow-[0_0_12px_rgba(168,85,247,0.3)]'
-                    : 'border-white/10 bg-white/5 text-zinc-400 hover:border-white/20'
+          <div className="grid grid-cols-2 gap-2 mt-1.5">
+            <button
+              type="button"
+              onClick={() => setSelectedGame('Standard')}
+              className={`p-2.5 sm:p-3 rounded-xl border text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${selectedGame === 'Standard'
+                  ? 'bg-cyan-500 text-black border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)]'
+                  : 'bg-white/5 text-zinc-400 border-white/10 hover:border-white/30'
                 }`}
+            >
+              Standard Games
+            </button>
+
+            <div className="relative group">
+              <button
+                type="button"
+                disabled={true}
+                className="w-full h-full p-2.5 sm:p-3 rounded-xl border text-[11px] sm:text-xs font-bold bg-zinc-900/80 border-amber-500/30 text-amber-400/50 cursor-not-allowed flex items-center justify-center gap-1.5 font-orbitron"
               >
-                <span className="truncate">{game.name}</span>
-                <span className={`text-[9px] px-2 py-0.5 rounded font-mono font-extrabold ${
-                  game.id === 'GTA 6' ? 'bg-amber-400 text-black' : 'bg-zinc-700 text-zinc-300'
-                }`}>
-                  {game.badge}
-                </span>
+                <span>🔒 GTA 6 (Locked)</span>
               </button>
-            ))}
+              <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black/90 text-amber-400 text-[10px] px-2 py-1 rounded border border-amber-500/40 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none font-mono z-20">
+                Revealing on Launch Day!
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -403,11 +405,10 @@ const BookingAvailability = ({
               <button
                 key={playerOption}
                 onClick={() => setSelectedTeam(playerOption)}
-                className={`p-2.5 sm:p-3 rounded-xl border text-center cursor-pointer transition-all ${
-                  selectedTeam === playerOption
+                className={`p-2.5 sm:p-3 rounded-xl border text-center cursor-pointer transition-all ${selectedTeam === playerOption
                     ? 'border-cyan-400 bg-cyan-400/10 text-white shadow-[0_0_12px_rgba(34,211,238,0.2)]'
                     : 'border-white/10 bg-white/5 text-zinc-400 hover:border-white/20'
-                }`}
+                  }`}
               >
                 <div className="text-[11px] sm:text-xs font-bold font-orbitron text-cyan-400">
                   {playerOption}
@@ -438,9 +439,8 @@ const BookingAvailability = ({
                         </span>
                       )}
                     </div>
-                    <div className={`w-[1px] rounded-full transition-all mt-1 ${
-                      isFullHour ? 'h-2.5 sm:h-3 bg-zinc-300' : 'h-1 sm:h-1.5 bg-zinc-600'
-                    }`} />
+                    <div className={`w-[1px] rounded-full transition-all mt-1 ${isFullHour ? 'h-2.5 sm:h-3 bg-zinc-300' : 'h-1 sm:h-1.5 bg-zinc-600'
+                      }`} />
                   </div>
                 );
               })}
@@ -454,17 +454,16 @@ const BookingAvailability = ({
                 return (
                   <div
                     key={block}
-                    className={`flex-1 h-full border-r border-black/20 transition-all ${
-                      isSelected
+                    className={`flex-1 h-full border-r border-black/20 transition-all ${isSelected
                         ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]'
                         : blockStatus === 'EXPIRED'
-                        ? 'bg-zinc-800/80 opacity-40'
-                        : blockStatus === 'APPROVED'
-                        ? 'bg-red-500/90 shadow-[inset_0_0_4px_rgba(0,0,0,0.5)]'
-                        : blockStatus === 'PENDING'
-                        ? 'bg-amber-400/90 shadow-[inset_0_0_4px_rgba(0,0,0,0.5)]'
-                        : 'bg-transparent'
-                    }`}
+                          ? 'bg-zinc-800/80 opacity-40'
+                          : blockStatus === 'APPROVED'
+                            ? 'bg-red-500/90 shadow-[inset_0_0_4px_rgba(0,0,0,0.5)]'
+                            : blockStatus === 'PENDING'
+                              ? 'bg-amber-400/90 shadow-[inset_0_0_4px_rgba(0,0,0,0.5)]'
+                              : 'bg-transparent'
+                      }`}
                   />
                 );
               })}
@@ -490,17 +489,16 @@ const BookingAvailability = ({
                 key={block}
                 disabled={isOccupied}
                 onClick={() => handleStartSelect(block)}
-                className={`p-2 sm:p-2.5 min-h-[40px] rounded-lg border text-[11px] sm:text-xs font-bold font-mono transition-all flex items-center justify-center ${
-                  isSelected
+                className={`p-2 sm:p-2.5 min-h-[40px] rounded-lg border text-[11px] sm:text-xs font-bold font-mono transition-all flex items-center justify-center ${isSelected
                     ? 'bg-cyan-500 text-black border-cyan-400 font-extrabold shadow-md'
                     : blockStatus === 'EXPIRED'
-                    ? 'bg-zinc-900/60 border-zinc-800 text-zinc-600 cursor-not-allowed line-through opacity-50'
-                    : blockStatus === 'APPROVED'
-                    ? 'bg-red-950/20 border-red-900/40 text-red-500/50 cursor-not-allowed line-through'
-                    : blockStatus === 'PENDING'
-                    ? 'bg-amber-950/20 border-amber-800/40 text-amber-500/60 cursor-not-allowed line-through'
-                    : 'bg-white/5 border-white/10 text-zinc-300 hover:border-cyan-400 cursor-pointer'
-                }`}
+                      ? 'bg-zinc-900/60 border-zinc-800 text-zinc-600 cursor-not-allowed line-through opacity-50'
+                      : blockStatus === 'APPROVED'
+                        ? 'bg-red-950/20 border-red-900/40 text-red-500/50 cursor-not-allowed line-through'
+                        : blockStatus === 'PENDING'
+                          ? 'bg-amber-950/20 border-amber-800/40 text-amber-500/60 cursor-not-allowed line-through'
+                          : 'bg-white/5 border-white/10 text-zinc-300 hover:border-cyan-400 cursor-pointer'
+                  }`}
               >
                 {minutesToTimeString(block)}
               </button>
@@ -529,11 +527,10 @@ const BookingAvailability = ({
                 <button
                   key={endMins}
                   onClick={() => setEndTime(endMins)}
-                  className={`p-2 sm:p-2.5 rounded-lg border text-[11px] sm:text-xs font-bold font-mono transition-all text-center ${
-                    isSelected
+                  className={`p-2 sm:p-2.5 rounded-lg border text-[11px] sm:text-xs font-bold font-mono transition-all text-center ${isSelected
                       ? 'bg-emerald-500 text-black border-emerald-400 font-extrabold shadow-md'
                       : 'bg-white/5 border-white/10 text-zinc-300 hover:border-emerald-400 cursor-pointer'
-                  }`}
+                    }`}
                 >
                   <div>{formatDurationText(durationMins)}</div>
                   <span className="block text-[8px] sm:text-[9px] opacity-80 font-normal">
@@ -551,7 +548,7 @@ const BookingAvailability = ({
         <div className="mt-5 p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-cyan-950/90 to-purple-950/90 border border-cyan-500/40 flex items-center justify-between gap-2">
           <div className="min-w-0 flex-1">
             <div className="text-[10px] sm:text-[11px] text-cyan-300 font-mono truncate">
-              {bookingDate} • {selectedCategory} {currentStation?.hasScreens ? `(${selectedScreen})` : ''} 
+              {bookingDate} • {selectedCategory} {currentStation?.hasScreens ? `(${selectedScreen})` : ''}
               {selectedCategory === 'PS5' && selectedGame ? ` • ${selectedGame}` : ''}
             </div>
 
