@@ -130,6 +130,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
             setGamerPoints(parsedPts);
             localStorage.setItem('cached_gamer_points', parsedPts);
 
+            // Fixed fallback parsing for diamonds across multiple schema variants
             const diamonds = data.redeemable_diamonds ?? data.diamonds ?? data.diamond_balance ?? data.available_diamonds ?? 0;
             const parsedDiamonds = parseInt(diamonds, 10) || 0;
             setRedeemableDiamonds(parsedDiamonds);
@@ -380,23 +381,24 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     setRechargeLoading(false);
   };
 
-const handleLogoutClick = async () => {
+  // Foolproof Logout Handler for Mobile and Desktop
+  const handleLogoutClick = async () => {
     try {
+      // Clear all local storage auth and caches instantly
+      localStorage.clear();
+      sessionStorage.clear();
+      
       await supabase.auth.signOut();
     } catch (err) {
       console.error("Logout error:", err);
     }
     
-    // Clear local storage tokens/cache if any
-    localStorage.removeItem('cached_gamer_points');
-    localStorage.removeItem('cached_redeemable_diamonds');
-
     if (onLogout) {
       onLogout();
     }
 
-    // Force hard redirect to home page immediately for mobile & desktop
-    window.location.replace('/');
+    // Force hard reload and redirect to root root instantly
+    window.location.href = '/';
   };
 
   const upcomingBookings = userBookings.filter((slot) => {
