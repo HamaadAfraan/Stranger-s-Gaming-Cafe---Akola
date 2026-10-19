@@ -102,7 +102,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     }
   };
 
-  useEffect(() => {
+useEffect(() => {
     const fetchProfileData = async () => {
       if (session?.user) {
         const userEmail = session.user.email || '';
@@ -128,13 +128,12 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
             const pts = data.gamer_points ?? data.points ?? data.score ?? 0;
             const parsedPts = parseInt(pts, 10) || 0;
             setGamerPoints(parsedPts);
-            localStorage.setItem('cached_gamer_points', parsedPts);
+            try { localStorage.setItem('cached_gamer_points', parsedPts); } catch (e) {}
 
-            // Fixed fallback parsing for diamonds across multiple schema variants
             const diamonds = data.redeemable_diamonds ?? data.diamonds ?? data.diamond_balance ?? data.available_diamonds ?? 0;
             const parsedDiamonds = parseInt(diamonds, 10) || 0;
             setRedeemableDiamonds(parsedDiamonds);
-            localStorage.setItem('cached_redeemable_diamonds', parsedDiamonds);
+            try { localStorage.setItem('cached_redeemable_diamonds', parsedDiamonds); } catch (e) {}
 
             if (data.loyalty_tier) setLoyaltyTier(data.loyalty_tier);
           } else {
@@ -149,6 +148,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
         } catch (err) {
           console.warn("Profile table fetch warning:", err);
         } finally {
+          // Yeh ensure karega ki iPhone Safari par error aaye ya success, loader hamesha band ho
           setProfileLoading(false);
         }
 
@@ -1280,3 +1280,4 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     </div>
   );
 }
+
