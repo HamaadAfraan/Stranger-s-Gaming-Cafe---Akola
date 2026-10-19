@@ -5,8 +5,8 @@ const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
+    storage: window.sessionStorage, // LocalStorage lock hone par sessionStorage use karega
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true
   }
 })
