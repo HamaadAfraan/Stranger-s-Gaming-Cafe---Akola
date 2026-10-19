@@ -51,24 +51,28 @@ export default function App() {
     }
   };
 
-  // Initial load aur Realtime Subscription
+  // Safari Safe Staggered Load & WebSocket Delay
   useEffect(() => {
     fetchBookings();
 
-    const channel = supabase
-      .channel('public:bookings')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'bookings' },
-        () => {
-          fetchBookings();
-        }
-      )
-      .subscribe();
+    const timer = setTimeout(() => {
+      const channel = supabase
+        .channel('public:bookings')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'bookings' },
+          () => {
+            fetchBookings();
+          }
+        )
+        .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }, 2000); // 2 second delay taaki Safari fetch requests pehle pure ho jayein
+
+    return () => clearTimeout(timer);
   }, []);
 
   // Modal open hote hi body scroll prevent karna
@@ -98,7 +102,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#08080a] text-white relative font-sans selection:bg-red-600 selection:text-white w-full overflow-x-hidden">
-      {/* Custom Cursor only on Desktop/Pointer devices */}
       <div className="hidden md:block">
         <CustomCursor />
       </div>
@@ -110,13 +113,12 @@ export default function App() {
         onOpenProfile={() => setCurrentView('profile')}
       />
 
-      {/* Conditionally render Profile Page or Homepage */}
       {currentView === 'profile' && session ? (
         <ProfilePage
           session={session}
           bookedSlots={bookedSlots}
           onBack={() => setCurrentView('home')}
-          onOpenBooking={handleOpenBooking} // Fixed: Prop connected for opening booking modal
+          onOpenBooking={handleOpenBooking}
           onLogout={async () => {
             await supabase.auth.signOut();
             setSession(null);
@@ -165,7 +167,6 @@ export default function App() {
         onBookingCreated={handleBookingCreated}
       />
 
-      {/* Login / Signup Modal */}
       {showLoginModal && (
         <Login
           onClose={() => setShowLoginModal(false)}

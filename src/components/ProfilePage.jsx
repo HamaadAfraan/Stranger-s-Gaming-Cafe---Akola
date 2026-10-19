@@ -9,7 +9,6 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
   const [phone, setPhone] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
 
-  // Safe LocalStorage Helpers to completely prevent Safari Private Mode crashes
   const getSafeStorage = (key, defaultVal = 0) => {
     try {
       const val = localStorage.getItem(key);
@@ -62,7 +61,6 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
 
   const UPI_ID = 'strangersgamingcafe@upi';
 
-  // Exactly 3 Diamond Packs: 1000, 2000, 5000
   const DIAMOND_PACKS = [
     { price: 1000, diamonds: 1200, label: 'Starter Pack' },
     { price: 2000, diamonds: 2500, label: 'Pro Pack (Bonus)' },
@@ -118,10 +116,9 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     let isMounted = true;
     
     const fetchProfileData = async () => {
-      // Safety timeout: Safari mein agar network hang ho toh 4 second mein loader force close ho jaye
       const safetyTimer = setTimeout(() => {
         if (isMounted) setProfileLoading(false);
-      }, 4000);
+      }, 5000);
 
       try {
         if (session?.user) {
@@ -186,6 +183,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     };
   }, [session?.user]);
 
+  // Sequential fetching to prevent Safari network overload
   const fetchUserData = async (email, userId, userPhone) => {
     try {
       const { data: allBookings } = await supabase.from('bookings').select('*');
@@ -199,16 +197,23 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
         setUserBookings(matchedBookings);
       }
 
-      const { data: allRecharges } = await supabase.from('diamond_recharges').select('*');
-      if (allRecharges && Array.isArray(allRecharges)) {
-        const matchedRecharges = allRecharges.filter(r => {
-          const matchEmail = email && r.email && r.email.toLowerCase() === email.toLowerCase();
-          const matchUser = userId && r.user_id && String(r.user_id) === String(userId);
-          const matchPhone = userPhone && r.phone && String(r.phone) === String(userPhone);
-          return matchEmail || matchUser || matchPhone;
-        });
-        setUserRecharges(matchedRecharges);
-      }
+      setTimeout(async () => {
+        try {
+          const { data: allRecharges } = await supabase.from('diamond_recharges').select('*');
+          if (allRecharges && Array.isArray(allRecharges)) {
+            const matchedRecharges = allRecharges.filter(r => {
+              const matchEmail = email && r.email && r.email.toLowerCase() === email.toLowerCase();
+              const matchUser = userId && r.user_id && String(r.user_id) === String(userId);
+              const matchPhone = userPhone && r.phone && String(r.phone) === String(userPhone);
+              return matchEmail || matchUser || matchPhone;
+            });
+            setUserRecharges(matchedRecharges);
+          }
+        } catch (e) {
+          console.error('Recharges fetch error:', e);
+        }
+      }, 400);
+
     } catch (err) {
       console.error('Error fetching user data:', err);
     }

@@ -1,6 +1,6 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   plugins: [
@@ -9,13 +9,16 @@ export default defineConfig({
   ],
   server: {
     maxHttpHeaderSize: 1048576,
+    allowedHosts: [
+      'handiwork-pegboard-rebuild.ngrok-free.dev',
+    ],
     proxy: {
       '/supabase': {
         target: 'https://ftpcjyecegugofftcoco.supabase.co',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/supabase/, ''),
-        ws: true, // WebSocket connections support ke liye
+        ws: true,
       },
     },
   },
-})
+});
