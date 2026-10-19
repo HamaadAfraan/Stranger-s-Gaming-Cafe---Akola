@@ -6,10 +6,10 @@ export const Pricing = ({ onOpenBooking }) => {
       {/* Header */}
       <div className="text-center mb-8 sm:mb-14">
         <h2 className="text-2xl sm:text-5xl font-black uppercase tracking-tight font-orbitron text-white">
-          PRICING <span className="text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.4)]">LIST</span>
+          GAMING CAFE <span className="text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.4)]">PRICING LIST AKOLA</span>
         </h2>
         <p className="text-cyan-400 text-[10px] sm:text-xs font-bold tracking-widest uppercase mt-1.5">
-          UPDATED & EFFECTIVE NOW
+          BILL MART MALL • UPDATED & EFFECTIVE NOW
         </p>
       </div>
 
@@ -22,7 +22,7 @@ export const Pricing = ({ onOpenBooking }) => {
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6 relative z-10">
           <div>
             <span className="bg-gradient-to-r from-amber-400 to-pink-500 text-black text-[9px] sm:text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest mb-2 inline-flex items-center gap-1.5 shadow-lg shadow-amber-500/30 animate-pulse">
-              <span>🚀</span> MOST AWAITED LAUNCH
+              <span>🚀</span> MOST AWAITED LAUNCH IN AKOLA
             </span>
             <h3 className="text-2xl sm:text-4xl font-black text-white uppercase font-orbitron tracking-wide">
               GTA VI <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-pink-400 to-purple-400 font-sans text-sm sm:text-base font-normal normal-case block sm:inline mt-1 sm:mt-0">Experience Zone</span>
@@ -44,7 +44,7 @@ export const Pricing = ({ onOpenBooking }) => {
           {/* PS5 VIP Zone Preview */}
           <div className="bg-[#0b0c10]/90 border border-amber-500/30 p-4 sm:p-5 rounded-xl sm:rounded-2xl flex items-center justify-between backdrop-blur-md">
             <div>
-              <span className="text-amber-400 font-black text-xs uppercase block tracking-wider">PS5 VIP ZONE</span>
+              <span className="text-amber-400 font-black text-xs uppercase block tracking-wider">PS5 VIP LOUNGE AKOLA</span>
               <span className="text-white font-bold text-sm sm:text-base">55" 4K HDR TV</span>
             </div>
             <div className="text-right">
@@ -70,7 +70,7 @@ export const Pricing = ({ onOpenBooking }) => {
         </div>
 
         <p className="text-center text-xs text-gray-400 mt-4 font-medium italic">
-          ⚡ Early slot pre-bookings for GTA 6 Launch Week will open soon!
+          ⚡ Early slot pre-bookings for GTA 6 Launch Week at Bill Mart Mall will open soon!
         </p>
       </div>
 
@@ -81,7 +81,7 @@ export const Pricing = ({ onOpenBooking }) => {
         <div className="bg-[#0b0c10] border-2 border-red-500/60 p-4 sm:p-7 rounded-2xl sm:rounded-3xl relative shadow-xl shadow-red-500/10 flex flex-col justify-between">
           <div>
             <span className="bg-red-600 text-white text-[9px] sm:text-[10px] font-black px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full uppercase tracking-wider mb-2.5 sm:mb-4 inline-block">
-              VIP ZONE
+              VIP ZONE AKOLA
             </span>
             <h3 className="text-lg sm:text-2xl font-black text-white uppercase font-orbitron mb-3 sm:mb-4 flex items-center justify-between flex-wrap gap-1">
               <span>PLAYSTATION 5</span>
@@ -147,7 +147,7 @@ export const Pricing = ({ onOpenBooking }) => {
         <div className="bg-[#0b0c10] border border-purple-500/40 p-4 sm:p-6 rounded-2xl sm:rounded-3xl flex flex-col justify-between">
           <div>
             <span className="text-purple-400 text-[9px] sm:text-[10px] font-black uppercase tracking-wider block mb-1.5 sm:mb-2">
-              200Hz ESPORTS ARENA
+              200Hz ESPORTS ARENA AKOLA
             </span>
             <h4 className="text-base sm:text-xl font-black text-white uppercase font-orbitron mb-3 sm:mb-4">
               HIGH-END PC GAMING
@@ -163,7 +163,7 @@ export const Pricing = ({ onOpenBooking }) => {
         <div className="bg-[#0b0c10] border border-red-500/40 p-4 sm:p-6 rounded-2xl sm:rounded-3xl flex flex-col justify-between">
           <div>
             <span className="text-red-500 text-[9px] sm:text-[10px] font-black uppercase tracking-wider block mb-1.5 sm:mb-2">
-              PRO EXPERIENCE
+              PRO SIMULATOR AKOLA
             </span>
             <h3 className="text-base sm:text-2xl font-black text-white uppercase font-orbitron mb-3 sm:mb-4 flex items-center justify-between">
               <span>SIMULATOR</span>

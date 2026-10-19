@@ -29,13 +29,13 @@ export const Location = () => {
       {/* Header */}
       <div className="mb-6 sm:mb-10 text-center">
         <span className="text-red-500 text-[10px] sm:text-xs font-bold uppercase tracking-widest block mb-1">
-          ARENA LOCATION
+          BILL MART MALL AKOLA • GAMING LOUNGE LOCATION
         </span>
         <h2 className="text-2xl sm:text-5xl font-black uppercase tracking-tight font-orbitron text-white">
-          VISIT <span className="text-cyan-400 drop-shadow-[0_0_15px_rgba(34,211,238,0.4)]">OUR CAFE</span>
+          VISIT <span className="text-cyan-400 drop-shadow-[0_0_15px_rgba(34,211,238,0.4)]">STRANGER'S GAMING CAFE</span>
         </h2>
-        <p className="text-gray-400 text-xs sm:text-sm mt-1.5 max-w-md mx-auto leading-relaxed">
-          Located at the heart of Akola. Drop in for high-speed esports sessions.
+        <p className="text-gray-400 text-xs sm:text-sm mt-1.5 max-w-lg mx-auto leading-relaxed">
+          Located at Bill Mart Mall, Akola. Drop in for high-speed esports sessions, PS5 gaming, and racing simulators.
         </p>
       </div>
 
@@ -138,7 +138,7 @@ export const Location = () => {
         {/* Live Satellite Google Maps Container */}
         <div className="w-full h-[260px] xs:h-[300px] sm:h-auto min-h-[260px] sm:min-h-[400px] rounded-2xl sm:rounded-3xl overflow-hidden border border-cyan-500/30 shadow-xl shadow-cyan-500/10 relative">
           <iframe
-            title="Stranger's Gaming Cafe Satellite Location"
+            title="Stranger's Gaming Cafe Satellite Location Akola"
             src={mapEmbedUrl}
             width="100%"
             height="100%"

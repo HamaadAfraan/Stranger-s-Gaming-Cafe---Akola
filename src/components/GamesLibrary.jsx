@@ -61,18 +61,6 @@ const PLAYER_COUNTS = ['All', '1P', '2P', '3P-4P'];
 
 // --- SORTED WITH TRENDING / POPULAR GAMES FIRST ---
 const GAMES_DATA = [
-  // Top Trending / Popular Block
-  {
-    id: 1,
-    name: "GTA V",
-    genre: "Open World",
-    players: "1P",
-    isPopular: true,
-    platforms: ['pc-arena', 'ps5-vip-55', 'ps5-reg-43', 'ps4'],
-    description: "Massive open-world action title filled with driving, shooting, bank heists, and vast exploration.",
-    mediaUrl: gta5Trailer,
-    coverImage: getCoverImage("gta-v.jpg")
-  },
   /*
   {
     id: 2,
@@ -86,6 +74,17 @@ const GAMES_DATA = [
     coverImage: getCoverImage("gta-6.avif")
   },
   */
+  {
+    id: 2,
+    name: "GTA V",
+    genre: "Open World",
+    players: "1P",
+    isPopular: true,
+    platforms: ['pc-arena', 'ps5-vip-55', 'ps5-reg-43', 'ps4'],
+    description: "Massive open-world action title filled with driving, shooting, bank heists, and vast exploration at Stranger's Gaming Cafe Akola.",
+    mediaUrl: gta5Trailer,
+    coverImage: getCoverImage("gta-v.jpg")
+  },
   {
     id: 3,
     name: "Tekken 8",
@@ -152,8 +151,6 @@ const GAMES_DATA = [
     mediaUrl: pubgTrailer,
     coverImage: getCoverImage("pubg.jpg")
   },
-
-  // Other Games
   {
     id: 9,
     name: "Forza Horizon 5",
@@ -365,14 +362,12 @@ const GAMES_DATA = [
   }
 ];
 
-// Helper function to detect if media URL is a video file (.mp4, blob, or imported asset)
 const isVideoUrl = (url) => {
   if (!url) return false;
   const str = String(url).toLowerCase();
   return str.endsWith('.mp4') || str.includes('.mp4?') || str.includes('data:video/mp4');
 };
 
-// Reusable Game Card Component - Optimized with preload="auto" for instant hover playback
 const GameCard = ({ game, onOpenModal }) => {
   const videoRef = useRef(null);
 
@@ -410,8 +405,8 @@ const GameCard = ({ game, onOpenModal }) => {
             muted
             loop
             playsInline
-            preload="auto" /* <-- Instant loading for fast playback */
-            className="w-full h-full object-cover hidden group-hover:block transition-opacity duration-300"
+            preload="auto"
+            className="w-full h-full object-cover hidden group-hover:block transition-opacity duration-300 pointer-events-none"
           />
         ) : (
           <img
@@ -461,7 +456,6 @@ export const GamesLibrary = () => {
   const [activeModalGame, setActiveModalGame] = useState(null);
   const [showAll, setShowAll] = useState(false);
 
-  // Accurate Player Filter Logic
   const checkPlayerMatch = (gamePlayers, selectedFilter) => {
     if (selectedFilter === 'All') return true;
     if (selectedFilter === '1P') return gamePlayers.includes('1P');
@@ -490,10 +484,10 @@ export const GamesLibrary = () => {
       {/* Header */}
       <div className="mb-6 sm:mb-8 text-center">
         <span className="text-cyan-400 text-[10px] sm:text-xs font-bold uppercase tracking-widest block mb-1">
-          Pre-Installed Gaming Arena Titles
+          BILL MART MALL AKOLA • PRE-INSTALLED GAME LIBRARY
         </span>
-        <h2 className="text-2xl sm:text-5xl font-black uppercase tracking-tight text-white">
-          GAME <span className="text-cyan-400 drop-shadow-[0_0_15px_rgba(34,211,238,0.4)]">LIBRARY</span>
+        <h2 className="text-2xl sm:text-5xl font-black uppercase tracking-tight text-white font-orbitron">
+          GAME <span className="text-cyan-400 drop-shadow-[0_0_15px_rgba(34,211,238,0.4)]">COLLECTION</span>
         </h2>
       </div>
 
@@ -608,9 +602,8 @@ export const GamesLibrary = () => {
                   autoPlay
                   loop
                   muted
-                  controls
                   playsInline
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover pointer-events-none"
                 />
               ) : (
                 <img

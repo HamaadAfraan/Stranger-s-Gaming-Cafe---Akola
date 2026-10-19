@@ -10,20 +10,20 @@ export const Hero = ({ onOpenBooking }) => {
 
       {/* Top Tagline Badge */}
       <div className="inline-flex items-center gap-1.5 sm:gap-2 bg-[#121520] border border-cyan-500/30 text-cyan-400 px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-[9px] sm:text-xs font-black tracking-wider sm:tracking-widest mb-5 sm:mb-8 uppercase backdrop-blur-md">
-        <Flame className="w-3 h-3 sm:w-4 sm:h-4 text-red-500 animate-pulse shrink-0" /> EAT • SLEEP • GAME • REPEAT
+        <Flame className="w-3 h-3 sm:w-4 sm:h-4 text-red-500 animate-pulse shrink-0" /> BILL MART MALL AKOLA • EAT • SLEEP • GAME • REPEAT
       </div>
 
       {/* Responsive Title Header */}
       <h1 className="text-2xl xs:text-3xl sm:text-5xl md:text-7xl font-black mb-3.5 sm:mb-6 tracking-tight uppercase leading-snug sm:leading-none font-orbitron text-white break-words w-full">
-        STRANGER'S <br />
+        BEST GAMING CAFE <br />
         <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-500 to-red-500 drop-shadow-[0_0_20px_rgba(34,211,238,0.2)]">
-          GAMING CAFE AKOLA
+          STRANGER'S GAMING AKOLA
         </span>
       </h1>
 
-      {/* Hero Subtitle */}
+      {/* Hero Subtitle with Local Keywords */}
       <p className="text-gray-400 text-xs sm:text-base md:text-lg max-w-2xl sm:max-w-3xl mx-auto mb-6 sm:mb-10 font-medium leading-relaxed px-1 sm:px-2">
-        Play More. Rank Higher. Experience Akola's premier gaming lounge featuring <span className="text-white font-bold">PS5 VIP Lounge</span>, <span className="text-white font-bold">200Hz PC Esports Arena</span>, <span className="text-white font-bold">Pro Racing Simulator</span> & <span className="text-white font-bold">PS4 Co-Op Zone</span>.
+        Play More. Rank Higher. Experience Akola's premier <span className="text-white font-bold">gaming cafe in Bill Mart Mall</span> featuring <span className="text-white font-bold">PS5 VIP gaming lounge</span>, <span className="text-white font-bold">200Hz PC esports arena</span>, <span className="text-white font-bold">pro racing simulator</span> & <span className="text-white font-bold">PS4 co-op zone</span>.
       </p>
 
       {/* Call to Action Buttons */}
@@ -50,7 +50,7 @@ export const Hero = ({ onOpenBooking }) => {
           </span>
           <span className="text-gray-700">•</span>
           <span className="flex items-center gap-1.5 text-cyan-400 whitespace-nowrap">
-            <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> LUXURY SEATING
+            <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> PARKING INCLUDE: 1 TWO WHEELER FREE
           </span>
           <span className="text-gray-700">•</span>
           <span className="flex items-center gap-1.5 text-cyan-400 whitespace-nowrap">
