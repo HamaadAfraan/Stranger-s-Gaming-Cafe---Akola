@@ -380,16 +380,23 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     setRechargeLoading(false);
   };
 
-  const handleLogoutClick = async () => {
+const handleLogoutClick = async () => {
     try {
       await supabase.auth.signOut();
     } catch (err) {
       console.error("Logout error:", err);
     }
+    
+    // Clear local storage tokens/cache if any
+    localStorage.removeItem('cached_gamer_points');
+    localStorage.removeItem('cached_redeemable_diamonds');
+
     if (onLogout) {
       onLogout();
     }
-    window.location.href = '/';
+
+    // Force hard redirect to home page immediately for mobile & desktop
+    window.location.replace('/');
   };
 
   const upcomingBookings = userBookings.filter((slot) => {

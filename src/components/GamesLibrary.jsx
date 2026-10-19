@@ -333,15 +333,23 @@ const isVideoUrl = (url) => {
 
 const GameCard = ({ game, onOpenModal }) => {
   const videoRef = useRef(null);
+  const [isVideoLoading, setIsVideoLoading] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   const handleMouseEnter = () => {
+    setIsHovered(true);
     if (videoRef.current) {
       videoRef.current.currentTime = 0;
-      videoRef.current.play().catch(() => {});
+      setIsVideoLoading(true);
+      videoRef.current.play()
+        .then(() => setIsVideoLoading(false))
+        .catch(() => setIsVideoLoading(false));
     }
   };
 
   const handleMouseLeave = () => {
+    setIsHovered(false);
+    setIsVideoLoading(false);
     if (videoRef.current) {
       videoRef.current.pause();
       videoRef.current.currentTime = 0;
@@ -358,8 +366,16 @@ const GameCard = ({ game, onOpenModal }) => {
         <img
           src={game.coverImage}
           alt={game.name}
-          className="w-full h-full object-cover group-hover:hidden transition-opacity duration-300"
+          className={`w-full h-full object-cover transition-opacity duration-300 ${isHovered && !isVideoLoading ? 'hidden' : 'block'}`}
         />
+
+        {/* Loading Spinner Animation */}
+        {isHovered && isVideoLoading && (
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-xs flex flex-col items-center justify-center z-10 space-y-2">
+            <div className="w-8 h-8 border-3 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-[10px] text-cyan-400 font-mono tracking-wider uppercase">Loading Trailer...</span>
+          </div>
+        )}
 
         {isVideoUrl(game.mediaUrl) ? (
           <video
@@ -368,24 +384,26 @@ const GameCard = ({ game, onOpenModal }) => {
             muted
             loop
             playsInline
-            preload="none"
-            className="w-full h-full object-cover hidden group-hover:block transition-opacity duration-300 pointer-events-none"
+            preload="auto"
+            onWaiting={() => setIsVideoLoading(true)}
+            onPlaying={() => setIsVideoLoading(false)}
+            className={`w-full h-full object-cover transition-opacity duration-300 pointer-events-none ${isHovered ? 'block' : 'hidden'}`}
           />
         ) : (
           <img
             src={game.mediaUrl}
             alt={`${game.name} Preview`}
-            className="w-full h-full object-cover hidden group-hover:block transition-opacity duration-300"
+            className={`w-full h-full object-cover transition-opacity duration-300 ${isHovered ? 'block' : 'hidden'}`}
           />
         )}
 
         {game.isPopular && (
-          <span className="absolute top-2.5 right-2.5 bg-red-600/90 text-white text-[9px] sm:text-[10px] font-bold uppercase px-2 py-0.5 rounded shadow">
+          <span className="absolute top-2.5 right-2.5 bg-red-600/90 text-white text-[9px] sm:text-[10px] font-bold uppercase px-2 py-0.5 rounded shadow z-20">
             Popular 🔥
           </span>
         )}
 
-        <span className="absolute bottom-2.5 left-2.5 bg-black/70 backdrop-blur-md text-cyan-400 border border-cyan-400/30 text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded">
+        <span className="absolute bottom-2.5 left-2.5 bg-black/70 backdrop-blur-md text-cyan-400 border border-cyan-400/30 text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded z-20">
           {game.genre}
         </span>
       </div>
@@ -407,6 +425,40 @@ const GameCard = ({ game, onOpenModal }) => {
           View Details & Consoles
         </button>
       </div>
+    </div>
+  );
+};
+
+// Modal Video Player Component with Loading Spinner
+const ModalVideoPlayer = ({ mediaUrl, gameName }) => {
+  const [isLoading, setIsLoading] = useState(true);
+
+  return (
+    <div className="relative h-44 sm:h-56 w-full shrink-0 bg-black">
+      {isLoading && (
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-xs flex flex-col items-center justify-center z-10 space-y-2">
+          <div className="w-8 h-8 border-3 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-[10px] text-cyan-400 font-mono tracking-wider uppercase">Loading Trailer...</span>
+        </div>
+      )}
+      {isVideoUrl(mediaUrl) ? (
+        <video
+          src={mediaUrl}
+          autoPlay
+          loop
+          muted
+          playsInline
+          onLoadedData={() => setIsLoading(false)}
+          onPlaying={() => setIsLoading(false)}
+          className="w-full h-full object-cover pointer-events-none"
+        />
+      ) : (
+        <img
+          src={mediaUrl}
+          alt={gameName}
+          className="w-full h-full object-cover"
+        />
+      )}
     </div>
   );
 };
@@ -558,26 +610,11 @@ export const GamesLibrary = () => {
       {activeModalGame && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
           <div className="bg-[#0f1015] border border-cyan-400/40 rounded-2xl max-w-md w-full overflow-hidden shadow-[0_0_30px_rgba(34,211,238,0.2)] max-h-[90vh] flex flex-col">
-            <div className="relative h-44 sm:h-56 w-full shrink-0 bg-black">
-              {isVideoUrl(activeModalGame.mediaUrl) ? (
-                <video
-                  src={activeModalGame.mediaUrl}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-full h-full object-cover pointer-events-none"
-                />
-              ) : (
-                <img
-                  src={activeModalGame.mediaUrl}
-                  alt={activeModalGame.name}
-                  className="w-full h-full object-cover"
-                />
-              )}
+            <div className="relative">
+              <ModalVideoPlayer mediaUrl={activeModalGame.mediaUrl} gameName={activeModalGame.name} />
               <button
                 onClick={() => setActiveModalGame(null)}
-                className="absolute top-2.5 right-2.5 bg-black/70 text-white rounded-full p-1.5 hover:bg-red-600 transition cursor-pointer z-10"
+                className="absolute top-2.5 right-2.5 bg-black/70 text-white rounded-full p-1.5 hover:bg-red-600 transition cursor-pointer z-20"
               >
                 ✕
               </button>
