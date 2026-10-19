@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, Sparkles, CheckCircle2 } from 'lucide-react';
+import { X, Sparkles, CheckCircle2, Bike } from 'lucide-react';
 import BookingAvailability from './Booking/BookingAvailability';
 import BookingPayment from './Booking/BookingPayment';
 import { supabase } from '../supabaseClient';
@@ -182,7 +182,6 @@ export const BookingModal = ({
 
   const [paymentStep, setPaymentStep] = useState(1);
 
-  // User Diamond Balances State
   const [userGamerPoints, setUserGamerPoints] = useState(0);
   const [userRedeemableDiamonds, setUserRedeemableDiamonds] = useState(0);
 
@@ -208,7 +207,6 @@ export const BookingModal = ({
           const { data: { session } } = await supabase.auth.getSession();
           if (session?.user) {
             const userId = session.user.id;
-            
             try {
               const { data, error } = await supabase
                 .from('profiles')
@@ -278,7 +276,7 @@ export const BookingModal = ({
       `&pn=${encodeURIComponent(PAYEE_NAME)}` +
       `&am=${amount}` +
       `&cu=INR` +
-      `&tn=${encodeURIComponent('Cafe Booking')}`
+      `&tn=${encodeURIComponent('Cafe Booking with Parking')}`
     );
   };
 
@@ -324,22 +322,21 @@ export const BookingModal = ({
   const isNameValid = formData.name.trim().length >= 2;
   const isPhoneValid = formData.phone.trim().replace(/[\s+\-]/g, '').length >= 7;
 
-  // Confirm Booking Handler (UPI pay par 10 diamonds earn, Diamonds pay par 5 diamonds earn)
   const handleConfirmBooking = async ({ paymentMethod, finalPayAmount, utrValue }) => {
     setErrorMessage('');
 
     if (!isNameValid || !isPhoneValid) {
-      setErrorMessage('Please fill name (2+ letters) and valid mobile number.');
+      setErrorMessage('Kripya apna naam aur valid mobile number bharein.');
       return;
     }
 
     if (paymentMethod === 'upi' && (!utrValue || utrValue.trim().length < 6)) {
-      setErrorMessage('Please enter a valid 6+ digit UTR/Transaction Ref Number for UPI payment.');
+      setErrorMessage('Kripya valid 6+ digit UTR/Transaction Ref Number darj karein.');
       return;
     }
 
     if (paymentMethod === 'diamonds' && userRedeemableDiamonds < finalPayAmount) {
-      setErrorMessage(`Insufficient Redeemable Diamonds! You have ${userRedeemableDiamonds} diamonds, but need ${finalPayAmount}.`);
+      setErrorMessage(`Aapke paas पर्याप्त diamonds nahi hain! Aapke paas ${userRedeemableDiamonds} hain, lekin ${finalPayAmount} chahiye.`);
       return;
     }
 
@@ -364,8 +361,6 @@ export const BookingModal = ({
     }
 
     const bookingPrice = typeof finalPayAmount === 'number' ? finalPayAmount : rawTotalAmount;
-
-    // Diamond calculation: UPI pay par 0.1 rate (₹100 = 10 Diamonds), Diamonds pay par fixed 5 diamonds earn
     const earnedDiamonds = paymentMethod === 'upi' ? Math.floor(Number(bookingPrice) * 0.1) : 5;
 
     let finalUtRDisplay = '';
@@ -409,7 +404,7 @@ export const BookingModal = ({
       success = true;
     } catch (error) {
       console.error('Booking insertion error:', error);
-      setErrorMessage('Connection failed. Please check your internet and try again.');
+      setErrorMessage('Connection failed. Kripya apna internet check karke dobara koshish karein.');
       setIsSubmitting(false);
       return;
     }
@@ -420,11 +415,9 @@ export const BookingModal = ({
         let newRedeemableDiamonds = userRedeemableDiamonds;
 
         if (paymentMethod === 'diamonds') {
-          // Diamonds se pay kiya toh pehle balance minus hoga aur fir 5 diamonds add honge
           newRedeemableDiamonds = Math.max(0, userRedeemableDiamonds - bookingPrice) + earnedDiamonds;
           newGamerPoints = userGamerPoints + earnedDiamonds;
         } else {
-          // UPI pay kiya toh gamer points aur redeemable dono mein 0.1 rate se add honge
           newGamerPoints = userGamerPoints + earnedDiamonds;
           newRedeemableDiamonds = userRedeemableDiamonds + earnedDiamonds;
         }
@@ -468,19 +461,27 @@ export const BookingModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[10000] bg-black/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto w-full max-w-full">
-      <div className="bg-[#101014] border border-white/20 rounded-2xl sm:rounded-3xl w-full max-w-2xl p-4 sm:p-8 relative shadow-2xl my-auto text-white max-h-[92vh] overflow-y-auto">
+    <div className="fixed inset-0 z-[10000] bg-[#08080a] sm:bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-6 overflow-y-auto w-full max-w-full min-h-screen sm:min-h-0">
+      <div className="bg-[#101014] border border-cyan-500/30 rounded-none sm:rounded-2xl w-full max-w-lg p-4 sm:p-6 relative shadow-2xl my-auto text-white min-h-screen sm:min-h-0 sm:max-h-[92vh] overflow-y-auto font-sans flex flex-col justify-start">
+        
+        {/* Close / Back Button */}
         <button
           onClick={handleModalClose}
-          className="absolute top-3 right-3 sm:top-5 sm:right-5 p-2 rounded-full bg-white/10 text-zinc-300 hover:text-white cursor-pointer transition-all z-10"
+          className="absolute top-4 right-4 sm:top-4 sm:right-4 p-2 rounded-full bg-white/10 text-zinc-300 hover:text-white cursor-pointer transition-all z-20"
         >
           <X className="w-5 h-5" />
         </button>
 
+        {/* Free Parking Included Notification Badge */}
+        <div className="mb-3 mt-8 sm:mt-0 p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 flex items-center gap-2 text-emerald-300 text-xs font-mono">
+          <Bike className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>Parking Include: 1 Two Wheeler Free with booking!</span>
+        </div>
+
         {paymentStep === 1 && (
           <div className="w-full">
-            <h3 className="text-lg sm:text-2xl font-black font-orbitron text-cyan-400 flex items-center gap-2 mb-2 pr-8">
-              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 shrink-0" />
+            <h3 className="text-base sm:text-lg font-black font-orbitron text-cyan-400 flex items-center gap-2 mb-3 pr-10">
+              <Sparkles className="w-4 h-4 text-red-500 shrink-0" />
               SELECT TIMINGS & RIG
             </h3>
 
@@ -548,33 +549,33 @@ export const BookingModal = ({
         )}
 
         {paymentStep === 3 && confirmedBookingDetails && (
-          <div className="text-center py-2 sm:py-4 w-full">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-cyan-500/20 text-cyan-400 border border-cyan-400 rounded-full flex items-center justify-center mx-auto mb-3 shadow-[0_0_20px_rgba(34,211,238,0.4)]">
-              <CheckCircle2 className="w-8 h-8 sm:w-10 sm:h-10" />
+          <div className="text-center py-4 w-full">
+            <div className="w-14 h-14 bg-cyan-500/20 text-cyan-400 border border-cyan-400 rounded-full flex items-center justify-center mx-auto mb-3 shadow-[0_0_15px_rgba(34,211,238,0.4)]">
+              <CheckCircle2 className="w-8 h-8" />
             </div>
 
-            <h3 className="text-xl sm:text-2xl font-black font-orbitron text-white">
+            <h3 className="text-xl font-black font-orbitron text-white">
               BOOKING SUBMITTED!
             </h3>
 
-            <p className="text-[11px] sm:text-xs text-zinc-400 mt-1 font-mono">
-              Show this Booking ID at the cafe counter.
+            <p className="text-xs text-zinc-400 mt-1 font-mono">
+              Cafe counter par yeh Booking ID dikhayein.
             </p>
 
-            <div className="mt-4 p-2.5 sm:p-3 rounded-xl bg-cyan-500/10 border border-cyan-400/40 inline-flex items-center gap-2 sm:gap-3">
-              <span className="text-[10px] sm:text-xs font-mono text-zinc-400">BOOKING ID:</span>
-              <span className="text-base sm:text-lg font-black font-orbitron text-cyan-300 tracking-wider">
+            <div className="mt-4 p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-400/40 inline-flex items-center gap-2">
+              <span className="text-xs font-mono text-zinc-400">BOOKING ID:</span>
+              <span className="text-base font-black font-orbitron text-cyan-300 tracking-wider">
                 {confirmedBookingDetails.id}
               </span>
             </div>
 
-            <div className="mt-5 p-3.5 sm:p-5 rounded-2xl bg-white/5 border border-white/10 text-left space-y-2 font-mono text-[11px] sm:text-xs">
+            <div className="mt-4 p-3.5 rounded-xl bg-white/5 border border-white/10 text-left space-y-2 font-mono text-xs">
               <div className="flex justify-between border-b border-white/10 pb-1.5">
                 <span className="text-zinc-400">Booking Date:</span>
                 <span className="text-purple-300 font-bold">{confirmedBookingDetails.bookingDate}</span>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-1.5">
-                <span className="text-zinc-400">Booked At (Time):</span>
+                <span className="text-zinc-400">Booked At:</span>
                 <span className="text-cyan-300 font-bold">{confirmedBookingDetails.created_time || 'Just now'}</span>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-1.5">
@@ -598,11 +599,11 @@ export const BookingModal = ({
                 <span className="text-red-400 font-bold">{confirmedBookingDetails.slot}</span>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-1.5">
-                <span className="text-zinc-400">Duration:</span>
-                <span className="text-amber-300 font-bold">{confirmedBookingDetails.duration}</span>
+                <span className="text-zinc-400">Duration & Perks:</span>
+                <span className="text-emerald-300 font-bold">{confirmedBookingDetails.duration} + Free Parking (1 Bike)</span>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-1.5">
-                <span className="text-zinc-400">Transaction Mode / UTR:</span>
+                <span className="text-zinc-400">UTR / Mode:</span>
                 <span className="text-purple-300 font-bold font-mono tracking-wider break-all">
                   {confirmedBookingDetails.utr}
                 </span>
@@ -617,7 +618,7 @@ export const BookingModal = ({
 
             <button
               onClick={handleModalClose}
-              className="mt-5 w-full py-3 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-orbitron font-black text-xs shadow-[0_0_20px_rgba(34,211,238,0.4)] cursor-pointer transition-all"
+              className="mt-4 w-full py-3 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-orbitron font-black text-xs shadow-[0_0_15px_rgba(34,211,238,0.4)] cursor-pointer transition-all"
             >
               DONE / CLOSE
             </button>

@@ -50,11 +50,10 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
 
   const UPI_ID = 'strangersgamingcafe@upi';
 
+  // Exactly 3 Diamond Packs: 1000, 2000, 5000
   const DIAMOND_PACKS = [
     { price: 1000, diamonds: 1200, label: 'Starter Pack' },
     { price: 2000, diamonds: 2500, label: 'Pro Pack (Bonus)' },
-    { price: 3000, diamonds: 3700, label: 'Elite Pack' },
-    { price: 4000, diamonds: 4850, label: 'Master Pack' },
     { price: 5000, diamonds: 6000, label: 'Legendary VIP Pack' },
   ];
 
@@ -381,6 +380,18 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     setRechargeLoading(false);
   };
 
+  const handleLogoutClick = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+    if (onLogout) {
+      onLogout();
+    }
+    window.location.href = '/';
+  };
+
   const upcomingBookings = userBookings.filter((slot) => {
     const bDateStr = slot.bookingDate || slot.date || '';
     const bSlotStr = slot.slot_time || slot.slot || '';
@@ -449,10 +460,10 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
             </button>
 
             <button 
-              onClick={onLogout}
-              className="sm:hidden px-3 py-2 bg-red-950/30 border border-red-500/30 text-red-400 rounded-xl text-xs font-bold"
+              onClick={handleLogoutClick}
+              className="sm:hidden px-3 py-2 bg-red-950/30 border border-red-500/30 text-red-400 rounded-xl text-xs font-bold cursor-pointer"
             >
-              🚪 Exit
+              🚪 Logout
             </button>
           </div>
 
@@ -496,7 +507,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
             </button>
 
             <button 
-              onClick={onLogout}
+              onClick={handleLogoutClick}
               className="hidden sm:flex items-center gap-2 px-3.5 py-2.5 bg-red-950/30 hover:bg-red-900/40 border border-red-500/30 text-red-400 rounded-xl text-xs font-bold tracking-wider transition cursor-pointer"
             >
               🚪 Log Out
@@ -504,12 +515,12 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
           </div>
         </div>
 
-        {/* Dashboard Layout: Mobile & Desktop Grid Container */}
+        {/* Strict Left Sidebar & Right Details Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
           
-          {/* Sidebar / Top Navigation for Mobile & PC */}
+          {/* Left Sidebar Menu */}
           <div className="lg:col-span-1 space-y-4">
-            <div className="bg-[#121216] border border-white/10 p-4 rounded-2xl text-center shadow-xl relative overflow-hidden hidden sm:block">
+            <div className="bg-[#121216] border border-white/10 p-4 rounded-2xl text-center shadow-xl relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-600 via-cyan-500 to-purple-600"></div>
               <img 
                 src={avatarUrl || profileImg} 
@@ -523,11 +534,11 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
               </div>
             </div>
 
-            {/* Navigation Tabs - Mobile pe horizontal scrollable ya vertical buttons jaisa toggle */}
-            <div className="bg-[#121216] border border-white/10 p-2.5 rounded-2xl flex lg:flex-col overflow-x-auto gap-1.5 shadow-xl scrollbar-none">
+            {/* Strict Vertical Navigation List */}
+            <div className="bg-[#121216] border border-white/10 p-2.5 rounded-2xl space-y-1.5 shadow-xl">
               <button
                 onClick={() => setActiveTab('dashboard')}
-                className={`whitespace-nowrap lg:w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center justify-between cursor-pointer ${
+                className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center justify-between cursor-pointer ${
                   activeTab === 'dashboard' ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-md shadow-red-600/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'
                 }`}
               >
@@ -535,12 +546,12 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                   <LayoutDashboard className="w-4 h-4 text-red-400" />
                   <span>Dashboard</span>
                 </div>
-                <span className="hidden lg:inline text-[10px] opacity-60">➔</span>
+                <span className="text-[10px] opacity-60">➔</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('edit-profile')}
-                className={`whitespace-nowrap lg:w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center justify-between cursor-pointer ${
+                className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center justify-between cursor-pointer ${
                   activeTab === 'edit-profile' ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-md shadow-red-600/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'
                 }`}
               >
@@ -548,36 +559,36 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                   <Settings className="w-4 h-4 text-amber-400" />
                   <span>Edit Profile</span>
                 </div>
-                <span className="hidden lg:inline text-[10px] opacity-60">➔</span>
+                <span className="text-[10px] opacity-60">➔</span>
               </button>
 
               <button
                 onClick={onOpenBooking || onBack}
-                className="whitespace-nowrap lg:w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-emerald-400 hover:bg-emerald-950/30 border border-emerald-500/20 transition flex items-center justify-between cursor-pointer"
+                className="w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-emerald-400 hover:bg-emerald-950/30 border border-emerald-500/20 transition flex items-center justify-between cursor-pointer"
               >
                 <div className="flex items-center gap-2.5">
                   <PlusCircle className="w-4 h-4 text-emerald-400" />
                   <span>New Booking</span>
                 </div>
-                <span className="hidden lg:inline text-xs">➔</span>
+                <span className="text-xs">➔</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('upcoming')}
-                className={`whitespace-nowrap lg:w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center justify-between cursor-pointer ${
+                className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center justify-between cursor-pointer ${
                   activeTab === 'upcoming' ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-md shadow-red-600/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
                   <Calendar className="w-4 h-4 text-cyan-400" />
-                  <span>Upcoming Bookings</span>
+                  <span>Upcoming</span>
                 </div>
                 <span className="bg-white/10 px-2 py-0.5 rounded text-[10px] font-mono">{upcomingBookings.length}</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('past')}
-                className={`whitespace-nowrap lg:w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center justify-between cursor-pointer ${
+                className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center justify-between cursor-pointer ${
                   activeTab === 'past' ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-md shadow-red-600/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'
                 }`}
               >
@@ -590,20 +601,20 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
 
               <button
                 onClick={() => setActiveTab('recharges')}
-                className={`whitespace-nowrap lg:w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center justify-between cursor-pointer ${
+                className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center justify-between cursor-pointer ${
                   activeTab === 'recharges' ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md shadow-cyan-600/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
                   <Wallet className="w-4 h-4 text-emerald-400" />
-                  <span>Diamond Recharges</span>
+                  <span>Recharges</span>
                 </div>
                 <span className="bg-white/10 px-2 py-0.5 rounded text-[10px] font-mono">{userRecharges.length}</span>
               </button>
             </div>
           </div>
 
-          {/* Right Main Content Display Area */}
+          {/* Right Main Content Details Area */}
           <div className="lg:col-span-3">
             {activeTab === 'dashboard' && (
               <div className="space-y-6">
@@ -631,7 +642,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                 <div className="bg-gradient-to-r from-cyan-950/60 to-blue-950/60 border border-cyan-500/30 p-6 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xl">
                   <div>
                     <h3 className="text-base font-bold font-orbitron text-white">Need More Diamonds?</h3>
-                    <p className="text-xs text-gray-300 mt-1">Recharge online instantly! Choose custom diamond packs, pay via UPI with FREE parking perk, and admin will credit diamonds instantly.</p>
+                    <p className="text-xs text-gray-300 mt-1">Recharge online instantly! Choose custom diamond packs, pay via UPI, and admin will credit diamonds instantly.</p>
                   </div>
                   <button
                     onClick={() => setShowRechargeModal(true)}
@@ -964,46 +975,43 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
         </div>
       </div>
 
-      {/* Add Diamonds / Recharge Modal */}
+      {/* Fully Mobile-Optimized Add Diamonds / Recharge Modal */}
       {showRechargeModal && (
         <div 
-          className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 z-50 animate-fadeIn"
+          className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 z-[9999] overflow-y-auto"
           onClick={() => setShowRechargeModal(false)}
         >
           <div 
-            className="bg-[#121216] border border-cyan-500/40 rounded-2xl max-w-lg w-full p-5 sm:p-6 space-y-4 shadow-2xl relative text-white max-h-[90vh] overflow-y-auto font-sans"
+            className="bg-[#121216] border border-cyan-500/40 rounded-2xl max-w-md w-full p-4 sm:p-6 space-y-3 shadow-2xl relative text-white my-auto max-h-[88vh] overflow-y-auto font-sans"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-start border-b border-white/10 pb-3">
+            <div className="flex justify-between items-center border-b border-white/10 pb-2.5 sticky top-0 bg-[#121216] z-10">
               <div>
-                <h2 className="text-base font-black font-orbitron text-cyan-400 uppercase tracking-wider flex items-center gap-2">
-                  <Gem className="w-5 h-5 text-cyan-400 animate-bounce" /> ADD REDEEMABLE DIAMONDS
+                <h2 className="text-xs sm:text-sm font-black font-orbitron text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Gem className="w-4 h-4 text-cyan-400 animate-bounce" /> ADD DIAMONDS
                 </h2>
-                <p className="text-[11px] text-gray-400 mt-0.5">
-                  Select a diamond pack, pay online, and submit UTR for admin approval
-                </p>
               </div>
               <button
                 onClick={() => setShowRechargeModal(false)}
-                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white text-lg transition cursor-pointer"
+                className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white text-base transition cursor-pointer"
               >
                 &times;
               </button>
             </div>
 
-            {/* Diamond Packs Selection */}
-            <div className="space-y-2">
-              <label className="block text-xs uppercase tracking-wider text-gray-300 font-mono font-semibold">
-                Select Diamond Recharge Pack:
+            {/* Diamond Packs Selection (3 Options: 1000, 2000, 5000) */}
+            <div className="space-y-1.5">
+              <label className="block text-[10px] uppercase tracking-wider text-gray-300 font-mono font-semibold">
+                Select Diamond Pack (1000 / 2000 / 5000):
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-1 gap-2">
                 {DIAMOND_PACKS.map((pack, idx) => (
                   <div
                     key={idx}
                     onClick={() => setSelectedPack(pack)}
-                    className={`p-3 rounded-xl border cursor-pointer transition flex items-center justify-between ${
+                    className={`p-2.5 rounded-xl border cursor-pointer transition flex items-center justify-between ${
                       selectedPack.price === pack.price
-                        ? 'bg-cyan-950/60 border-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.3)]'
+                        ? 'bg-cyan-950/80 border-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.3)]'
                         : 'bg-[#1a1a20] border-white/10 hover:border-white/30'
                     }`}
                   >
@@ -1011,9 +1019,9 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                       <div className="text-xs font-bold text-cyan-300 flex items-center gap-1">
                         <Gem className="w-3.5 h-3.5 text-cyan-400" /> {pack.diamonds} Diamonds
                       </div>
-                      <div className="text-[10px] text-gray-400">{pack.label}</div>
+                      <div className="text-[9px] text-gray-400">{pack.label}</div>
                     </div>
-                    <div className="text-sm font-black font-mono text-emerald-400">
+                    <div className="text-xs font-black font-mono text-emerald-400">
                       ₹{pack.price}
                     </div>
                   </div>
@@ -1021,57 +1029,50 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
               </div>
             </div>
 
-            {/* UPI Payment Box */}
-            <div className="bg-white/5 p-3.5 rounded-2xl border border-white/10 space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-xs font-mono text-cyan-400 font-bold uppercase tracking-wider">
-                  ⚡ Pay ₹{selectedPack.price} via UPI
+            {/* UPI Payment Box (PhonePe, GPay, Paytm) */}
+            <div className="bg-white/5 p-3 rounded-xl border border-white/10 space-y-2.5">
+              <div className="flex justify-between items-center text-[11px]">
+                <span className="font-mono text-cyan-400 font-bold uppercase">
+                  Pay ₹{selectedPack.price} via UPI
                 </span>
-                <span className="text-[10px] font-mono bg-cyan-950 px-2 py-0.5 rounded border border-cyan-500/40 text-cyan-300">
-                  Get {selectedPack.diamonds} Diamonds
+                <span className="font-mono bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-500/40 text-cyan-300 text-[9px]">
+                  ⚡ Instant Approval
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 <a
                   href={getAppUri('phonepe', selectedPack.price)}
-                  className="p-2.5 rounded-xl bg-purple-900/60 border border-purple-500/50 hover:bg-purple-800 text-white font-mono text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer"
+                  className="p-2 rounded-lg bg-purple-900/60 border border-purple-500/50 hover:bg-purple-800 text-white font-mono text-[10px] font-bold flex items-center justify-center gap-1 transition cursor-pointer text-center"
                 >
                   <span>💜</span> PhonePe
                 </a>
 
                 <a
                   href={getAppUri('gpay', selectedPack.price)}
-                  className="p-2.5 rounded-xl bg-blue-900/60 border border-blue-500/50 hover:bg-blue-800 text-white font-mono text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer"
+                  className="p-2 rounded-lg bg-blue-900/60 border border-blue-500/50 hover:bg-blue-800 text-white font-mono text-[10px] font-bold flex items-center justify-center gap-1 transition cursor-pointer text-center"
                 >
-                  <span>🌐</span> Google Pay
+                  <span>🌐</span> GPay
                 </a>
 
                 <a
                   href={getAppUri('paytm', selectedPack.price)}
-                  className="p-2.5 rounded-xl bg-cyan-900/60 border border-cyan-500/50 hover:bg-cyan-800 text-white font-mono text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer"
+                  className="p-2 rounded-lg bg-cyan-900/60 border border-cyan-500/50 hover:bg-cyan-800 text-white font-mono text-[10px] font-bold flex items-center justify-center gap-1 transition cursor-pointer text-center"
                 >
                   <span>💙</span> Paytm
-                </a>
-
-                <a
-                  href={getStandardUpiUri(selectedPack.price)}
-                  className="p-2.5 rounded-xl bg-emerald-900/60 border border-emerald-500/50 hover:bg-emerald-800 text-white font-mono text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer"
-                >
-                  <span>⚡</span> Any UPI App
                 </a>
               </div>
 
               <div className="text-center pt-1">
-                <div className="w-28 h-28 bg-white p-1.5 rounded-xl mx-auto flex items-center justify-center shadow-lg">
+                <div className="w-24 h-24 bg-white p-1 rounded-lg mx-auto flex items-center justify-center shadow-md">
                   <img
                     src={getDynamicUpiQrUrl(selectedPack.price)}
                     alt="Dynamic Payment QR Code"
-                    className="w-24 h-24 object-contain mx-auto"
+                    className="w-22 h-22 object-contain mx-auto"
                   />
                 </div>
-                <div className="text-xs font-mono font-bold mt-2 text-emerald-400">
-                  Scan QR & Pay ₹{selectedPack.price} to Cafe UPI ID
+                <div className="text-[10px] font-mono font-bold mt-1.5 text-emerald-400">
+                  Scan & Pay ₹{selectedPack.price} to Cafe UPI ID
                 </div>
               </div>
             </div>
@@ -1079,13 +1080,13 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
             {/* UTR Input Section */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-xs text-gray-300 font-mono font-semibold">
+                <label className="text-[11px] text-gray-300 font-mono font-semibold">
                   Transaction Ref / UTR No. <span className="text-red-500">*</span>
                 </label>
                 <button
                   type="button"
                   onClick={() => setShowUtrHelp(true)}
-                  className="text-[10px] text-cyan-400 hover:text-cyan-300 font-mono flex items-center gap-1 bg-cyan-950/60 border border-cyan-500/40 px-2 py-0.5 rounded-md cursor-pointer"
+                  className="text-[9px] text-cyan-400 hover:text-cyan-300 font-mono flex items-center gap-1 bg-cyan-950/60 border border-cyan-500/40 px-2 py-0.5 rounded cursor-pointer"
                 >
                   <HelpCircle className="w-3 h-3 text-cyan-400" />
                   Where to find?
@@ -1094,19 +1095,19 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
 
               <input
                 type="text"
-                placeholder="Enter 12-digit UPI UTR Number after payment"
+                placeholder="Enter 12-digit UTR Number"
                 value={rechargeUtr}
                 onChange={(e) => setRechargeUtr(e.target.value)}
-                className="w-full p-3 rounded-xl bg-[#1a1a20] border border-white/10 text-white font-mono text-xs focus:outline-none focus:border-cyan-500"
+                className="w-full p-2.5 rounded-xl bg-[#1a1a20] border border-white/10 text-white font-mono text-xs focus:outline-none focus:border-cyan-500"
               />
             </div>
 
             <button
               onClick={handleRechargeSubmit}
               disabled={rechargeLoading || !rechargeUtr || rechargeUtr.trim().length < 6}
-              className="w-full py-3.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition cursor-pointer shadow-lg shadow-cyan-600/30 disabled:opacity-50"
+              className="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 text-white font-bold text-[11px] uppercase tracking-widest rounded-xl transition cursor-pointer shadow-lg shadow-cyan-600/30 disabled:opacity-50"
             >
-              {rechargeLoading ? 'Submitting Request...' : `Submit UTR for ${selectedPack.diamonds} Diamonds`}
+              {rechargeLoading ? 'Submitting...' : `Submit UTR for ${selectedPack.diamonds} Diamonds`}
             </button>
           </div>
         </div>
