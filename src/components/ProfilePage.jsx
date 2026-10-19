@@ -8,6 +8,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
+  const [safariDebugError, setSafariDebugError] = tests = useState('');
   
   // Safe LocalStorage Helpers to prevent Safari Private Mode crashes
   const getSafeStorage = (key, defaultVal = 0) => {
@@ -171,6 +172,8 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
         }
       } catch (err) {
         console.warn("Profile table fetch warning:", err);
+        console.error("Safari strict error catch:", err);
+        setSafariDebugError(err.message || String(err));
       } finally {
         clearTimeout(safetyTimer);
         if (isMounted) {
