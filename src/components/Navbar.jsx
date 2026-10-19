@@ -52,7 +52,7 @@ export const Navbar = ({ onOpenBooking, onOpenLogin, session, onOpenProfile }) =
   // Active section detection on scroll
   useEffect(() => {
     const handleScroll = () => {
-      const sections = ['home', 'zones', 'pricing', 'games', 'location'];
+      const sections = ['home', 'zones', 'gallery', 'pricing', 'games', 'location'];
       const scrollPosition = window.scrollY + 120;
 
       for (const sectionId of sections) {
@@ -95,6 +95,7 @@ export const Navbar = ({ onOpenBooking, onOpenLogin, session, onOpenProfile }) =
   const navItems = [
     { id: 'home', label: 'HOME' },
     { id: 'zones', label: 'ZONES' },
+    { id: 'gallery', label: 'GALLERY' },
     { id: 'pricing', label: 'PRICING' },
     { id: 'games', label: 'GAMES' },
     { id: 'location', label: 'LOCATION' },

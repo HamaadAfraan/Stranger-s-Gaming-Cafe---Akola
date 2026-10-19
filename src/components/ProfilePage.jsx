@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HelpCircle, X, Eye, EyeOff, Gem, PlusCircle, CreditCard, CheckCircle2 } from 'lucide-react';
+import { HelpCircle, X, Eye, EyeOff, Gem, PlusCircle, CreditCard, CheckCircle2, LayoutDashboard, Settings, Calendar, History, Wallet } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import profileImg from '../assets/profile.jpeg';
 
@@ -8,15 +8,20 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
-  const [gamerPoints, setGamerPoints] = useState(0);
-  const [redeemableDiamonds, setRedeemableDiamonds] = useState(0);
+  
+  const [gamerPoints, setGamerPoints] = useState(() => {
+    return parseInt(localStorage.getItem('cached_gamer_points'), 10) || 0;
+  });
+  const [redeemableDiamonds, setRedeemableDiamonds] = useState(() => {
+    return parseInt(localStorage.getItem('cached_redeemable_diamonds'), 10) || 0;
+  });
   const [loyaltyTier, setLoyaltyTier] = useState('BRONZE');
 
   const [loading, setLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState('');
   
-  // Toast Notification State
   const [toast, setToast] = useState({ show: false, text: '', type: 'success' });
 
   const showToast = (text, type = 'success') => {
@@ -26,7 +31,6 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     }, 4000);
   };
   
-  // Password Update States
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [showPwd, setShowPwd] = useState(false);
@@ -36,10 +40,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
   const [userBookings, setUserBookings] = useState([]);
   const [userRecharges, setUserRecharges] = useState([]);
   
-  // State for Selected Booking/Recharge Receipt Modal
   const [selectedRecord, setSelectedRecord] = useState(null);
-
-  // State for Add Diamonds / Recharge Modal
   const [showRechargeModal, setShowRechargeModal] = useState(false);
   const [selectedPack, setSelectedPack] = useState({ price: 1000, diamonds: 1200 });
   const [rechargeUtr, setRechargeUtr] = useState('');
@@ -57,7 +58,6 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     { price: 5000, diamonds: 6000, label: 'Legendary VIP Pack' },
   ];
 
-  // Helper Functions for Format Parsing
   const formatDateString = (rawDate) => {
     if (!rawDate) return 'N/A';
     try {
@@ -69,22 +69,18 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     }
   };
 
-  // Safe Standardized Upcoming/Past Comparison Logic for Mobile & PC
   const checkIsUpcoming = (bookingDateStr, slotTimeStr) => {
     if (!bookingDateStr) return false;
 
-    // Aaj ki local YYYY-MM-DD date nikalo
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
     const todayStr = `${year}-${month}-${day}`;
 
-    // YYYY-MM-DD format exact string comparison
     if (bookingDateStr > todayStr) return true;  
     if (bookingDateStr < todayStr) return false; 
 
-    // Agar date aaj ki hi hai (bookingDateStr === todayStr):
     if (!slotTimeStr || !slotTimeStr.includes('-')) return true;
 
     try {
@@ -107,7 +103,6 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     }
   };
 
-  // Safe Profile, Bookings & Recharges Fetch
   useEffect(() => {
     const fetchProfileData = async () => {
       if (session?.user) {
@@ -120,7 +115,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
         setAvatarUrl(session.user.user_metadata?.avatar_url || '');
 
         try {
-          const { data } = await supabase
+          const { data, error } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', userId)
@@ -130,19 +125,36 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
             if (data.name) setName(data.name);
             if (data.phone) setPhone(data.phone);
             if (data.avatar_url) setAvatarUrl(data.avatar_url);
-            if (data.gamer_points !== undefined && data.gamer_points !== null) {
-              setGamerPoints(parseInt(data.gamer_points, 10) || 0);
-            }
-            if (data.redeemable_diamonds !== undefined && data.redeemable_diamonds !== null) {
-              setRedeemableDiamonds(parseInt(data.redeemable_diamonds, 10) || 0);
-            }
+            
+            const pts = data.gamer_points ?? data.points ?? data.score ?? 0;
+            const parsedPts = parseInt(pts, 10) || 0;
+            setGamerPoints(parsedPts);
+            localStorage.setItem('cached_gamer_points', parsedPts);
+
+            const diamonds = data.redeemable_diamonds ?? data.diamonds ?? data.diamond_balance ?? data.available_diamonds ?? 0;
+            const parsedDiamonds = parseInt(diamonds, 10) || 0;
+            setRedeemableDiamonds(parsedDiamonds);
+            localStorage.setItem('cached_redeemable_diamonds', parsedDiamonds);
+
             if (data.loyalty_tier) setLoyaltyTier(data.loyalty_tier);
+          } else {
+            await supabase.from('profiles').upsert({
+              id: userId,
+              name: session.user.user_metadata?.full_name || 'Gamer',
+              phone: userPhone,
+              gamer_points: 0,
+              redeemable_diamonds: 0
+            }, { onConflict: 'id' });
           }
         } catch (err) {
           console.warn("Profile table fetch warning:", err);
+        } finally {
+          setProfileLoading(false);
         }
 
         fetchUserData(userEmail, userId, userPhone);
+      } else {
+        setProfileLoading(false);
       }
     };
 
@@ -151,7 +163,6 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
 
   const fetchUserData = async (email, userId, userPhone) => {
     try {
-      // Fetch Bookings
       const { data: allBookings } = await supabase.from('bookings').select('*');
       if (allBookings && Array.isArray(allBookings)) {
         const matchedBookings = allBookings.filter(b => {
@@ -163,7 +174,6 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
         setUserBookings(matchedBookings);
       }
 
-      // Fetch Diamond Recharges from dedicated 'diamond_recharges' table
       const { data: allRecharges } = await supabase.from('diamond_recharges').select('*');
       if (allRecharges && Array.isArray(allRecharges)) {
         const matchedRecharges = allRecharges.filter(r => {
@@ -276,7 +286,6 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     setLoading(false);
   };
 
-  // Password Update Handler
   const handlePasswordUpdate = async (e) => {
     e.preventDefault();
     setPwdMessage('');
@@ -337,7 +346,6 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(upiData)}`;
   };
 
-  // Submit Diamond Recharge Request to the new dedicated 'diamond_recharges' table
   const handleRechargeSubmit = async (e) => {
     e.preventDefault();
     if (!rechargeUtr || rechargeUtr.trim().length < 6) {
@@ -397,11 +405,11 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
   const currentBadge = tierBadges[calculatedTier] || tierBadges['BRONZE'];
 
   return (
-    <div className="min-h-screen bg-[#08080a] text-white pt-20 pb-16 px-4 sm:px-8 font-sans relative">
+    <div className="min-h-screen bg-[#08080a] text-white pt-20 pb-16 px-3 sm:px-8 font-sans relative">
       
-      {/* Toast Notification Container */}
+      {/* Toast Notification */}
       {toast.show && (
-        <div className="fixed top-24 right-4 z-[99999] animate-bounce transition-all duration-300 max-w-sm w-full">
+        <div className="fixed top-24 right-4 z-[99999] animate-bounce transition-all duration-300 max-w-sm w-full px-4">
           <div className={`p-4 rounded-2xl border shadow-2xl flex items-start gap-3 ${
             toast.type === 'error' 
               ? 'bg-red-950/90 border-red-500 text-red-200' 
@@ -431,8 +439,8 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
       <div className="max-w-7xl mx-auto">
         
         {/* Top Header Bar */}
-        <div className="bg-[#121216] border border-white/10 rounded-2xl p-4 sm:p-6 mb-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl">
-          <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
+        <div className="bg-[#121216]/90 backdrop-blur-md border border-white/10 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xl">
+          <div className="flex items-center justify-between w-full sm:w-auto gap-3">
             <button 
               onClick={onBack}
               className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-bold tracking-wider transition cursor-pointer flex items-center gap-2"
@@ -442,129 +450,155 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
 
             <button 
               onClick={onLogout}
-              className="md:hidden px-3 py-2 bg-red-950/30 border border-red-500/30 text-red-400 rounded-xl text-xs font-bold"
+              className="sm:hidden px-3 py-2 bg-red-950/30 border border-red-500/30 text-red-400 rounded-xl text-xs font-bold"
             >
               🚪 Exit
             </button>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center md:justify-end gap-3 w-full md:w-auto">
+          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2.5 w-full sm:w-auto">
             {/* Lifetime Gamer Points */}
-            <div className="bg-gradient-to-r from-blue-950/80 to-cyan-950/80 border border-cyan-500/40 px-4 py-2.5 rounded-xl flex items-center gap-3 shadow-lg">
-              <span className="text-xl animate-pulse">💎</span>
+            <div className="bg-gradient-to-r from-blue-950/80 to-cyan-950/80 border border-cyan-500/40 px-3 py-2 rounded-xl flex items-center gap-2.5 shadow-lg">
+              <span className="text-lg animate-pulse">💎</span>
               <div>
-                <span className="text-[9px] text-cyan-300 uppercase font-black tracking-widest block">Gamer Points</span>
-                <span className="text-base font-black font-mono text-cyan-100">{gamerPoints} <span className="text-[10px] font-normal text-cyan-400">PTS</span></span>
+                <span className="text-[8px] text-cyan-300 uppercase font-black tracking-widest block">Gamer Points</span>
+                <span className="text-sm font-black font-mono text-cyan-100">
+                  {profileLoading && gamerPoints === 0 ? '-' : gamerPoints} <span className="text-[9px] font-normal text-cyan-400">PTS</span>
+                </span>
               </div>
             </div>
 
             {/* Spendable Redeemable Diamonds */}
-            <div className="bg-gradient-to-r from-emerald-950/80 to-teal-950/80 border border-emerald-500/40 px-4 py-2.5 rounded-xl flex items-center gap-3 shadow-lg">
-              <span className="text-xl animate-bounce">🪙</span>
+            <div className="bg-gradient-to-r from-emerald-950/80 to-teal-950/80 border border-emerald-500/40 px-3 py-2 rounded-xl flex items-center gap-2.5 shadow-lg">
+              <span className="text-lg animate-bounce">🪙</span>
               <div>
-                <span className="text-[9px] text-emerald-300 uppercase font-black tracking-widest block">Redeemable Diamonds</span>
-                <span className="text-base font-black font-mono text-emerald-100">{redeemableDiamonds} <span className="text-[10px] font-normal text-emerald-400">AVAIL</span></span>
+                <span className="text-[8px] text-emerald-300 uppercase font-black tracking-widest block">Diamonds</span>
+                <span className="text-sm font-black font-mono text-emerald-100">
+                  {profileLoading && redeemableDiamonds === 0 ? '-' : redeemableDiamonds} <span className="text-[9px] font-normal text-emerald-400">AVAIL</span>
+                </span>
               </div>
             </div>
 
-            <div className={`bg-gradient-to-r ${currentBadge.color} border px-3 py-2.5 rounded-xl flex items-center gap-2 shadow-lg`}>
-              <span className="text-lg">{currentBadge.icon}</span>
+            <div className={`bg-gradient-to-r ${currentBadge.color} border px-3 py-2 rounded-xl flex items-center gap-2 shadow-lg`}>
+              <span className="text-base">{currentBadge.icon}</span>
               <div>
-                <span className="text-[8px] uppercase font-bold opacity-80 block tracking-wider">Tier</span>
-                <span className="text-xs font-black uppercase tracking-widest">{calculatedTier}</span>
+                <span className="text-[7px] uppercase font-bold opacity-80 block tracking-wider">Tier</span>
+                <span className="text-[11px] font-black uppercase tracking-widest">{calculatedTier}</span>
               </div>
             </div>
 
             {/* Add Diamonds Button */}
             <button
               onClick={() => setShowRechargeModal(true)}
-              className="px-4 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg transition cursor-pointer flex items-center gap-2"
+              className="px-3.5 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 text-white font-extrabold text-[11px] uppercase tracking-wider rounded-xl shadow-lg transition cursor-pointer flex items-center gap-1.5"
             >
-              <Gem className="w-4 h-4" /> Add Diamonds
+              <Gem className="w-3.5 h-3.5" /> Add Diamonds
             </button>
 
             <button 
               onClick={onLogout}
-              className="hidden md:flex items-center gap-2 px-4 py-3 bg-red-950/30 hover:bg-red-900/40 border border-red-500/30 text-red-400 rounded-xl text-xs font-bold tracking-wider transition cursor-pointer"
+              className="hidden sm:flex items-center gap-2 px-3.5 py-2.5 bg-red-950/30 hover:bg-red-900/40 border border-red-500/30 text-red-400 rounded-xl text-xs font-bold tracking-wider transition cursor-pointer"
             >
               🚪 Log Out
             </button>
           </div>
         </div>
 
-        {/* Dashboard Main Grid Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        {/* Dashboard Layout: Mobile & Desktop Grid Container */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
           
-          {/* Left Sidebar Navigation */}
-          <div className="lg:col-span-1 space-y-6">
-            <div className="bg-[#121216] border border-white/10 p-5 rounded-2xl text-center shadow-xl">
+          {/* Sidebar / Top Navigation for Mobile & PC */}
+          <div className="lg:col-span-1 space-y-4">
+            <div className="bg-[#121216] border border-white/10 p-4 rounded-2xl text-center shadow-xl relative overflow-hidden hidden sm:block">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-600 via-cyan-500 to-purple-600"></div>
               <img 
                 src={avatarUrl || profileImg} 
                 alt="Gamer Avatar" 
-                className="w-20 h-20 mx-auto rounded-full object-cover border-2 border-red-600 shadow-lg shadow-red-600/30 mb-3"
+                className="w-16 h-16 mx-auto rounded-full object-cover border-2 border-red-600 shadow-lg shadow-red-600/30 mb-2.5"
               />
-              <h2 className="text-base font-black font-orbitron text-white truncate">{name || 'Gamer Profile'}</h2>
-              <p className="text-gray-400 text-[11px] mt-0.5 truncate">{session?.user?.email || 'Guest User'}</p>
-              <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 bg-red-600/15 border border-red-500/30 rounded-lg text-red-400 text-[9px] font-bold tracking-widest uppercase">
+              <h2 className="text-sm font-black font-orbitron text-white truncate">{name || 'Gamer Profile'}</h2>
+              <p className="text-gray-400 text-[10px] mt-0.5 truncate">{session?.user?.email || 'Guest User'}</p>
+              <div className="mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-red-600/15 border border-red-500/30 rounded-md text-red-400 text-[9px] font-bold tracking-widest uppercase">
                 {calculatedTier} VIP
               </div>
             </div>
 
-            <div className="bg-[#121216] border border-white/10 p-3 rounded-2xl space-y-2 shadow-xl">
+            {/* Navigation Tabs - Mobile pe horizontal scrollable ya vertical buttons jaisa toggle */}
+            <div className="bg-[#121216] border border-white/10 p-2.5 rounded-2xl flex lg:flex-col overflow-x-auto gap-1.5 shadow-xl scrollbar-none">
               <button
                 onClick={() => setActiveTab('dashboard')}
-                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center gap-3 cursor-pointer ${
-                  activeTab === 'dashboard' ? 'bg-red-600 text-white shadow-lg shadow-red-600/30' : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                className={`whitespace-nowrap lg:w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center justify-between cursor-pointer ${
+                  activeTab === 'dashboard' ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-md shadow-red-600/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'
                 }`}
               >
-                📊 Dashboard
+                <div className="flex items-center gap-2.5">
+                  <LayoutDashboard className="w-4 h-4 text-red-400" />
+                  <span>Dashboard</span>
+                </div>
+                <span className="hidden lg:inline text-[10px] opacity-60">➔</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('edit-profile')}
-                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center gap-3 cursor-pointer ${
-                  activeTab === 'edit-profile' ? 'bg-red-600 text-white shadow-lg shadow-red-600/30' : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                className={`whitespace-nowrap lg:w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center justify-between cursor-pointer ${
+                  activeTab === 'edit-profile' ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-md shadow-red-600/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'
                 }`}
               >
-                ⚙️ Edit Profile & Password
+                <div className="flex items-center gap-2.5">
+                  <Settings className="w-4 h-4 text-amber-400" />
+                  <span>Edit Profile</span>
+                </div>
+                <span className="hidden lg:inline text-[10px] opacity-60">➔</span>
               </button>
 
               <button
                 onClick={onOpenBooking || onBack}
-                className="w-full text-left px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider text-green-400 hover:bg-green-950/30 border border-green-500/20 transition flex items-center justify-between cursor-pointer"
+                className="whitespace-nowrap lg:w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-emerald-400 hover:bg-emerald-950/30 border border-emerald-500/20 transition flex items-center justify-between cursor-pointer"
               >
-                <span>➕ New Booking</span>
-                <span className="text-xs">➔</span>
+                <div className="flex items-center gap-2.5">
+                  <PlusCircle className="w-4 h-4 text-emerald-400" />
+                  <span>New Booking</span>
+                </div>
+                <span className="hidden lg:inline text-xs">➔</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('upcoming')}
-                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center justify-between cursor-pointer ${
-                  activeTab === 'upcoming' ? 'bg-red-600 text-white shadow-lg shadow-red-600/30' : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                className={`whitespace-nowrap lg:w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center justify-between cursor-pointer ${
+                  activeTab === 'upcoming' ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-md shadow-red-600/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'
                 }`}
               >
-                <span>📅 Upcoming Bookings</span>
-                <span className="bg-white/10 px-2 py-0.5 rounded text-[10px]">{upcomingBookings.length}</span>
+                <div className="flex items-center gap-2.5">
+                  <Calendar className="w-4 h-4 text-cyan-400" />
+                  <span>Upcoming Bookings</span>
+                </div>
+                <span className="bg-white/10 px-2 py-0.5 rounded text-[10px] font-mono">{upcomingBookings.length}</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('past')}
-                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center justify-between cursor-pointer ${
-                  activeTab === 'past' ? 'bg-red-600 text-white shadow-lg shadow-red-600/30' : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                className={`whitespace-nowrap lg:w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center justify-between cursor-pointer ${
+                  activeTab === 'past' ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-md shadow-red-600/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'
                 }`}
               >
-                <span>📜 Past Bookings</span>
-                <span className="bg-white/10 px-2 py-0.5 rounded text-[10px]">{pastBookings.length}</span>
+                <div className="flex items-center gap-2.5">
+                  <History className="w-4 h-4 text-purple-400" />
+                  <span>Past Bookings</span>
+                </div>
+                <span className="bg-white/10 px-2 py-0.5 rounded text-[10px] font-mono">{pastBookings.length}</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('recharges')}
-                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center justify-between cursor-pointer ${
-                  activeTab === 'recharges' ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/30' : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                className={`whitespace-nowrap lg:w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center justify-between cursor-pointer ${
+                  activeTab === 'recharges' ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md shadow-cyan-600/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'
                 }`}
               >
-                <span>💎 Diamond Recharges</span>
-                <span className="bg-white/10 px-2 py-0.5 rounded text-[10px]">{userRecharges.length}</span>
+                <div className="flex items-center gap-2.5">
+                  <Wallet className="w-4 h-4 text-emerald-400" />
+                  <span>Diamond Recharges</span>
+                </div>
+                <span className="bg-white/10 px-2 py-0.5 rounded text-[10px] font-mono">{userRecharges.length}</span>
               </button>
             </div>
           </div>
@@ -575,25 +609,29 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
               <div className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="bg-[#121216] border border-white/10 p-5 rounded-2xl shadow-xl">
-                    <span className="text-xs text-gray-400 font-bold uppercase tracking-wider block">Total Bookings</span>
+                    <span className="text-[11px] text-gray-400 font-bold uppercase tracking-wider block">Total Bookings</span>
                     <span className="text-2xl font-black font-orbitron text-white mt-1 block">{userBookings.length}</span>
                   </div>
 
                   <div className="bg-[#121216] border border-white/10 p-5 rounded-2xl shadow-xl">
-                    <span className="text-xs text-gray-400 font-bold uppercase tracking-wider block">Redeemable Diamonds</span>
-                    <span className="text-2xl font-black font-orbitron text-emerald-400 mt-1 block">🪙 {redeemableDiamonds}</span>
+                    <span className="text-[11px] text-gray-400 font-bold uppercase tracking-wider block">Redeemable Diamonds</span>
+                    <span className="text-2xl font-black font-orbitron text-emerald-400 mt-1 block">
+                      🪙 {profileLoading && redeemableDiamonds === 0 ? '-' : redeemableDiamonds}
+                    </span>
                   </div>
 
                   <div className="bg-[#121216] border border-white/10 p-5 rounded-2xl shadow-xl">
-                    <span className="text-xs text-gray-400 font-bold uppercase tracking-wider block">Lifetime Points</span>
-                    <span className="text-2xl font-black font-orbitron text-cyan-400 mt-1 block">💎 {gamerPoints}</span>
+                    <span className="text-[11px] text-gray-400 font-bold uppercase tracking-wider block">Lifetime Points</span>
+                    <span className="text-2xl font-black font-orbitron text-cyan-400 mt-1 block">
+                      💎 {profileLoading && gamerPoints === 0 ? '-' : gamerPoints}
+                    </span>
                   </div>
                 </div>
 
                 <div className="bg-gradient-to-r from-cyan-950/60 to-blue-950/60 border border-cyan-500/30 p-6 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xl">
                   <div>
                     <h3 className="text-base font-bold font-orbitron text-white">Need More Diamonds?</h3>
-                    <p className="text-xs text-gray-300 mt-1">Recharge online from home! Choose custom diamond packs, pay via UPI, submit UTR, and admin will credit diamonds instantly after verification.</p>
+                    <p className="text-xs text-gray-300 mt-1">Recharge online instantly! Choose custom diamond packs, pay via UPI with FREE parking perk, and admin will credit diamonds instantly.</p>
                   </div>
                   <button
                     onClick={() => setShowRechargeModal(true)}
@@ -605,8 +643,8 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
 
                 {/* Recent Bookings & Recharges */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-[#121216] border border-white/10 p-6 rounded-2xl shadow-2xl">
-                    <h3 className="text-sm font-bold font-orbitron text-gray-300 uppercase tracking-wider mb-4">
+                  <div className="bg-[#121216] border border-white/10 p-5 rounded-2xl shadow-2xl">
+                    <h3 className="text-xs font-bold font-orbitron text-gray-300 uppercase tracking-wider mb-4">
                       Recent Gaming Bookings
                     </h3>
                     {userBookings.length === 0 ? (
@@ -637,8 +675,8 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                     )}
                   </div>
 
-                  <div className="bg-[#121216] border border-white/10 p-6 rounded-2xl shadow-2xl">
-                    <h3 className="text-sm font-bold font-orbitron text-gray-300 uppercase tracking-wider mb-4">
+                  <div className="bg-[#121216] border border-white/10 p-5 rounded-2xl shadow-2xl">
+                    <h3 className="text-xs font-bold font-orbitron text-gray-300 uppercase tracking-wider mb-4">
                       Recent Diamond Recharges
                     </h3>
                     {userRecharges.length === 0 ? (
@@ -673,10 +711,10 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
             )}
 
             {activeTab === 'edit-profile' && (
-              <div className="space-y-8">
+              <div className="space-y-6">
                 {/* Profile Details Edit Form */}
-                <div className="bg-[#121216] border border-white/10 p-8 rounded-2xl shadow-2xl">
-                  <h2 className="text-lg font-bold font-orbitron text-red-500 mb-6">Update Gamer Details</h2>
+                <div className="bg-[#121216] border border-white/10 p-6 sm:p-8 rounded-2xl shadow-2xl">
+                  <h2 className="text-base font-bold font-orbitron text-red-500 mb-6">Update Gamer Details</h2>
 
                   {message && (
                     <p className="text-green-400 text-xs mb-6 bg-green-950/50 p-3 rounded-lg border border-green-800 text-center font-bold">
@@ -684,7 +722,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                     </p>
                   )}
 
-                  <form onSubmit={handleUpdate} className="space-y-6">
+                  <form onSubmit={handleUpdate} className="space-y-5">
                     <div>
                       <label className="block text-xs uppercase tracking-wider mb-2 text-gray-300">👤 Gamer Name</label>
                       <input 
@@ -709,7 +747,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
 
                     <div>
                       <label className="block text-xs uppercase tracking-wider mb-2 text-gray-300">🖼 Profile Avatar</label>
-                      <div className="flex gap-3">
+                      <div className="flex flex-col sm:flex-row gap-3">
                         <input 
                           type="text" 
                           value={avatarUrl} 
@@ -741,8 +779,8 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                 </div>
 
                 {/* Password Update Card */}
-                <div className="bg-[#121216] border border-white/10 p-8 rounded-2xl shadow-2xl">
-                  <h2 className="text-lg font-bold font-orbitron text-amber-400 mb-2">Change Password</h2>
+                <div className="bg-[#121216] border border-white/10 p-6 sm:p-8 rounded-2xl shadow-2xl">
+                  <h2 className="text-base font-bold font-orbitron text-amber-400 mb-2">Change Password</h2>
                   <p className="text-xs text-gray-400 mb-6">Update your account password securely.</p>
 
                   {pwdMessage && (
@@ -755,7 +793,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                     </div>
                   )}
 
-                  <form onSubmit={handlePasswordUpdate} className="space-y-6">
+                  <form onSubmit={handlePasswordUpdate} className="space-y-5">
                     <div>
                       <label className="block text-xs uppercase tracking-wider mb-2 text-gray-300">New Password</label>
                       <div className="relative">
@@ -802,7 +840,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
             {activeTab === 'upcoming' && (
               <div className="space-y-4">
                 <div className="flex justify-between items-center mb-2">
-                  <h2 className="text-base font-bold font-orbitron text-white">Upcoming & Pending Bookings</h2>
+                  <h2 className="text-sm font-bold font-orbitron text-white">Upcoming & Pending Bookings</h2>
                   <button onClick={onOpenBooking || onBack} className="text-xs text-red-400 hover:underline">+ New Booking</button>
                 </div>
 
@@ -815,13 +853,13 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                     <div 
                       key={booking.id || idx} 
                       onClick={() => setSelectedRecord({ type: 'booking', data: booking })}
-                      className="bg-[#121216] hover:bg-[#1a1a22] border border-white/10 hover:border-cyan-500/50 p-6 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 cursor-pointer transition shadow-lg group"
+                      className="bg-[#121216] hover:bg-[#1a1a22] border border-white/10 hover:border-cyan-500/50 p-5 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 cursor-pointer transition shadow-lg group"
                     >
                       <div>
                         <span className="inline-block px-3 py-1 bg-cyan-600/20 text-cyan-400 border border-cyan-500/30 text-[10px] font-bold rounded-lg uppercase tracking-wider mb-2">
                           {booking.screen || booking.category || 'Station'}
                         </span>
-                        <h3 className="text-lg font-bold font-orbitron group-hover:text-cyan-400 transition">{booking.customer_name || booking.name || name || 'Gamer Session'}</h3>
+                        <h3 className="text-base font-bold font-orbitron group-hover:text-cyan-400 transition">{booking.customer_name || booking.name || name || 'Gamer Session'}</h3>
                         <div className="flex items-center gap-4 text-xs text-gray-400 mt-2">
                           <span>📅 {formatDateString(booking.bookingDate || booking.date)}</span>
                           <span>⏰ {booking.slot_time || booking.slot || booking.time}</span>
@@ -845,7 +883,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
 
             {activeTab === 'past' && (
               <div className="space-y-4">
-                <h2 className="text-base font-bold font-orbitron text-white mb-2">Past Reservation History</h2>
+                <h2 className="text-sm font-bold font-orbitron text-white mb-2">Past Reservation History</h2>
 
                 {pastBookings.length === 0 ? (
                   <div className="text-center py-16 bg-[#121216] border border-white/10 rounded-2xl">
@@ -856,13 +894,13 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                     <div 
                       key={booking.id || idx} 
                       onClick={() => setSelectedRecord({ type: 'booking', data: booking })}
-                      className="bg-[#121216] hover:bg-[#1a1a22] border border-white/10 p-6 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 opacity-80 hover:opacity-100 cursor-pointer transition"
+                      className="bg-[#121216] hover:bg-[#1a1a22] border border-white/10 p-5 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 opacity-80 hover:opacity-100 cursor-pointer transition"
                     >
                       <div>
                         <span className="inline-block px-3 py-1 bg-white/5 text-gray-400 border border-white/10 text-[10px] font-bold rounded-lg uppercase tracking-wider mb-2">
                           {booking.screen || booking.category || 'Station'}
                         </span>
-                        <h3 className="text-lg font-bold font-orbitron">{booking.customer_name || booking.name || name || 'Gamer Session'}</h3>
+                        <h3 className="text-base font-bold font-orbitron">{booking.customer_name || booking.name || name || 'Gamer Session'}</h3>
                         <div className="flex items-center gap-4 text-xs text-gray-500 mt-2">
                           <span>📅 {formatDateString(booking.bookingDate || booking.date)}</span>
                           <span>⏰ {booking.slot_time || booking.slot || booking.time}</span>
@@ -882,7 +920,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
             {activeTab === 'recharges' && (
               <div className="space-y-4">
                 <div className="flex justify-between items-center mb-2">
-                  <h2 className="text-base font-bold font-orbitron text-white">Diamond Recharges History</h2>
+                  <h2 className="text-sm font-bold font-orbitron text-white">Diamond Recharges History</h2>
                   <button onClick={() => setShowRechargeModal(true)} className="text-xs text-cyan-400 hover:underline">+ Add Diamonds</button>
                 </div>
 
@@ -895,13 +933,13 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                     <div 
                       key={r.id || idx} 
                       onClick={() => setSelectedRecord({ type: 'recharge', data: r })}
-                      className="bg-[#121216] hover:bg-[#1a1a22] border border-white/10 hover:border-cyan-500/50 p-6 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 cursor-pointer transition shadow-lg group"
+                      className="bg-[#121216] hover:bg-[#1a1a22] border border-white/10 hover:border-cyan-500/50 p-5 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 cursor-pointer transition shadow-lg group"
                     >
                       <div>
                         <span className="inline-block px-3 py-1 bg-cyan-600/20 text-cyan-400 border border-cyan-500/30 text-[10px] font-bold rounded-lg uppercase tracking-wider mb-2">
                           💎 {r.diamonds} Diamonds Pack
                         </span>
-                        <h3 className="text-lg font-bold font-orbitron group-hover:text-cyan-400 transition">UTR: {r.utr}</h3>
+                        <h3 className="text-base font-bold font-orbitron group-hover:text-cyan-400 transition">UTR: {r.utr}</h3>
                         <div className="flex items-center gap-4 text-xs text-gray-400 mt-2 font-mono">
                           <span>📅 {formatDateString(r.created_at)}</span>
                           <span className="text-emerald-400 font-bold">₹{r.amount}</span>

@@ -13,6 +13,7 @@ import { BookingModal } from './components/BookingModal';
 import Login from './components/Login';
 import ProfilePage from './components/ProfilePage';
 import { supabase } from './supabaseClient';
+import { GalleryExperience } from './components/GalleryExperience';
 
 export default function App() {
   const [currentView, setCurrentView] = useState('home'); // 'home' or 'profile'
@@ -133,6 +134,10 @@ export default function App() {
             <Zones />
           </section>
 
+          <section id="gallery" className="w-full">
+            <GalleryExperience />
+          </section>
+          
           <section id="pricing" className="w-full">
             <Pricing onOpenBooking={handleOpenBooking} />
             <Perks />
