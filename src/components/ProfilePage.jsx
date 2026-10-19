@@ -103,24 +103,31 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
   };
 
 useEffect(() => {
+    let isMounted = true;
+    
     const fetchProfileData = async () => {
-      if (session?.user) {
-        const userEmail = session.user.email || '';
-        const userId = session.user.id || '';
-        const userPhone = session.user.user_metadata?.phone || '';
+      // Safety timeout: Safari mein agar request hang ho toh 4 second mein loader force close ho jaye
+      const safetyTimer = setTimeout(() => {
+        if (isMounted) setProfileLoading(false);
+      }, 4000);
 
-        setName(session.user.user_metadata?.full_name || session.user.user_metadata?.name || '');
-        setPhone(userPhone);
-        setAvatarUrl(session.user.user_metadata?.avatar_url || '');
+      try {
+        if (session?.user) {
+          const userEmail = session.user.email || '';
+          const userId = session.user.id || '';
+          const userPhone = session.user.user_metadata?.phone || '';
 
-        try {
+          setName(session.user.user_metadata?.full_name || session.user.user_metadata?.name || '');
+          setPhone(userPhone);
+          setAvatarUrl(session.user.user_metadata?.avatar_url || '');
+
           const { data, error } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', userId)
             .maybeSingle();
 
-          if (data) {
+          if (isMounted && data) {
             if (data.name) setName(data.name);
             if (data.phone) setPhone(data.phone);
             if (data.avatar_url) setAvatarUrl(data.avatar_url);
@@ -136,7 +143,7 @@ useEffect(() => {
             try { localStorage.setItem('cached_redeemable_diamonds', parsedDiamonds); } catch (e) {}
 
             if (data.loyalty_tier) setLoyaltyTier(data.loyalty_tier);
-          } else {
+          } else if (isMounted) {
             await supabase.from('profiles').upsert({
               id: userId,
               name: session.user.user_metadata?.full_name || 'Gamer',
@@ -145,20 +152,26 @@ useEffect(() => {
               redeemable_diamonds: 0
             }, { onConflict: 'id' });
           }
-        } catch (err) {
-          console.warn("Profile table fetch warning:", err);
-        } finally {
-          // Yeh ensure karega ki iPhone Safari par error aaye ya success, loader hamesha band ho
+
+          if (isMounted) {
+            fetchUserData(userEmail, userId, userPhone);
+          }
+        }
+      } catch (err) {
+        console.warn("Safari profile fetch error:", err);
+      } finally {
+        clearTimeout(safetyTimer);
+        if (isMounted) {
           setProfileLoading(false);
         }
-
-        fetchUserData(userEmail, userId, userPhone);
-      } else {
-        setProfileLoading(false);
       }
     };
 
     fetchProfileData();
+
+    return () => {
+      isMounted = false;
+    };
   }, [session?.user]);
 
   const fetchUserData = async (email, userId, userPhone) => {
