@@ -1,42 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
 
-// ==========================================
-// ALL TRAILER VIDEO / GIF IMPORTS
-// ==========================================
-import forzaTrailer from '../assets/trailer/forza.mp4';
-import gt7Trailer from '../assets/trailer/gran tourismo.mp4';
-import ets2Trailer from '../assets/trailer/Euro Truck Simulator.mp4';
-
-import fc26Trailer from '../assets/trailer/fc.mp4';
-import wwePainTrailer from '../assets/trailer/wwe htwp.mp4';
-import wwe2k26Trailer from '../assets/trailer/wwe 2k26.mp4';
-import cricketTrailer from '../assets/trailer/Cricket.mp4';
-
-import tekken from '../assets/trailer/tekken.mp4';
-import mortalTrailer from '../assets/trailer/mortal kombat.mp4'; 
-
-import valorantTrailer from '../assets/trailer/valorant.mp4';
-import pubgTrailer from '../assets/trailer/pubg.mp4';
-import codBoTrailer from '../assets/trailer/Call_of_Duty.mp4';
-import codMw3Trailer from '../assets/trailer/Call_of_Duty.mp4';
-
-import gta5Trailer from '../assets/trailer/gta v.mp4';
-import gta6Trailer from '../assets/trailer/gta v.mp4';
-import gtaSaTrailer from '../assets/trailer/gta sa.mp4';
-import gtaVcTrailer from '../assets/trailer/gta vc.mp4';
-import rdr2Trailer from '../assets/trailer/red dead.mp4';
-import farCry6Trailer from '../assets/trailer/Far_Cry.mp4';
-import assassinTrailer from '../assets/trailer/Assassins_Creed.mp4';
-
-import it2Trailer from '../assets/trailer/it takes two.mp4';
-import aWayOutTrailer from '../assets/trailer/A_Way_Out.mp4';
-
-import gowRagTrailer from '../assets/trailer/god of war ragnarok.mp4';
-import gow2Trailer from '../assets/trailer/god of war 3 remastered.mp4';
-import spiderman2Trailer from '../assets/trailer/spiderman.mp4';
-import ghostTrailer from '../assets/trailer/ghost.mp4';
-import unchartedTrailer from '../assets/trailer/unchartered.mp4';
-
 // Helper function: Resolves local asset image path (Vite / React support)
 const getCoverImage = (filename) => {
   try {
@@ -59,7 +22,7 @@ const PLATFORMS = [
 const GENRES = ['All', 'Action/Adventure', 'Fighting', 'Sports', 'Racing', 'FPS', 'Open World', 'Co-Op / Arcade', 'Simulation'];
 const PLAYER_COUNTS = ['All', '1P', '2P', '3P-4P'];
 
-// --- SORTED WITH TRENDING / POPULAR GAMES FIRST ---
+// --- GAMES DATA WITH DIRECT CLOUDINARY .MOV LINKS ---
 const GAMES_DATA = [
   /*
   {
@@ -70,7 +33,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['ps5-vip-55', 'ps5-reg-43'],
     description: "Experience the open-world action and adventure of the next installment in the Grand Theft Auto series.",
-    mediaUrl: gta6Trailer,
+    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419701/gta_v.mov",
     coverImage: getCoverImage("gta-6.avif")
   },
   */
@@ -82,7 +45,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['pc-arena', 'ps5-vip-55', 'ps5-reg-43', 'ps4'],
     description: "Massive open-world action title filled with driving, shooting, bank heists, and vast exploration at Stranger's Gaming Cafe Akola.",
-    mediaUrl: gta5Trailer,
+    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419701/gta_v.mov",
     coverImage: getCoverImage("gta-v.jpg")
   },
   {
@@ -93,7 +56,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['ps5-vip-55', 'ps5-reg-43'],
     description: "Next-gen 3D fighting tournament with aggressive Heat System mechanics and legendary martial artists.",
-    mediaUrl: tekken,
+    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419702/tekken.mov",
     coverImage: getCoverImage("tekken.webp")
   },
   {
@@ -104,7 +67,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['ps5-vip-55', 'ps5-reg-43'],
     description: "Swing through Marvel's New York as Peter Parker & Miles Morales to fight formidable villains like Venom.",
-    mediaUrl: spiderman2Trailer,
+    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419715/spiderman.mov",
     coverImage: getCoverImage("spiderman.jpeg")
   },
   {
@@ -115,7 +78,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['ps5-vip-55', 'ps5-reg-43'],
     description: "Epic Norse saga following Kratos and Atreus as they battle legendary gods and mythical monsters.",
-    mediaUrl: gowRagTrailer,
+    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419639/god_of_war_ragnarok.mov",
     coverImage: getCoverImage("god-of-war.webp")
   },
   {
@@ -126,7 +89,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['ps4'],
     description: "Epic tale of outlaw Arthur Morgan and the Van der Linde gang across the dying American frontier.",
-    mediaUrl: rdr2Trailer,
+    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419708/red_dead.mov",
     coverImage: getCoverImage("rdr2.jpeg")
   },
   {
@@ -137,7 +100,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['pc-arena'],
     description: "5v5 character-based tactical shooter combining precise gunplay with tactical character abilities.",
-    mediaUrl: valorantTrailer,
+    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419705/valorant.mov",
     coverImage: getCoverImage("valorant.jpg")
   },
   {
@@ -148,7 +111,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['pc-arena', 'ps5-vip-55'],
     description: "Intense battle royale shooter where 100 players fight for survival on sprawling tactical maps.",
-    mediaUrl: pubgTrailer,
+    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419696/pubg.mov",
     coverImage: getCoverImage("pubg.jpg")
   },
   {
@@ -159,7 +122,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['car-simulator', 'truck-simulator'],
     description: "High-speed open-world racing game featuring breathtaking Mexican landscapes and ultimate supercar drives.",
-    mediaUrl: forzaTrailer,
+    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419644/forza.mov",
     coverImage: getCoverImage("forza.jpg")
   },
   {
@@ -170,7 +133,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['car-simulator'],
     description: "Ultra-realistic driving simulator delivering authentic motorsport racing across real-world circuits.",
-    mediaUrl: gt7Trailer,
+    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419699/gran_tourismo.mov",
     coverImage: getCoverImage("gran-tourismo.jpg")
   },
   {
@@ -181,7 +144,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['truck-simulator'],
     description: "Drive heavy trucks across European highways, deliver cargo, and expand your freight company.",
-    mediaUrl: ets2Trailer,
+    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419698/Euro_Truck_Simulator.mov",
     coverImage: getCoverImage("ets2.jpg")
   },
   {
@@ -192,7 +155,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['ps5-vip-55', 'ps5-reg-43', 'ps4'],
     description: "Premier football simulation featuring world-class clubs and competitive local multiplayer matches.",
-    mediaUrl: fc26Trailer,
+    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419700/fc.mov",
     coverImage: getCoverImage("fc26.jpg")
   },
   {
@@ -203,7 +166,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['ps5-vip-55', 'ps5-reg-43'],
     description: "Authentic professional cricket simulation featuring deep career modes, licensed teams, and stadium action.",
-    mediaUrl: cricketTrailer,
+    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419640/Cricket.mov",
     coverImage: getCoverImage("cricket24.jpg")
   },
   {
@@ -214,7 +177,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['ps4'],
     description: "Nostalgic arcade wrestling classic featuring legendary WWE superstars and chaotic ring action.",
-    mediaUrl: wwePainTrailer,
+    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419713/wwe_htwp.mov",
     coverImage: getCoverImage("wwe-pain.avif")
   },
   {
@@ -225,7 +188,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['ps5-vip-55', 'ps5-reg-43'],
     description: "Modern professional wrestling simulator built with realistic combat physics and stunning visuals.",
-    mediaUrl: wwe2k26Trailer,
+    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419718/wwe_2k26.mov",
     coverImage: getCoverImage("wwe.jpg")
   },
   {
@@ -236,7 +199,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['ps5-vip-55', 'ps5-reg-43'],
     description: "Visceral 1v1 fighter featuring cinematic Fatalities, Kameo assistance, and a rebooted universe story.",
-    mediaUrl: mortalTrailer,
+    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419708/mortal_kombat.mov",
     coverImage: getCoverImage("mortal.avif")
   },
   {
@@ -247,7 +210,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['ps5-vip-55'],
     description: "Action-packed tactical shooter with thrilling stealth combat, military campaign, and zombie survival.",
-    mediaUrl: codBoTrailer,
+    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419717/Call_of_Duty.mov",
     coverImage: getCoverImage("call-of-duty.jpg")
   },
   {
@@ -258,7 +221,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['pc-arena', 'ps5-vip-55', 'ps4'],
     description: "Modern military shooter delivering high-speed gunfights, campaign missions, and multiplayer warfare.",
-    mediaUrl: codMw3Trailer,
+    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419717/Call_of_Duty.mov",
     coverImage: getCoverImage("call_of_duty_mw3.webp")
   },
   {
@@ -269,7 +232,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['pc-arena', 'ps4'],
     description: "Iconic crime saga where CJ navigates gang warfare, drive-bys, and story missions across San Andreas.",
-    mediaUrl: gtaSaTrailer,
+    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419704/gta_sa.mov",
     coverImage: getCoverImage("gta-sa.jpg")
   },
   {
@@ -280,7 +243,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['ps4'],
     description: "80s-themed crime adventure following Tommy Vercetti's rise through neon-lit Vice City.",
-    mediaUrl: gtaVcTrailer,
+    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419701/gta_vc.mov",
     coverImage: getCoverImage("gtavc.png")
   },
   {
@@ -291,7 +254,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['pc-arena', 'ps5-vip-55'],
     description: "Join a guerrilla revolution to liberate a tropical paradise from a ruthless modern dictator.",
-    mediaUrl: farCry6Trailer,
+    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419710/Far_Cry.mov",
     coverImage: getCoverImage("far cry 6.jpg")
   },
   {
@@ -302,7 +265,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['pc-arena', 'ps5-vip-55'],
     description: "Become Eivor, a legendary Viking raider, and lead your clan to build a new home in Dark Age England.",
-    mediaUrl: assassinTrailer,
+    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419689/Assassins_Creed.mov",
     coverImage: getCoverImage("assasian.jpg")
   },
   {
@@ -313,7 +276,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['ps5-reg-43', 'ps4'],
     description: "Pure cooperative platformer adventure designed strictly for two players to solve creative puzzles.",
-    mediaUrl: it2Trailer,
+    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419703/it_takes_two.mov",
     coverImage: getCoverImage("it2.webp")
   },
   {
@@ -324,7 +287,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['ps5-reg-43'],
     description: "Split-screen story adventure centered around two inmates attempting a daring prison breakout.",
-    mediaUrl: aWayOutTrailer,
+    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419697/A_Way_Out.mov",
     coverImage: getCoverImage("a_way_out.jpg")
   },
   {
@@ -335,7 +298,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['ps4'],
     description: "Classic hack-and-slash adventure featuring Kratos' vengeance against the Greek Olympian gods.",
-    mediaUrl: gow2Trailer,
+    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419707/god_of_war_3_remastered.mov",
     coverImage: getCoverImage("god2.jpg")
   },
   {
@@ -346,7 +309,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['ps5-vip-55'],
     description: "Forge a new path and wage an unconventional war for the freedom of Tsushima as samurai Jin Sakai.",
-    mediaUrl: ghostTrailer,
+    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419643/ghost.mov",
     coverImage: getCoverImage("ghost of tsushima.png")
   },
   {
@@ -357,7 +320,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['ps5-vip-55', 'ps5-reg-43'],
     description: "Seek fortune and leave your mark on the map in thrilling cinematic treasure-hunting adventures.",
-    mediaUrl: unchartedTrailer,
+    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419710/unchartered.mov",
     coverImage: getCoverImage("uncharted.jpg")
   }
 ];
@@ -365,7 +328,7 @@ const GAMES_DATA = [
 const isVideoUrl = (url) => {
   if (!url) return false;
   const str = String(url).toLowerCase();
-  return str.endsWith('.mp4') || str.includes('.mp4?') || str.includes('data:video/mp4');
+  return str.includes('.mp4') || str.includes('.mov') || str.includes('cloudinary');
 };
 
 const GameCard = ({ game, onOpenModal }) => {
@@ -405,7 +368,7 @@ const GameCard = ({ game, onOpenModal }) => {
             muted
             loop
             playsInline
-            preload="auto"
+            preload="none"
             className="w-full h-full object-cover hidden group-hover:block transition-opacity duration-300 pointer-events-none"
           />
         ) : (
