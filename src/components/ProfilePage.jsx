@@ -183,7 +183,6 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     };
   }, [session?.user]);
 
-  // Sequential fetching to prevent Safari network overload
   const fetchUserData = async (email, userId, userPhone) => {
     try {
       const { data: allBookings } = await supabase.from('bookings').select('*');
