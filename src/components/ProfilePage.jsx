@@ -9,12 +9,24 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
   const [phone, setPhone] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   
-  const [gamerPoints, setGamerPoints] = useState(() => {
-    return parseInt(localStorage.getItem('cached_gamer_points'), 10) || 0;
-  });
-  const [redeemableDiamonds, setRedeemableDiamonds] = useState(() => {
-    return parseInt(localStorage.getItem('cached_redeemable_diamonds'), 10) || 0;
-  });
+  // Safe LocalStorage Helpers to prevent Safari Private Mode crashes
+  const getSafeStorage = (key, defaultVal = 0) => {
+    try {
+      const val = localStorage.getItem(key);
+      return val !== null ? parseInt(val, 10) || defaultVal : defaultVal;
+    } catch (e) {
+      return defaultVal;
+    }
+  };
+
+  const setSafeStorage = (key, val) => {
+    try {
+      localStorage.setItem(key, val);
+    } catch (e) {}
+  };
+
+  const [gamerPoints, setGamerPoints] = useState(() => getSafeStorage('cached_gamer_points', 0));
+  const [redeemableDiamonds, setRedeemableDiamonds] = useState(() => getSafeStorage('cached_redeemable_diamonds', 0));
   const [loyaltyTier, setLoyaltyTier] = useState('BRONZE');
 
   const [loading, setLoading] = useState(false);
@@ -102,11 +114,11 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     }
   };
 
-useEffect(() => {
+  useEffect(() => {
     let isMounted = true;
     
     const fetchProfileData = async () => {
-      // Safety timeout: Safari mein agar request hang ho toh 4 second mein loader force close ho jaye
+      // Safety timeout for Safari mobile networks to prevent infinite loader locks
       const safetyTimer = setTimeout(() => {
         if (isMounted) setProfileLoading(false);
       }, 4000);
@@ -135,12 +147,12 @@ useEffect(() => {
             const pts = data.gamer_points ?? data.points ?? data.score ?? 0;
             const parsedPts = parseInt(pts, 10) || 0;
             setGamerPoints(parsedPts);
-            try { localStorage.setItem('cached_gamer_points', parsedPts); } catch (e) {}
+            setSafeStorage('cached_gamer_points', parsedPts);
 
             const diamonds = data.redeemable_diamonds ?? data.diamonds ?? data.diamond_balance ?? data.available_diamonds ?? 0;
             const parsedDiamonds = parseInt(diamonds, 10) || 0;
             setRedeemableDiamonds(parsedDiamonds);
-            try { localStorage.setItem('cached_redeemable_diamonds', parsedDiamonds); } catch (e) {}
+            setSafeStorage('cached_redeemable_diamonds', parsedDiamonds);
 
             if (data.loyalty_tier) setLoyaltyTier(data.loyalty_tier);
           } else if (isMounted) {
@@ -158,7 +170,7 @@ useEffect(() => {
           }
         }
       } catch (err) {
-        console.warn("Safari profile fetch error:", err);
+        console.warn("Profile table fetch warning:", err);
       } finally {
         clearTimeout(safetyTimer);
         if (isMounted) {
@@ -397,10 +409,8 @@ useEffect(() => {
   // Foolproof Logout Handler for Mobile and Desktop
   const handleLogoutClick = async () => {
     try {
-      // Clear all local storage auth and caches instantly
       localStorage.clear();
       sessionStorage.clear();
-      
       await supabase.auth.signOut();
     } catch (err) {
       console.error("Logout error:", err);
@@ -410,7 +420,6 @@ useEffect(() => {
       onLogout();
     }
 
-    // Force hard reload and redirect to root root instantly
     window.location.href = '/';
   };
 
@@ -440,7 +449,6 @@ useEffect(() => {
   return (
     <div className="min-h-screen bg-[#08080a] text-white pt-20 pb-16 px-3 sm:px-8 font-sans relative">
       
-      {/* Toast Notification */}
       {toast.show && (
         <div className="fixed top-24 right-4 z-[99999] animate-bounce transition-all duration-300 max-w-sm w-full px-4">
           <div className={`p-4 rounded-2xl border shadow-2xl flex items-start gap-3 ${
@@ -471,7 +479,6 @@ useEffect(() => {
 
       <div className="max-w-7xl mx-auto">
         
-        {/* Top Header Bar */}
         <div className="bg-[#121216]/90 backdrop-blur-md border border-white/10 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xl">
           <div className="flex items-center justify-between w-full sm:w-auto gap-3">
             <button 
@@ -490,7 +497,6 @@ useEffect(() => {
           </div>
 
           <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2.5 w-full sm:w-auto">
-            {/* Lifetime Gamer Points */}
             <div className="bg-gradient-to-r from-blue-950/80 to-cyan-950/80 border border-cyan-500/40 px-3 py-2 rounded-xl flex items-center gap-2.5 shadow-lg">
               <span className="text-lg animate-pulse">💎</span>
               <div>
@@ -501,7 +507,6 @@ useEffect(() => {
               </div>
             </div>
 
-            {/* Spendable Redeemable Diamonds */}
             <div className="bg-gradient-to-r from-emerald-950/80 to-teal-950/80 border border-emerald-500/40 px-3 py-2 rounded-xl flex items-center gap-2.5 shadow-lg">
               <span className="text-lg animate-bounce">🪙</span>
               <div>
@@ -520,7 +525,6 @@ useEffect(() => {
               </div>
             </div>
 
-            {/* Add Diamonds Button */}
             <button
               onClick={() => setShowRechargeModal(true)}
               className="px-3.5 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 text-white font-extrabold text-[11px] uppercase tracking-wider rounded-xl shadow-lg transition cursor-pointer flex items-center gap-1.5"
@@ -537,10 +541,8 @@ useEffect(() => {
           </div>
         </div>
 
-        {/* Strict Left Sidebar & Right Details Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
           
-          {/* Left Sidebar Menu */}
           <div className="lg:col-span-1 space-y-4">
             <div className="bg-[#121216] border border-white/10 p-4 rounded-2xl text-center shadow-xl relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-600 via-cyan-500 to-purple-600"></div>
@@ -556,7 +558,6 @@ useEffect(() => {
               </div>
             </div>
 
-            {/* Strict Vertical Navigation List */}
             <div className="bg-[#121216] border border-white/10 p-2.5 rounded-2xl space-y-1.5 shadow-xl">
               <button
                 onClick={() => setActiveTab('dashboard')}
@@ -636,7 +637,6 @@ useEffect(() => {
             </div>
           </div>
 
-          {/* Right Main Content Details Area */}
           <div className="lg:col-span-3">
             {activeTab === 'dashboard' && (
               <div className="space-y-6">
@@ -674,7 +674,6 @@ useEffect(() => {
                   </button>
                 </div>
 
-                {/* Recent Bookings & Recharges */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-[#121216] border border-white/10 p-5 rounded-2xl shadow-2xl">
                     <h3 className="text-xs font-bold font-orbitron text-gray-300 uppercase tracking-wider mb-4">
@@ -745,7 +744,6 @@ useEffect(() => {
 
             {activeTab === 'edit-profile' && (
               <div className="space-y-6">
-                {/* Profile Details Edit Form */}
                 <div className="bg-[#121216] border border-white/10 p-6 sm:p-8 rounded-2xl shadow-2xl">
                   <h2 className="text-base font-bold font-orbitron text-red-500 mb-6">Update Gamer Details</h2>
 
@@ -811,7 +809,6 @@ useEffect(() => {
                   </form>
                 </div>
 
-                {/* Password Update Card */}
                 <div className="bg-[#121216] border border-white/10 p-6 sm:p-8 rounded-2xl shadow-2xl">
                   <h2 className="text-base font-bold font-orbitron text-amber-400 mb-2">Change Password</h2>
                   <p className="text-xs text-gray-400 mb-6">Update your account password securely.</p>
@@ -949,7 +946,6 @@ useEffect(() => {
               </div>
             )}
 
-            {/* Diamond Recharges Tab */}
             {activeTab === 'recharges' && (
               <div className="space-y-4">
                 <div className="flex justify-between items-center mb-2">
@@ -997,7 +993,6 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* Fully Mobile-Optimized Add Diamonds / Recharge Modal */}
       {showRechargeModal && (
         <div 
           className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 z-[9999] overflow-y-auto"
@@ -1021,7 +1016,6 @@ useEffect(() => {
               </button>
             </div>
 
-            {/* Diamond Packs Selection (3 Options: 1000, 2000, 5000) */}
             <div className="space-y-1.5">
               <label className="block text-[10px] uppercase tracking-wider text-gray-300 font-mono font-semibold">
                 Select Diamond Pack (1000 / 2000 / 5000):
@@ -1051,7 +1045,6 @@ useEffect(() => {
               </div>
             </div>
 
-            {/* UPI Payment Box (PhonePe, GPay, Paytm) */}
             <div className="bg-white/5 p-3 rounded-xl border border-white/10 space-y-2.5">
               <div className="flex justify-between items-center text-[11px]">
                 <span className="font-mono text-cyan-400 font-bold uppercase">
@@ -1099,7 +1092,6 @@ useEffect(() => {
               </div>
             </div>
 
-            {/* UTR Input Section */}
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-[11px] text-gray-300 font-mono font-semibold">
@@ -1135,7 +1127,6 @@ useEffect(() => {
         </div>
       )}
 
-      {/* UTR HELP POPUP */}
       {showUtrHelp && (
         <div className="fixed inset-0 z-[10001] bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
           <div className="bg-[#18181f] border border-cyan-500/50 rounded-2xl w-full max-w-md p-5 relative text-white shadow-2xl font-sans">
@@ -1185,7 +1176,6 @@ useEffect(() => {
         </div>
       )}
 
-      {/* Booking or Recharge Receipt Details Modal */}
       {selectedRecord && (
         <div 
           className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fadeIn"
@@ -1293,4 +1283,3 @@ useEffect(() => {
     </div>
   );
 }
-
