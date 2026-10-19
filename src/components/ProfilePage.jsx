@@ -8,9 +8,8 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
-  const [safariDebugError, setSafariDebugError] = tests = useState('');
-  
-  // Safe LocalStorage Helpers to prevent Safari Private Mode crashes
+
+  // Safe LocalStorage Helpers to completely prevent Safari Private Mode crashes
   const getSafeStorage = (key, defaultVal = 0) => {
     try {
       const val = localStorage.getItem(key);
@@ -119,7 +118,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     let isMounted = true;
     
     const fetchProfileData = async () => {
-      // Safety timeout for Safari mobile networks to prevent infinite loader locks
+      // Safety timeout: Safari mein agar network hang ho toh 4 second mein loader force close ho jaye
       const safetyTimer = setTimeout(() => {
         if (isMounted) setProfileLoading(false);
       }, 4000);
@@ -171,9 +170,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
           }
         }
       } catch (err) {
-        console.warn("Profile table fetch warning:", err);
-        console.error("Safari strict error catch:", err);
-        setSafariDebugError(err.message || String(err));
+        console.warn("Safari profile fetch warning:", err);
       } finally {
         clearTimeout(safetyTimer);
         if (isMounted) {
@@ -409,7 +406,6 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     setRechargeLoading(false);
   };
 
-  // Foolproof Logout Handler for Mobile and Desktop
   const handleLogoutClick = async () => {
     try {
       localStorage.clear();
@@ -450,14 +446,8 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
   const currentBadge = tierBadges[calculatedTier] || tierBadges['BRONZE'];
 
   return (
-    
     <div className="min-h-screen bg-[#08080a] text-white pt-20 pb-16 px-3 sm:px-8 font-sans relative">
-      {safariDebugError && (
-  <div className="bg-red-950/90 border border-red-500 text-red-200 p-4 rounded-xl mb-4 text-xs font-mono">
-    <strong className="block font-bold mb-1">Safari Debug Error:</strong>
-    {safariDebugError}
-  </div>
-)}
+      
       {toast.show && (
         <div className="fixed top-24 right-4 z-[99999] animate-bounce transition-all duration-300 max-w-sm w-full px-4">
           <div className={`p-4 rounded-2xl border shadow-2xl flex items-start gap-3 ${
