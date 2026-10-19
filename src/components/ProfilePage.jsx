@@ -450,8 +450,14 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
   const currentBadge = tierBadges[calculatedTier] || tierBadges['BRONZE'];
 
   return (
+    
     <div className="min-h-screen bg-[#08080a] text-white pt-20 pb-16 px-3 sm:px-8 font-sans relative">
-      
+      {safariDebugError && (
+  <div className="bg-red-950/90 border border-red-500 text-red-200 p-4 rounded-xl mb-4 text-xs font-mono">
+    <strong className="block font-bold mb-1">Safari Debug Error:</strong>
+    {safariDebugError}
+  </div>
+)}
       {toast.show && (
         <div className="fixed top-24 right-4 z-[99999] animate-bounce transition-all duration-300 max-w-sm w-full px-4">
           <div className={`p-4 rounded-2xl border shadow-2xl flex items-start gap-3 ${
