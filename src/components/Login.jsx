@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
-import { supabase } from '../supabaseClient';
+// Firebase imports hata kar apna local firebase client import kiya
+import { auth } from '../firebase';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  sendPasswordResetEmail 
+} from 'firebase/auth';
 import { X, Eye, EyeOff } from 'lucide-react';
 
 export default function Login({ onClose, onLoginSuccess }) {
@@ -21,63 +27,54 @@ export default function Login({ onClose, onLoginSuccess }) {
     setErrorMsg('');
     setSuccessMsg('');
 
-    if (isForgotPassword) {
-      // Forgot Password Handler
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin,
-      });
-
-      setLoading(false);
-      if (error) {
-        setErrorMsg(error.message);
-      } else {
+    try {
+      if (isForgotPassword) {
+        // Firebase Forgot Password Handler
+        await sendPasswordResetEmail(auth, email);
+        setLoading(false);
         setSuccessMsg('Password reset link sent to your registered email!');
-      }
-      return;
-    }
-
-    if (isSignUp) {
-      // Check if passwords match
-      if (password !== confirmPassword) {
-        setLoading(false);
-        setErrorMsg('Please check password: Passwords do not match!');
         return;
       }
 
-      if (password.length < 6) {
+      if (isSignUp) {
+        // Check if passwords match
+        if (password !== confirmPassword) {
+          setLoading(false);
+          setErrorMsg('Please check password: Passwords do not match!');
+          return;
+        }
+
+        if (password.length < 6) {
+          setLoading(false);
+          setErrorMsg('Password must be at least 6 characters long.');
+          return;
+        }
+
+        // Firebase Sign Up for new gamers
+        await createUserWithEmailAndPassword(auth, email, password);
         setLoading(false);
-        setErrorMsg('Password must be at least 6 characters long.');
-        return;
-      }
-
-      // Sign Up for new gamers
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-
-      setLoading(false);
-      if (error) {
-        setErrorMsg(error.message);
-      } else {
         setSuccessMsg('Account created successfully! You can now log in.');
         setIsSignUp(false);
         setPassword('');
         setConfirmPassword('');
-      }
-    } else {
-      // Login for existing gamers
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      setLoading(false);
-      if (error) {
-        setErrorMsg(error.message);
       } else {
-        onLoginSuccess(data.user);
+        // Firebase Login for existing gamers
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        setLoading(false);
+        onLoginSuccess(userCredential.user);
       }
+    } catch (error) {
+      setLoading(false);
+      // Firebase error messages user-friendly banane ke liye
+      let message = error.message;
+      if (error.code === 'auth/invalid-credential') {
+        message = 'Invalid email or password. Please try again.';
+      } else if (error.code === 'auth/email-already-in-use') {
+        message = 'This email is already registered. Please log in instead.';
+      } else if (error.code === 'auth/user-not-found') {
+        message = 'No account found with this email.';
+      }
+      setErrorMsg(message);
     }
   };
 

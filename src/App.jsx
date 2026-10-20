@@ -12,8 +12,12 @@ import { Footer } from './components/Footer';
 import { BookingModal } from './components/BookingModal';
 import Login from './components/Login';
 import ProfilePage from './components/ProfilePage';
-import { supabase } from './supabaseClient';
 import { GalleryExperience } from './components/GalleryExperience';
+
+// Firebase imports
+import { auth, db } from './firebase';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { collection, getDocs, onSnapshot } from 'firebase/firestore';
 
 export default function App() {
   const [currentView, setCurrentView] = useState('home'); // 'home' or 'profile'
@@ -22,57 +26,44 @@ export default function App() {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [bookedSlots, setBookedSlots] = useState([]);
 
+  // Firebase Auth State Listener (Safari Safe)
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      setSession(user);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => unsubscribeAuth();
   }, []);
 
-  // Direct Supabase se latest booked slots fetch karne ka function
+  // Firestore se bookings fetch karne ka function
   const fetchBookings = async () => {
     try {
-      const { data, error } = await supabase
-        .from('bookings')
-        .select('*');
-
-      if (error) {
-        console.error('Error fetching bookings from Supabase:', error);
-      } else {
-        setBookedSlots(Array.isArray(data) ? data : []);
-      }
+      const querySnapshot = await getDocs(collection(db, 'bookings'));
+      const bookingsList = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setBookedSlots(bookingsList);
     } catch (error) {
-      console.error('Failed to fetch booked slots in App.jsx:', error);
+      console.error('Error fetching bookings from Firestore:', error);
     }
   };
 
-  // Safari Safe Staggered Load & WebSocket Delay
+  // Real-time listener for bookings using Firestore onSnapshot (Safari Safe alternative to WebSockets)
   useEffect(() => {
     fetchBookings();
 
-    const timer = setTimeout(() => {
-      const channel = supabase
-        .channel('public:bookings')
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'bookings' },
-          () => {
-            fetchBookings();
-          }
-        )
-        .subscribe();
+    const unsubscribeBookings = onSnapshot(collection(db, 'bookings'), (snapshot) => {
+      const bookingsList = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setBookedSlots(bookingsList);
+    }, (error) => {
+      console.error('Firestore real-time sync error:', error);
+    });
 
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }, 2000); // 2 second delay taaki Safari fetch requests pehle pure ho jayein
-
-    return () => clearTimeout(timer);
+    return () => unsubscribeBookings();
   }, []);
 
   // Modal open hote hi body scroll prevent karna
@@ -120,9 +111,13 @@ export default function App() {
           onBack={() => setCurrentView('home')}
           onOpenBooking={handleOpenBooking}
           onLogout={async () => {
-            await supabase.auth.signOut();
-            setSession(null);
-            setCurrentView('home');
+            try {
+              await signOut(auth);
+              setSession(null);
+              setCurrentView('home');
+            } catch (error) {
+              console.error('Logout error:', error);
+            }
           }}
         />
       ) : (

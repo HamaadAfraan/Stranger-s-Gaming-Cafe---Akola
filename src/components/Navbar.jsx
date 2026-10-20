@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Crosshair, Menu, X, User } from 'lucide-react';
-import { supabase } from '../supabaseClient';
+import { auth, db } from '../firebase';
+import { doc, getDoc } from 'firebase/firestore';
 import profileImg from '../assets/profile.jpeg';
 
 export const Navbar = ({ onOpenBooking, onOpenLogin, session, onOpenProfile }) => {
@@ -8,36 +9,34 @@ export const Navbar = ({ onOpenBooking, onOpenLogin, session, onOpenProfile }) =
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [currentAvatar, setCurrentAvatar] = useState(profileImg);
 
-  // Safe Supabase fetch with error fallback
+  const currentUser = session?.user || auth.currentUser;
+
+  // Safe Firebase Firestore fetch for avatar
   useEffect(() => {
     let isMounted = true;
 
     const fetchLatestAvatar = async () => {
-      if (!session?.user?.id) {
-        if (isMounted) setCurrentAvatar(profileImg);
+      const userId = currentUser?.uid || currentUser?.id;
+      if (!userId) {
+        if (isMounted) setCurrentAvatar(currentUser?.photoURL || profileImg);
         return;
       }
 
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('avatar_url')
-          .eq('id', session.user.id)
-          .maybeSingle(); // .single() ki jagah .maybeSingle() use karein taaki profile na milne par crash na ho
-
-        if (error) throw error;
+        const userRef = doc(db, 'profiles', userId);
+        const userSnap = await getDoc(userRef);
 
         if (isMounted) {
-          if (data && data.avatar_url) {
-            setCurrentAvatar(data.avatar_url);
+          if (userSnap.exists() && userSnap.data().avatar_url) {
+            setCurrentAvatar(userSnap.data().avatar_url);
           } else {
-            setCurrentAvatar(session.user?.user_metadata?.avatar_url || profileImg);
+            setCurrentAvatar(currentUser?.photoURL || profileImg);
           }
         }
       } catch (err) {
         console.warn("Avatar fetch skipped/failed:", err.message);
         if (isMounted) {
-          setCurrentAvatar(session.user?.user_metadata?.avatar_url || profileImg);
+          setCurrentAvatar(currentUser?.photoURL || profileImg);
         }
       }
     };
@@ -47,7 +46,7 @@ export const Navbar = ({ onOpenBooking, onOpenLogin, session, onOpenProfile }) =
     return () => {
       isMounted = false;
     };
-  }, [session]);
+  }, [currentUser]);
 
   // Active section detection on scroll
   useEffect(() => {
@@ -139,7 +138,7 @@ export const Navbar = ({ onOpenBooking, onOpenLogin, session, onOpenProfile }) =
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         
         {/* Gamer Profile Avatar */}
-        {session && (
+        {currentUser && (
           <button 
             onClick={onOpenProfile}
             title="Gamer Profile & Bookings"
@@ -157,7 +156,7 @@ export const Navbar = ({ onOpenBooking, onOpenLogin, session, onOpenProfile }) =
         {/* Book a Station Button */}
         <button 
           onClick={() => {
-            if (!session) {
+            if (!currentUser) {
               onOpenLogin();
             } else {
               onOpenBooking();
@@ -197,7 +196,7 @@ export const Navbar = ({ onOpenBooking, onOpenLogin, session, onOpenProfile }) =
             </a>
           ))}
 
-          {session ? (
+          {currentUser ? (
             <button
               onClick={() => {
                 setIsMobileMenuOpen(false);

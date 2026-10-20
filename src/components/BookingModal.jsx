@@ -2,7 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { X, Sparkles, CheckCircle2, Bike } from 'lucide-react';
 import BookingAvailability from './Booking/BookingAvailability';
 import BookingPayment from './Booking/BookingPayment';
-import { supabase } from '../supabaseClient';
+// Supabase ki jagah Firebase auth aur db import kiya
+import { auth, db } from '../firebase';
+import { 
+  collection, 
+  addDoc, 
+  doc, 
+  getDoc, 
+  updateDoc, 
+  serverTimestamp 
+} from 'firebase/firestore';
 
 const UPI_ID = 'hamaad.afraan@ybl';
 const PAYEE_NAME = 'Strangers Gaming Cafe';
@@ -200,35 +209,40 @@ export const BookingModal = ({
     return now.getHours() * 60 + now.getMinutes();
   });
 
+  // Fetch User Data from Firestore 'profiles' collection
   useEffect(() => {
     const fetchUserData = async () => {
       if (isOpen) {
         try {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session?.user) {
-            const userId = session.user.id;
+          const currentUser = auth.currentUser;
+          if (currentUser) {
+            const userId = currentUser.uid;
             try {
-              const { data, error } = await supabase
-                .from('profiles')
-                .select('name, phone, gamer_points, redeemable_diamonds')
-                .eq('id', userId)
-                .single();
+              const docRef = doc(db, 'profiles', userId);
+              const docSnap = await getDoc(docRef);
               
-              if (!error && data) {
+              if (docSnap.exists()) {
+                const data = docSnap.data();
                 setFormData((prev) => ({
                   ...prev,
-                  name: data.name || session.user.user_metadata?.full_name || '',
-                  phone: data.phone || session.user.user_metadata?.phone || '',
+                  name: data.name || currentUser.displayName || '',
+                  phone: data.phone || currentUser.phoneNumber || '',
                 }));
                 setUserGamerPoints(parseInt(data.gamer_points, 10) || 0);
                 setUserRedeemableDiamonds(parseInt(data.redeemable_diamonds, 10) || 0);
+              } else {
+                setFormData((prev) => ({
+                  ...prev,
+                  name: currentUser.displayName || '',
+                  phone: currentUser.phoneNumber || '',
+                }));
               }
             } catch (profileError) {
-              console.warn("Profile table error:", profileError);
+              console.warn("Firestore profile fetch error:", profileError);
             }
           }
         } catch (authError) {
-          console.warn("Session error:", authError);
+          console.warn("Auth session error:", authError);
         }
       }
     };
@@ -322,6 +336,7 @@ export const BookingModal = ({
   const isNameValid = formData.name.trim().length >= 2;
   const isPhoneValid = formData.phone.trim().replace(/[\s+\-]/g, '').length >= 7;
 
+  // Handle Booking Confirmation and Save to Firestore
   const handleConfirmBooking = async ({ paymentMethod, finalPayAmount, utrValue }) => {
     setErrorMessage('');
 
@@ -342,7 +357,7 @@ export const BookingModal = ({
 
     setIsSubmitting(true);
     const bookingId = `STR-${Math.floor(1000 + Math.random() * 9000)}`;
-    const timeSlotString = `${minutesToTimeString(startTime)} - ${minutesToTimeString(endTime)}`;
+    const timeSlotString = `${minutesToTimeString(startTime)}\n${minutesToTimeString(endTime)}`;
     const now = new Date();
     const createdTimeString = now.toLocaleTimeString('en-US', {
       hour: '2-digit',
@@ -353,11 +368,11 @@ export const BookingModal = ({
     let userEmail = '';
     let currentUserId = null;
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      userEmail = session?.user?.email || '';
-      currentUserId = session?.user?.id || null;
+      const currentUser = auth.currentUser;
+      userEmail = currentUser?.email || '';
+      currentUserId = currentUser?.uid || null;
     } catch (e) {
-      console.warn('Session fetch warning:', e);
+      console.warn('Auth warning:', e);
     }
 
     const bookingPrice = typeof finalPayAmount === 'number' ? finalPayAmount : rawTotalAmount;
@@ -391,26 +406,15 @@ export const BookingModal = ({
       price: bookingPrice,
       created_time: createdTimeString,
       status: paymentMethod === 'diamonds' ? 'CONFIRMED' : 'PENDING',
-      createdAt: now.toISOString(),
+      createdAt: serverTimestamp(),
     };
 
-    let success = false;
     try {
-      const { error } = await supabase
-        .from('bookings')
-        .insert([bookingDetails]);
+      // Save booking in Firestore 'bookings' collection
+      await addDoc(collection(db, 'bookings'), bookingDetails);
 
-      if (error) throw new Error(error.message);
-      success = true;
-    } catch (error) {
-      console.error('Booking insertion error:', error);
-      setErrorMessage('Connection failed. Kripya apna internet check karke dobara koshish karein.');
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (success && currentUserId) {
-      try {
+      // Update User Profile points in Firestore if logged in
+      if (currentUserId) {
         let newGamerPoints = userGamerPoints;
         let newRedeemableDiamonds = userRedeemableDiamonds;
 
@@ -422,27 +426,26 @@ export const BookingModal = ({
           newRedeemableDiamonds = userRedeemableDiamonds + earnedDiamonds;
         }
 
-        await supabase
-          .from('profiles')
-          .update({
-            gamer_points: newGamerPoints,
-            redeemable_diamonds: newRedeemableDiamonds,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', currentUserId);
+        const userDocRef = doc(db, 'profiles', currentUserId);
+        await updateDoc(userDocRef, {
+          gamer_points: newGamerPoints,
+          redeemable_diamonds: newRedeemableDiamonds,
+          updated_at: new Date().toISOString()
+        });
 
         setUserGamerPoints(newGamerPoints);
         setUserRedeemableDiamonds(newRedeemableDiamonds);
-      } catch (ptsError) {
-        console.warn("Error updating profile balances:", ptsError);
       }
 
       if (typeof onBookingCreated === 'function') onBookingCreated(bookingDetails);
       setConfirmedBookingDetails(bookingDetails);
       setPaymentStep(3);
+    } catch (error) {
+      console.error('Firestore Booking error:', error);
+      setErrorMessage('Connection failed. Kripya apna internet check karke dobara koshish karein.');
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    setIsSubmitting(false);
   };
 
   const handleModalClose = () => {
@@ -596,7 +599,7 @@ export const BookingModal = ({
               </div>
               <div className="flex justify-between border-b border-white/10 pb-1.5">
                 <span className="text-red-400 font-bold">Reserved Slot:</span>
-                <span className="text-red-400 font-bold">{confirmedBookingDetails.slot}</span>
+                <span className="text-red-400 font-bold whitespace-pre-line">{confirmedBookingDetails.slot}</span>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-1.5">
                 <span className="text-zinc-400">Duration & Perks:</span>
