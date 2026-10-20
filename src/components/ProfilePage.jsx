@@ -276,7 +276,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     reader.readAsDataURL(file);
   };
 
-  const handleUpdate = async (e) => {
+const handleUpdate = async (e) => {
     e.preventDefault();
     if (!session?.user?.id) return;
     setLoading(true);
@@ -285,19 +285,29 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     const finalAvatar = avatarUrl && avatarUrl.trim() !== '' ? avatarUrl : profileImg;
 
     try {
-      await supabase.auth.updateUser({
+      // Step 1: Auth User Details Update
+      const { error: authError } = await supabase.auth.updateUser({
         data: { full_name: name, phone: phone, avatar_url: finalAvatar }
       });
 
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
+      if (authError) {
+        console.error('Auth update error:', authError);
+      }
+
+      // Step 2: Safari ke liye 200ms delay taaki network lock na ho
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // Step 3: Profiles Table Upsert
+      const { error: profileError } = await supabase.from('profiles').upsert(
+        {
           id: session.user.id,
           name: name,
           phone: phone,
           avatar_url: finalAvatar,
           updated_at: new Date().toISOString()
-        }, { onConflict: 'id' });
+        },
+        { onConflict: 'id' }
+      );
 
       if (profileError) {
         console.error('Profile save error:', profileError);
@@ -310,9 +320,9 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     } catch (err) {
       console.error('Profile update catch error:', err);
       setMessage('Failed to update profile.');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const handlePasswordUpdate = async (e) => {
