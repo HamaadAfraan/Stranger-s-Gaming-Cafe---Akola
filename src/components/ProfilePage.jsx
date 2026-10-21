@@ -149,7 +149,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
               setGamerPoints(parsedPts);
               setSafeStorage('cached_gamer_points', parsedPts);
 
-              const diamonds = data.redeemable_diamonds ?? data.diamonds ?? data.diamond_balance ?? 0;
+              const diamonds = data.redeemable_diamonds ?? data.diamonds ?? data.diamond_balance ?? data.available_diamonds ?? 0;
               const parsedDiamonds = parseInt(diamonds, 10) || 0;
               setRedeemableDiamonds(parsedDiamonds);
               setSafeStorage('cached_redeemable_diamonds', parsedDiamonds);
@@ -201,16 +201,22 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
       });
       setUserBookings(matchedBookings);
 
-      const rechargesSnap = await getDocs(collection(db, 'diamond_recharges'));
-      const allRecharges = rechargesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setTimeout(async () => {
+        try {
+          const rechargesSnap = await getDocs(collection(db, 'diamond_recharges'));
+          const allRecharges = rechargesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-      const matchedRecharges = allRecharges.filter(r => {
-        const matchEmail = email && r.email && r.email.toLowerCase() === email.toLowerCase();
-        const matchUser = uId && r.user_id && String(r.user_id) === String(uId);
-        const matchPhone = userPhone && r.phone && String(r.phone) === String(userPhone);
-        return matchEmail || matchUser || matchPhone;
-      });
-      setUserRecharges(matchedRecharges);
+          const matchedRecharges = allRecharges.filter(r => {
+            const matchEmail = email && r.email && r.email.toLowerCase() === email.toLowerCase();
+            const matchUser = uId && r.user_id && String(r.user_id) === String(uId);
+            const matchPhone = userPhone && r.phone && String(r.phone) === String(userPhone);
+            return matchEmail || matchUser || matchPhone;
+          });
+          setUserRecharges(matchedRecharges);
+        } catch (e) {
+          console.error('Recharges fetch error:', e);
+        }
+      }, 400);
 
     } catch (err) {
       console.error('Error fetching user data from Firestore:', err);
@@ -236,8 +242,8 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
 
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 400;
-        const MAX_HEIGHT = 400;
+        const MAX_WIDTH = 600;
+        const MAX_HEIGHT = 600;
         let width = img.width;
         let height = img.height;
 
@@ -259,7 +265,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
 
-        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
 
         setAvatarUrl(compressedBase64);
         setMessage('Image loaded! Click save to update profile.');
@@ -385,7 +391,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
         created_at: new Date().toISOString()
       });
 
-      showToast(`Recharge request for ${selectedPack.diamonds} Diamonds submitted successfully!`, 'success', 'Recharge Request Submitted');
+      showToast(`Recharge request for ${selectedPack.diamonds} Diamonds (₹${selectedPack.price}) submitted successfully! Admin will verify your UTR and approve diamonds shortly.`, 'success', 'Recharge Request Submitted');
       setShowRechargeModal(false);
       setRechargeUtr('');
       fetchUserData(userEmail, userId, phone);
@@ -468,6 +474,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
       )}
 
       <div className="max-w-7xl mx-auto">
+        
         <div className="bg-[#121216]/90 backdrop-blur-md border border-white/10 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xl">
           <div className="flex items-center justify-between w-full sm:w-auto gap-3">
             <button 
@@ -531,6 +538,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+          
           <div className="lg:col-span-1 space-y-4">
             <div className="bg-[#121216] border border-white/10 p-4 rounded-2xl text-center shadow-xl relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-600 via-cyan-500 to-purple-600"></div>
@@ -539,7 +547,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                 alt="Gamer Avatar" 
                 className="w-16 h-16 mx-auto rounded-full object-cover border-2 border-red-600 shadow-lg shadow-red-600/30 mb-2.5"
               />
-              <h2 className="text-sm font-black text-white truncate">{name || 'Gamer Profile'}</h2>
+              <h2 className="text-sm font-black font-orbitron text-white truncate">{name || 'Gamer Profile'}</h2>
               <p className="text-gray-400 text-[10px] mt-0.5 truncate">{userEmail || 'Guest User'}</p>
               <div className="mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-red-600/15 border border-red-500/30 rounded-md text-red-400 text-[9px] font-bold tracking-widest uppercase">
                 {calculatedTier} VIP
@@ -550,27 +558,27 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
               <button
                 onClick={() => setActiveTab('dashboard')}
                 className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center justify-between cursor-pointer ${
-                  activeTab === 'dashboard' ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-md' : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                  activeTab === 'dashboard' ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-md shadow-red-600/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
                   <LayoutDashboard className="w-4 h-4 text-red-400" />
                   <span>Dashboard</span>
                 </div>
-                <span>➔</span>
+                <span className="text-[10px] opacity-60">➔</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('edit-profile')}
                 className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center justify-between cursor-pointer ${
-                  activeTab === 'edit-profile' ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-md' : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                  activeTab === 'edit-profile' ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-md shadow-red-600/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
                   <Settings className="w-4 h-4 text-amber-400" />
                   <span>Edit Profile</span>
                 </div>
-                <span>➔</span>
+                <span className="text-[10px] opacity-60">➔</span>
               </button>
 
               <button
@@ -581,13 +589,13 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                   <PlusCircle className="w-4 h-4 text-emerald-400" />
                   <span>New Booking</span>
                 </div>
-                <span>➔</span>
+                <span className="text-xs">➔</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('upcoming')}
                 className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center justify-between cursor-pointer ${
-                  activeTab === 'upcoming' ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-md' : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                  activeTab === 'upcoming' ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-md shadow-red-600/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
@@ -600,7 +608,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
               <button
                 onClick={() => setActiveTab('past')}
                 className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center justify-between cursor-pointer ${
-                  activeTab === 'past' ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-md' : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                  activeTab === 'past' ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-md shadow-red-600/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
@@ -613,7 +621,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
               <button
                 onClick={() => setActiveTab('recharges')}
                 className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center justify-between cursor-pointer ${
-                  activeTab === 'recharges' ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md' : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                  activeTab === 'recharges' ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md shadow-cyan-600/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
@@ -631,19 +639,19 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="bg-[#121216] border border-white/10 p-5 rounded-2xl shadow-xl">
                     <span className="text-[11px] text-gray-400 font-bold uppercase tracking-wider block">Total Bookings</span>
-                    <span className="text-2xl font-black text-white mt-1 block">{userBookings.length}</span>
+                    <span className="text-2xl font-black font-orbitron text-white mt-1 block">{userBookings.length}</span>
                   </div>
 
                   <div className="bg-[#121216] border border-white/10 p-5 rounded-2xl shadow-xl">
                     <span className="text-[11px] text-gray-400 font-bold uppercase tracking-wider block">Redeemable Diamonds</span>
-                    <span className="text-2xl font-black text-emerald-400 mt-1 block">
+                    <span className="text-2xl font-black font-orbitron text-emerald-400 mt-1 block">
                       🪙 {profileLoading && redeemableDiamonds === 0 ? '-' : redeemableDiamonds}
                     </span>
                   </div>
 
                   <div className="bg-[#121216] border border-white/10 p-5 rounded-2xl shadow-xl">
                     <span className="text-[11px] text-gray-400 font-bold uppercase tracking-wider block">Lifetime Points</span>
-                    <span className="text-2xl font-black text-cyan-400 mt-1 block">
+                    <span className="text-2xl font-black font-orbitron text-cyan-400 mt-1 block">
                       💎 {profileLoading && gamerPoints === 0 ? '-' : gamerPoints}
                     </span>
                   </div>
@@ -651,15 +659,81 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
 
                 <div className="bg-gradient-to-r from-cyan-950/60 to-blue-950/60 border border-cyan-500/30 p-6 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xl">
                   <div>
-                    <h3 className="text-base font-bold text-white">Need More Diamonds?</h3>
-                    <p className="text-xs text-gray-300 mt-1">Recharge online instantly! Choose custom diamond packs, pay via UPI, and admin will credit diamonds.</p>
+                    <h3 className="text-base font-bold font-orbitron text-white">Need More Diamonds?</h3>
+                    <p className="text-xs text-gray-300 mt-1">Recharge online instantly! Choose custom diamond packs, pay via UPI, and admin will credit diamonds instantly.</p>
                   </div>
                   <button
                     onClick={() => setShowRechargeModal(true)}
-                    className="px-6 py-3.5 bg-cyan-600 hover:bg-cyan-500 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-lg transition cursor-pointer shrink-0 flex items-center gap-2"
+                    className="px-6 py-3.5 bg-cyan-600 hover:bg-cyan-500 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-lg shadow-cyan-600/30 transition cursor-pointer shrink-0 flex items-center gap-2"
                   >
                     <Gem className="w-4 h-4" /> Add Diamonds Now
                   </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-[#121216] border border-white/10 p-5 rounded-2xl shadow-2xl">
+                    <h3 className="text-xs font-bold font-orbitron text-gray-300 uppercase tracking-wider mb-4">
+                      Recent Gaming Bookings
+                    </h3>
+                    {userBookings.length === 0 ? (
+                      <p className="text-gray-500 text-xs uppercase tracking-widest text-center py-6">No bookings found.</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {userBookings.slice(0, 3).map((b, idx) => (
+                          <div 
+                            key={b.id || idx}
+                            onClick={() => setSelectedRecord({ type: 'booking', data: b })}
+                            className="p-3.5 rounded-xl border border-zinc-800 bg-[#18181b] hover:bg-[#27272a] cursor-pointer flex justify-between items-center transition"
+                          >
+                            <div>
+                              <span className="text-xs font-bold text-cyan-300 block">{b.screen || b.category || 'Gaming Station'}</span>
+                              <span className="text-[10px] text-zinc-400 font-mono">📅 {b.bookingDate || b.date}</span>
+                            </div>
+                            <div className="text-right">
+                              <span className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase ${
+                                String(b.status).toUpperCase() === 'APPROVED' ? 'bg-emerald-950 text-emerald-300' : 'bg-amber-950 text-amber-300 animate-pulse'
+                              }`}>
+                                {b.status || 'PENDING'}
+                              </span>
+                              <span className="text-xs font-black font-mono text-emerald-400 block mt-1">₹{b.price || b.amount}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="bg-[#121216] border border-white/10 p-5 rounded-2xl shadow-2xl">
+                    <h3 className="text-xs font-bold font-orbitron text-gray-300 uppercase tracking-wider mb-4">
+                      Recent Diamond Recharges
+                    </h3>
+                    {userRecharges.length === 0 ? (
+                      <p className="text-gray-500 text-xs uppercase tracking-widest text-center py-6">No recharges found.</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {userRecharges.slice(0, 3).map((r, idx) => (
+                          <div 
+                            key={r.id || idx}
+                            onClick={() => setSelectedRecord({ type: 'recharge', data: r })}
+                            className="p-3.5 rounded-xl border border-zinc-800 bg-[#18181b] hover:bg-[#27272a] cursor-pointer flex justify-between items-center transition"
+                          >
+                            <div>
+                              <span className="text-xs font-bold text-cyan-300 block">💎 {r.diamonds} Diamonds Pack</span>
+                              <span className="text-[10px] text-purple-300 font-mono">UTR: {r.utr}</span>
+                            </div>
+                            <div className="text-right">
+                              <span className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase ${
+                                String(r.status).toUpperCase() === 'APPROVED' ? 'bg-emerald-950 text-emerald-300' : 'bg-amber-950 text-amber-300 animate-pulse'
+                              }`}>
+                                {r.status || 'PENDING'}
+                              </span>
+                              <span className="text-xs font-black font-mono text-emerald-400 block mt-1">₹{r.amount}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -667,7 +741,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
             {activeTab === 'edit-profile' && (
               <div className="space-y-6">
                 <div className="bg-[#121216] border border-white/10 p-6 sm:p-8 rounded-2xl shadow-2xl">
-                  <h2 className="text-base font-bold text-red-500 mb-6">Update Gamer Details</h2>
+                  <h2 className="text-base font-bold font-orbitron text-red-500 mb-6">Update Gamer Details</h2>
 
                   {message && (
                     <p className="text-green-400 text-xs mb-6 bg-green-950/50 p-3 rounded-lg border border-green-800 text-center font-bold">
@@ -724,7 +798,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                     <button 
                       type="submit" 
                       disabled={loading || uploading}
-                      className="w-full py-4 bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase tracking-widest rounded-xl shadow-lg transition cursor-pointer disabled:opacity-50"
+                      className="w-full py-4 bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase tracking-widest rounded-xl shadow-lg shadow-red-600/30 transition cursor-pointer disabled:opacity-50"
                     >
                       {loading ? 'Saving Changes...' : 'Save Profile Changes'}
                     </button>
@@ -732,7 +806,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                 </div>
 
                 <div className="bg-[#121216] border border-white/10 p-6 sm:p-8 rounded-2xl shadow-2xl">
-                  <h2 className="text-base font-bold text-amber-400 mb-2">Change Password</h2>
+                  <h2 className="text-base font-bold font-orbitron text-amber-400 mb-2">Change Password</h2>
                   <p className="text-xs text-gray-400 mb-6">Update your account password securely.</p>
 
                   {pwdMessage && (
@@ -792,7 +866,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
             {activeTab === 'upcoming' && (
               <div className="space-y-4">
                 <div className="flex justify-between items-center mb-2">
-                  <h2 className="text-sm font-bold text-white">Upcoming & Pending Bookings</h2>
+                  <h2 className="text-sm font-bold font-orbitron text-white">Upcoming & Pending Bookings</h2>
                   <button onClick={onOpenBooking || onBack} className="text-xs text-red-400 hover:underline">+ New Booking</button>
                 </div>
 
@@ -805,23 +879,26 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                     <div 
                       key={booking.id || idx} 
                       onClick={() => setSelectedRecord({ type: 'booking', data: booking })}
-                      className="bg-[#121216] hover:bg-[#1a1a22] border border-white/10 p-5 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 cursor-pointer transition shadow-lg group"
+                      className="bg-[#121216] hover:bg-[#1a1a22] border border-white/10 hover:border-cyan-500/50 p-5 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 cursor-pointer transition shadow-lg group"
                     >
                       <div>
                         <span className="inline-block px-3 py-1 bg-cyan-600/20 text-cyan-400 border border-cyan-500/30 text-[10px] font-bold rounded-lg uppercase tracking-wider mb-2">
                           {booking.screen || booking.category || 'Station'}
                         </span>
-                        <h3 className="text-base font-bold group-hover:text-cyan-400 transition">{booking.customer_name || booking.name || name || 'Gamer Session'}</h3>
+                        <h3 className="text-base font-bold font-orbitron group-hover:text-cyan-400 transition">{booking.customer_name || booking.name || name || 'Gamer Session'}</h3>
                         <div className="flex items-center gap-4 text-xs text-gray-400 mt-2">
                           <span>📅 {formatDateString(booking.bookingDate || booking.date)}</span>
                           <span>⏰ {booking.slot_time || booking.slot || booking.time}</span>
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right flex sm:flex-col justify-between w-full sm:w-auto items-center sm:items-end">
                         <span className={`text-xs font-bold px-3 py-1 rounded-full ${
-                          String(booking.status).toUpperCase() === 'PENDING' ? 'bg-amber-950/60 border border-amber-500/40 text-amber-400' : 'bg-green-950/40 text-green-400'
+                          String(booking.status).toUpperCase() === 'PENDING' ? 'bg-amber-950/60 border border-amber-500/40 text-amber-400 animate-pulse' : 'bg-green-950/40 border border-green-500/30 text-green-400'
                         }`}>
                           {booking.status || 'CONFIRMED'}
+                        </span>
+                        <span className="text-[10px] text-gray-400 mt-2 hover:underline flex items-center gap-1">
+                          View Details ➔
                         </span>
                       </div>
                     </div>
@@ -832,19 +909,33 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
 
             {activeTab === 'past' && (
               <div className="space-y-4">
-                <h2 className="text-sm font-bold text-white mb-2">Past Reservation History</h2>
+                <h2 className="text-sm font-bold font-orbitron text-white mb-2">Past Reservation History</h2>
+
                 {pastBookings.length === 0 ? (
                   <div className="text-center py-16 bg-[#121216] border border-white/10 rounded-2xl">
                     <p className="text-gray-400 text-xs uppercase tracking-widest">No past bookings found.</p>
                   </div>
                 ) : (
                   pastBookings.map((booking, idx) => (
-                    <div key={booking.id || idx} onClick={() => setSelectedRecord({ type: 'booking', data: booking })} className="bg-[#121216] border border-white/10 p-5 rounded-2xl flex justify-between items-center cursor-pointer">
+                    <div 
+                      key={booking.id || idx} 
+                      onClick={() => setSelectedRecord({ type: 'booking', data: booking })}
+                      className="bg-[#121216] hover:bg-[#1a1a22] border border-white/10 p-5 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 opacity-80 hover:opacity-100 cursor-pointer transition"
+                    >
                       <div>
-                        <h3 className="text-sm font-bold">{booking.customer_name || name}</h3>
-                        <p className="text-xs text-gray-400">📅 {booking.bookingDate || booking.date}</p>
+                        <span className="inline-block px-3 py-1 bg-white/5 text-gray-400 border border-white/10 text-[10px] font-bold rounded-lg uppercase tracking-wider mb-2">
+                          {booking.screen || booking.category || 'Station'}
+                        </span>
+                        <h3 className="text-base font-bold font-orbitron">{booking.customer_name || booking.name || name || 'Gamer Session'}</h3>
+                        <div className="flex items-center gap-4 text-xs text-gray-500 mt-2">
+                          <span>📅 {formatDateString(booking.bookingDate || booking.date)}</span>
+                          <span>⏰ {booking.slot_time || booking.slot || booking.time}</span>
+                        </div>
                       </div>
-                      <span className="text-xs text-gray-400">Completed</span>
+                      <div className="text-right">
+                        <span className="text-xs text-gray-400 uppercase tracking-widest block">Completed</span>
+                        <span className="text-[10px] text-gray-500 mt-1 block">Click for details</span>
+                      </div>
                     </div>
                   ))
                 )}
@@ -854,23 +945,41 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
             {activeTab === 'recharges' && (
               <div className="space-y-4">
                 <div className="flex justify-between items-center mb-2">
-                  <h2 className="text-sm font-bold text-white">Diamond Recharges History</h2>
+                  <h2 className="text-sm font-bold font-orbitron text-white">Diamond Recharges History</h2>
                   <button onClick={() => setShowRechargeModal(true)} className="text-xs text-cyan-400 hover:underline">+ Add Diamonds</button>
                 </div>
+
                 {userRecharges.length === 0 ? (
                   <div className="text-center py-16 bg-[#121216] border border-white/10 rounded-2xl">
-                    <p className="text-gray-400 text-xs uppercase tracking-widest">No recharges found.</p>
+                    <p className="text-gray-400 text-xs uppercase tracking-widest">No diamond recharges found.</p>
                   </div>
                 ) : (
                   userRecharges.map((r, idx) => (
-                    <div key={r.id || idx} onClick={() => setSelectedRecord({ type: 'recharge', data: r })} className="bg-[#121216] border border-white/10 p-5 rounded-2xl flex justify-between items-center cursor-pointer">
+                    <div 
+                      key={r.id || idx} 
+                      onClick={() => setSelectedRecord({ type: 'recharge', data: r })}
+                      className="bg-[#121216] hover:bg-[#1a1a22] border border-white/10 hover:border-cyan-500/50 p-5 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 cursor-pointer transition shadow-lg group"
+                    >
                       <div>
-                        <h3 className="text-sm font-bold text-cyan-400">💎 {r.diamonds} Diamonds</h3>
-                        <p className="text-xs text-gray-400 font-mono">UTR: {r.utr}</p>
+                        <span className="inline-block px-3 py-1 bg-cyan-600/20 text-cyan-400 border border-cyan-500/30 text-[10px] font-bold rounded-lg uppercase tracking-wider mb-2">
+                          💎 {r.diamonds} Diamonds Pack
+                        </span>
+                        <h3 className="text-base font-bold font-orbitron group-hover:text-cyan-400 transition">UTR: {r.utr}</h3>
+                        <div className="flex items-center gap-4 text-xs text-gray-400 mt-2 font-mono">
+                          <span>📅 {formatDateString(r.created_at)}</span>
+                          <span className="text-emerald-400 font-bold">₹{r.amount}</span>
+                        </div>
                       </div>
-                      <span className={`text-xs font-bold px-3 py-1 rounded-full ${String(r.status).toUpperCase() === 'PENDING' ? 'bg-amber-950 text-amber-400' : 'bg-emerald-950 text-emerald-300'}`}>
-                        {r.status}
-                      </span>
+                      <div className="text-right flex sm:flex-col justify-between w-full sm:w-auto items-center sm:items-end">
+                        <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                          String(r.status).toUpperCase() === 'PENDING' ? 'bg-amber-950/60 border border-amber-500/40 text-amber-400 animate-pulse' : 'bg-emerald-950/40 border border-emerald-500/30 text-emerald-300'
+                        }`}>
+                          {r.status || 'PENDING'}
+                        </span>
+                        <span className="text-[10px] text-gray-400 mt-2 hover:underline">
+                          View Receipt ➔
+                        </span>
+                      </div>
                     </div>
                   ))
                 )}
@@ -881,44 +990,292 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
       </div>
 
       {showRechargeModal && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 z-[9999]" onClick={() => setShowRechargeModal(false)}>
-          <div className="bg-[#121216] border border-cyan-500/40 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative text-white" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-center border-b border-white/10 pb-3">
-              <h2 className="text-sm font-black text-cyan-400 uppercase">ADD DIAMONDS</h2>
-              <button onClick={() => setShowRechargeModal(false)} className="text-gray-400 hover:text-white text-lg">&times;</button>
+        <div 
+          className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 z-[9999] overflow-y-auto"
+          onClick={() => setShowRechargeModal(false)}
+        >
+          <div 
+            className="bg-[#121216] border border-cyan-500/40 rounded-2xl max-w-md w-full p-4 sm:p-6 space-y-3 shadow-2xl relative text-white my-auto max-h-[88vh] overflow-y-auto font-sans"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center border-b border-white/10 pb-2.5 sticky top-0 bg-[#121216] z-10">
+              <div>
+                <h2 className="text-xs sm:text-sm font-black font-orbitron text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Gem className="w-4 h-4 text-cyan-400 animate-bounce" /> ADD DIAMONDS
+                </h2>
+              </div>
+              <button
+                onClick={() => setShowRechargeModal(false)}
+                className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white text-base transition cursor-pointer"
+              >
+                &times;
+              </button>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-xs text-gray-300">Select Diamond Pack:</label>
+            <div className="space-y-1.5">
+              <label className="block text-[10px] uppercase tracking-wider text-gray-300 font-mono font-semibold">
+                Select Diamond Pack (1000 / 2000 / 5000):
+              </label>
               <div className="grid grid-cols-1 gap-2">
                 {DIAMOND_PACKS.map((pack, idx) => (
-                  <div key={idx} onClick={() => setSelectedPack(pack)} className={`p-3 rounded-xl border cursor-pointer flex justify-between items-center ${selectedPack.price === pack.price ? 'bg-cyan-950/80 border-cyan-400' : 'bg-[#1a1a20] border-white/10'}`}>
+                  <div
+                    key={idx}
+                    onClick={() => setSelectedPack(pack)}
+                    className={`p-2.5 rounded-xl border cursor-pointer transition flex items-center justify-between ${
+                      selectedPack.price === pack.price
+                        ? 'bg-cyan-950/80 border-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.3)]'
+                        : 'bg-[#1a1a20] border-white/10 hover:border-white/30'
+                    }`}
+                  >
                     <div>
-                      <div className="text-xs font-bold text-cyan-300">💎 {pack.diamonds} Diamonds</div>
-                      <div className="text-[10px] text-gray-400">{pack.label}</div>
+                      <div className="text-xs font-bold text-cyan-300 flex items-center gap-1">
+                        <Gem className="w-3.5 h-3.5 text-cyan-400" /> {pack.diamonds} Diamonds
+                      </div>
+                      <div className="text-[9px] text-gray-400">{pack.label}</div>
                     </div>
-                    <div className="text-xs font-bold text-emerald-400">₹{pack.price}</div>
+                    <div className="text-xs font-black font-mono text-emerald-400">
+                      ₹{pack.price}
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="bg-white/5 p-3 rounded-xl text-center">
-              <img src={getDynamicUpiQrUrl(selectedPack.price)} alt="QR" className="w-28 h-28 object-contain mx-auto bg-white p-1 rounded" />
-              <div className="text-xs font-bold mt-2 text-emerald-400">Scan & Pay ₹{selectedPack.price}</div>
+            <div className="bg-white/5 p-3 rounded-xl border border-white/10 space-y-2.5">
+              <div className="flex justify-between items-center text-[11px]">
+                <span className="font-mono text-cyan-400 font-bold uppercase">
+                  Pay ₹{selectedPack.price} via UPI
+                </span>
+                <span className="font-mono bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-500/40 text-cyan-300 text-[9px]">
+                  ⚡ Instant Approval
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <a
+                  href={getAppUri('phonepe', selectedPack.price)}
+                  className="p-2 rounded-lg bg-purple-900/60 border border-purple-500/50 hover:bg-purple-800 text-white font-mono text-[10px] font-bold flex items-center justify-center gap-1 transition cursor-pointer text-center"
+                >
+                  <span>💜</span> PhonePe
+                </a>
+
+                <a
+                  href={getAppUri('gpay', selectedPack.price)}
+                  className="p-2 rounded-lg bg-blue-900/60 border border-blue-500/50 hover:bg-blue-800 text-white font-mono text-[10px] font-bold flex items-center justify-center gap-1 transition cursor-pointer text-center"
+                >
+                  <span>🌐</span> GPay
+                </a>
+
+                <a
+                  href={getAppUri('paytm', selectedPack.price)}
+                  className="p-2 rounded-lg bg-cyan-900/60 border border-cyan-500/50 hover:bg-cyan-800 text-white font-mono text-[10px] font-bold flex items-center justify-center gap-1 transition cursor-pointer text-center"
+                >
+                  <span>💙</span> Paytm
+                </a>
+              </div>
+
+              <div className="text-center pt-1">
+                <div className="w-24 h-24 bg-white p-1 rounded-lg mx-auto flex items-center justify-center shadow-md">
+                  <img
+                    src={getDynamicUpiQrUrl(selectedPack.price)}
+                    alt="Dynamic Payment QR Code"
+                    className="w-22 h-22 object-contain mx-auto"
+                  />
+                </div>
+                <div className="text-[10px] font-mono font-bold mt-1.5 text-emerald-400">
+                  Scan & Pay ₹{selectedPack.price} to Cafe UPI ID
+                </div>
+              </div>
             </div>
 
             <div>
-              <label className="text-xs text-gray-300 block mb-1">Transaction Ref / UTR No. *</label>
-              <input type="text" placeholder="Enter 12-digit UTR" value={rechargeUtr} onChange={(e) => setRechargeUtr(e.target.value)} className="w-full p-3 rounded-xl bg-[#1a1a20] border border-white/10 text-white text-xs" />
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-[11px] text-gray-300 font-mono font-semibold">
+                  Transaction Ref / UTR No. <span className="text-red-500">*</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowUtrHelp(true)}
+                  className="text-[9px] text-cyan-400 hover:text-cyan-300 font-mono flex items-center gap-1 bg-cyan-950/60 border border-cyan-500/40 px-2 py-0.5 rounded cursor-pointer"
+                >
+                  <HelpCircle className="w-3 h-3 text-cyan-400" />
+                  Where to find?
+                </button>
+              </div>
+
+              <input
+                type="text"
+                placeholder="Enter 12-digit UTR Number"
+                value={rechargeUtr}
+                onChange={(e) => setRechargeUtr(e.target.value)}
+                className="w-full p-2.5 rounded-xl bg-[#1a1a20] border border-white/10 text-white font-mono text-xs focus:outline-none focus:border-cyan-500"
+              />
             </div>
 
-            <button onClick={handleRechargeSubmit} disabled={rechargeLoading || !rechargeUtr} className="w-full py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs uppercase rounded-xl">
-              {rechargeLoading ? 'Submitting...' : 'Submit UTR'}
+            <button
+              onClick={handleRechargeSubmit}
+              disabled={rechargeLoading || !rechargeUtr || rechargeUtr.trim().length < 6}
+              className="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 text-white font-bold text-[11px] uppercase tracking-widest rounded-xl transition cursor-pointer shadow-lg shadow-cyan-600/30 disabled:opacity-50"
+            >
+              {rechargeLoading ? 'Submitting...' : `Submit UTR for ${selectedPack.diamonds} Diamonds`}
             </button>
           </div>
         </div>
       )}
+
+      {showUtrHelp && (
+        <div className="fixed inset-0 z-[10001] bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-[#18181f] border border-cyan-500/50 rounded-2xl w-full max-w-md p-5 relative text-white shadow-2xl font-sans">
+            <button
+              onClick={() => setShowUtrHelp(false)}
+              className="absolute top-3 right-3 p-1.5 rounded-full bg-white/10 text-zinc-400 hover:text-white cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <h4 className="text-base font-black font-orbitron text-cyan-400 flex items-center gap-2">
+              <HelpCircle className="w-4 h-4 text-purple-400" />
+              Transaction ID / UTR Help
+            </h4>
+            <p className="text-xs text-gray-300 mt-2">
+              After successful payment via Google Pay, PhonePe, or Paytm, look for the 12-digit UTR, UPI Reference ID, or Transaction ID in your payment history details and enter it above.
+            </p>
+
+            <div className="grid grid-cols-2 gap-2 mt-4">
+              {[
+                { id: 'phonepe', name: 'PhonePe' },
+                { id: 'gpay', name: 'Google Pay' },
+                { id: 'paytm', name: 'Paytm' },
+                { id: 'other', name: 'Other BHIM' },
+              ].map((app) => (
+                <button
+                  key={app.id}
+                  onClick={() => setActiveAppHelp(app.id)}
+                  className={`p-2 rounded-xl font-mono text-xs font-bold border transition-all cursor-pointer ${
+                    activeAppHelp === app.id
+                      ? 'bg-cyan-500 text-black border-cyan-400'
+                      : 'bg-white/5 text-zinc-400 border-white/10'
+                  }`}
+                >
+                  {app.name}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setShowUtrHelp(false)}
+              className="mt-4 w-full py-2.5 rounded-xl bg-cyan-500 text-black font-orbitron font-bold text-xs cursor-pointer hover:bg-cyan-400"
+            >
+              GOT IT
+            </button>
+          </div>
+        </div>
+      )}
+
+      {selectedRecord && (
+        <div 
+          className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fadeIn"
+          onClick={() => setSelectedRecord(null)}
+        >
+          <div 
+            className="bg-[#121216] border border-cyan-500/40 rounded-2xl max-w-md w-full p-6 sm:p-8 space-y-4 shadow-2xl relative text-white font-sans max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-start border-b border-white/10 pb-4">
+              <div>
+                <h2 className="text-base sm:text-lg font-black font-orbitron text-cyan-400 uppercase tracking-wider">
+                  {selectedRecord.type === 'booking' ? 'BOOKING RECEIPT DETAILS' : 'DIAMOND RECHARGE RECEIPT'}
+                </h2>
+                <p className="text-[11px] text-gray-400 mt-0.5 font-mono">
+                  Stranger's Gaming Cafe
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedRecord(null)}
+                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white text-lg transition cursor-pointer"
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="space-y-2.5 text-xs sm:text-sm font-mono">
+              <div className="flex justify-between items-center border-b border-white/5 pb-1.5">
+                <span className="text-gray-400">RECORD ID:</span>
+                <span className="font-mono text-xs font-bold bg-[#1a1a20] px-2.5 py-1 rounded border border-white/10 text-cyan-400">
+                  {selectedRecord.data.id || 'STR-5019'}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center border-b border-white/5 pb-1.5">
+                <span className="text-gray-400">Date:</span>
+                <span className="font-semibold text-purple-300">
+                  {formatDateString(selectedRecord.data.bookingDate || selectedRecord.data.date || selectedRecord.data.created_at)}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center border-b border-white/5 pb-1.5">
+                <span className="text-gray-400">Customer Name:</span>
+                <span className="font-semibold text-white">
+                  {selectedRecord.data.customer_name || selectedRecord.data.name || name || 'Gamer'}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center border-b border-white/5 pb-1.5">
+                <span className="text-gray-400">Phone Number:</span>
+                <span className="font-semibold text-white">
+                  {selectedRecord.data.phone || phone || 'N/A'}
+                </span>
+              </div>
+
+              {selectedRecord.type === 'recharge' ? (
+                <>
+                  <div className="flex justify-between items-center border-b border-white/5 pb-1.5">
+                    <span className="text-gray-400">Diamond Pack:</span>
+                    <span className="font-bold text-cyan-400">💎 {selectedRecord.data.diamonds} Diamonds</span>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-white/5 pb-1.5">
+                    <span className="text-gray-400">UTR Reference:</span>
+                    <span className="font-mono text-purple-300 text-xs break-all">{selectedRecord.data.utr}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex justify-between items-center border-b border-white/5 pb-1.5">
+                  <span className="text-gray-400">Station / Details:</span>
+                  <span className="font-bold text-cyan-400">
+                    {selectedRecord.data.screen || selectedRecord.data.category || 'Standard Booking'}
+                  </span>
+                </div>
+              )}
+
+              <div className="flex justify-between items-center border-b border-white/5 pb-1.5">
+                <span className="text-gray-400">Status:</span>
+                <span className={`font-bold px-2 py-0.5 rounded text-xs ${
+                  String(selectedRecord.data.status).toUpperCase() === 'PENDING' ? 'bg-amber-950 text-amber-400' : 'bg-emerald-950 text-emerald-400'
+                }`}>
+                  {selectedRecord.data.status || 'CONFIRMED'}
+                </span>
+              </div>
+
+              <div className="pt-2 flex justify-between items-center text-sm font-bold font-orbitron">
+                <span className="text-gray-300">Total Amount:</span>
+                <span className="font-extrabold text-emerald-400 text-base">
+                  ₹{selectedRecord.data.amount || selectedRecord.data.price || '0'}
+                </span>
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <button
+                onClick={() => setSelectedRecord(null)}
+                className="w-full py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition cursor-pointer shadow-lg shadow-cyan-600/20 font-orbitron"
+              >
+                Close Window
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
