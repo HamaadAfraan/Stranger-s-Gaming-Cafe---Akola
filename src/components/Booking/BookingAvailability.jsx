@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Monitor, Calendar, Clock, Car, Gamepad2 } from 'lucide-react';
-import { supabase } from "../../supabaseClient";
+import React, { useState, useEffect } from "react";
+import { Monitor, Calendar, Clock, Car } from "lucide-react";
+import { db } from "../../firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 const BookingAvailability = ({
   bookingDate,
@@ -39,7 +40,7 @@ const BookingAvailability = ({
 
   const getFutureMaxDateString = () => {
     const d = new Date();
-    d.setDate(d.getDate() + 7); // Aaj se 7 din aage tak ki booking allowed
+    d.setDate(d.getDate() + 7);
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
@@ -49,7 +50,6 @@ const BookingAvailability = ({
   const todayStr = getTodayDateString();
   const maxDateStr = getFutureMaxDateString();
 
-  // Dynamic Cafe Timing state (Default: 11:00 AM to 11:00 PM)
   const [openingMinutes, setOpeningMinutes] = useState(660);
   const [closingMinutes, setClosingMinutes] = useState(1380);
 
@@ -65,51 +65,81 @@ const BookingAvailability = ({
     }
   }, [selectedCategory, selectedGame, setSelectedTeam]);
 
-  // Fetch dynamic Cafe Timing from Supabase based on Regular (id: 1) or Friday (id: 2)
   useEffect(() => {
     setStartTime(null);
     setEndTime(null);
     setShowEndPicker(false);
 
-    const fetchCafeTimingFromSupabase = async () => {
+    const fetchCafeTimingFromFirebase = async () => {
       try {
         const selectedD = new Date(bookingDate);
         const isFriday = !isNaN(selectedD.getTime()) && selectedD.getDay() === 5;
-        const targetId = isFriday ? 2 : 1; // Friday ke liye id = 2, baaki dino ke liye id = 1
+        const targetId = isFriday ? "2" : "1";
 
-        const { data, error } = await supabase
-          .from('cafe_settings')
-          .select('open_time, close_time')
-          .eq('id', targetId)
-          .maybeSingle();
+        const DEFAULT_OPEN_MINS = 1020;
+        const DEFAULT_CLOSE_MINS = 1320;
 
-        if (error) {
-          console.warn("Supabase timing fetch warning, fallback to defaults:", error);
-          return;
-        }
+        const docRef = doc(db, 'cafe_settings', targetId);
+        const docSnap = await getDoc(docRef);
 
-        if (data) {
-          const openMins = timeStringToMinutes(data.open_time);
-          const closeMins = timeStringToMinutes(data.close_time);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          const updatedAtStr = data.updated_at;
 
-          if (openMins !== null) setOpeningMinutes(openMins);
-          if (closeMins !== null) {
-            setClosingMinutes(closeMins <= (openMins || 660) ? closeMins + 1440 : closeMins);
+          let isUpdatedForSelectedDate = false;
+
+          if (updatedAtStr) {
+            const updatedDatePart = updatedAtStr.split('T')[0];
+            if (updatedDatePart === bookingDate) {
+              isUpdatedForSelectedDate = true;
+            }
           }
+
+          if (isUpdatedForSelectedDate && data.open_time && data.close_time) {
+            const openMins = timeStringToMinutes(data.open_time);
+            const closeMins = timeStringToMinutes(data.close_time);
+
+            if (openMins !== null) setOpeningMinutes(openMins);
+            if (closeMins !== null) {
+              setClosingMinutes(closeMins <= (openMins || DEFAULT_OPEN_MINS) ? closeMins + 1440 : closeMins);
+            }
+          } else {
+            setOpeningMinutes(DEFAULT_OPEN_MINS);
+            setClosingMinutes(DEFAULT_CLOSE_MINS);
+          }
+        } else {
+          setOpeningMinutes(DEFAULT_OPEN_MINS);
+          setClosingMinutes(DEFAULT_CLOSE_MINS);
         }
       } catch (e) {
-        console.error("Failed to load cafe timing from Supabase:", e);
+        console.error("Failed to load cafe timing from Firebase:", e);
+        setOpeningMinutes(1020);
+        setClosingMinutes(1320);
       }
     };
 
-    fetchCafeTimingFromSupabase();
+    fetchCafeTimingFromFirebase();
   }, [bookingDate]);
 
-  // Available games list for PS5
-  const gameOptions = [
-    { id: 'GTA 6', name: 'GTA VI (Special)', badge: 'HOT' },
-    { id: 'Standard', name: 'Other Games (FC 24, Spider-Man 2, Tekken etc.)', badge: 'REGULAR' }
-  ];
+  const getDates = () => {
+    const chronoDates = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      chronoDates.push({
+        dateString: `${year}-${month}-${day}`,
+        dayName: d.toLocaleDateString('en-US', { weekday: 'short' }),
+        dayNum: d.getDate(),
+        monthName: d.toLocaleDateString('en-US', { month: 'short' })
+      });
+    }
+    return chronoDates;
+  };
+
+  const datesList = getDates();
 
   const calculateFinalPrice = () => {
     if (!startTime || !endTime) return 0;
@@ -269,184 +299,213 @@ const BookingAvailability = ({
   const allBlocks = generate15MinSlots().slice(0, -1);
 
   return (
-    <div className="w-full text-white">
-      {/* DATE SELECTOR (7 Days Advance Allowed) */}
-      <div className="mt-3 sm:mt-4">
-        <label className="text-[11px] sm:text-xs font-mono uppercase tracking-widest text-zinc-400 flex items-center gap-1.5 mb-1.5">
-          <Calendar className="w-3.5 h-3.5 text-cyan-400" /> Select Date (Up to 7 Days)
-        </label>
-        <div className="relative">
+    <div className="w-full text-white pb-32">
+      {/* Date Carousel */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-2.5">
+          <label className="text-xs font-mono uppercase tracking-widest text-zinc-400 flex items-center gap-1.5 font-bold">
+            <Calendar className="w-4 h-4 text-[#ccff00]" /> Select Date
+          </label>
           <input
             type="date"
             min={todayStr}
             max={maxDateStr}
             value={bookingDate}
             onChange={(e) => setBookingDate(e.target.value)}
-            className="w-full bg-white/5 border border-white/20 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-mono text-white focus:outline-none focus:border-cyan-400 transition-all cursor-pointer shadow-sm [color-scheme:dark]"
+            className="bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 text-xs font-mono text-[#ccff00] cursor-pointer [color-scheme:dark]"
           />
         </div>
-      </div>
-
-      {/* PLATFORM */}
-      <div className="mt-4 sm:mt-5">
-        <label className="text-[11px] sm:text-xs font-mono uppercase tracking-widest text-zinc-400">
-          1. Select Platform
-        </label>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1.5">
-          {stations.map((station) => (
-            <button
-              key={station.id}
-              onClick={() => {
-                setSelectedCategory(station.id);
-                setStartTime(null);
-                setEndTime(null);
-                setShowEndPicker(false);
-
-                if (station.hasScreens) {
-                  setSelectedScreen(station.screens[0]);
-                }
-                if (station.multiplayer) {
-                  setSelectedTeam('1 Player');
-                }
-                if (setSelectedGame) setSelectedGame('Standard');
-              }}
-              className={`p-2.5 sm:p-3 rounded-xl font-orbitron text-[11px] sm:text-xs font-bold transition-all border cursor-pointer truncate ${selectedCategory === station.id
-                  ? 'bg-cyan-500 text-black border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)]'
-                  : 'bg-white/5 text-zinc-400 border-white/10 hover:border-white/30'
+        <div className="flex gap-2.5 overflow-x-auto no-scrollbar py-1">
+          {datesList.map((d) => {
+            const isSelected = bookingDate === d.dateString;
+            return (
+              <button
+                key={d.dateString}
+                onClick={() => setBookingDate(d.dateString)}
+                className={`flex flex-col items-center justify-center min-w-[70px] py-3.5 px-3 rounded-2xl border transition-all cursor-pointer font-mono shrink-0 ${
+                  isSelected
+                    ? 'bg-[#ccff00] text-black border-[#ccff00] font-bold shadow-[0_0_20px_rgba(204,255,0,0.45)] scale-105'
+                    : 'bg-[#181922] text-zinc-400 border-white/10 hover:border-[#ccff00]/40 hover:text-white'
                 }`}
-            >
-              {station.id}
-            </button>
-          ))}
+              >
+                <span className="text-[10px] uppercase">{d.dayName}</span>
+                <span className="text-lg font-black font-orbitron my-0.5">{d.dayNum}</span>
+                <span className="text-[10px] uppercase">{d.monthName}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* SUB CATEGORY / SCREEN */}
-      {currentStation?.hasScreens && (
-        <div className="mt-4 sm:mt-5">
-          <label className="text-[11px] sm:text-xs font-mono uppercase tracking-widest text-zinc-400">
-            2. Select {selectedCategory === 'Simulator' ? 'Vehicle Type' : 'Display Size'}
-          </label>
-
-          <div className="grid grid-cols-2 gap-2 sm:gap-3 mt-1.5">
-            {currentStation.screens.map((screen) => (
+      {/* Platform Selection */}
+      <div className="mb-6">
+        <label className="text-xs font-mono uppercase tracking-widest text-zinc-400 font-bold block mb-3">
+          1. Select Platform
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          {stations.map((station) => {
+            const isSelected = selectedCategory === station.id;
+            return (
               <button
-                key={screen}
+                key={station.id}
                 onClick={() => {
-                  setSelectedScreen(screen);
+                  setSelectedCategory(station.id);
                   setStartTime(null);
                   setEndTime(null);
                   setShowEndPicker(false);
 
-                  if (screen === '43" Standard' && selectedTeam === '4 Players') {
-                    setSelectedTeam('3 Players');
+                  if (station.hasScreens) {
+                    setSelectedScreen(station.screens[0]);
                   }
+                  if (station.multiplayer) {
+                    setSelectedTeam('1 Player');
+                  }
+                  if (setSelectedGame) setSelectedGame('Standard');
                 }}
-                className={`p-2.5 sm:p-3 rounded-xl border text-[11px] sm:text-xs font-bold font-orbitron text-left cursor-pointer transition-all flex items-center ${selectedScreen === screen
-                    ? 'border-cyan-400 bg-cyan-400/10 text-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.2)]'
-                    : 'border-white/10 bg-white/5 text-zinc-400 hover:border-white/20'
-                  }`}
+                className={`p-4 rounded-2xl font-orbitron text-xs font-bold transition-all border cursor-pointer text-left flex items-center justify-between ${
+                  isSelected
+                    ? 'bg-[#ccff00] text-black border-[#ccff00] shadow-[0_0_20px_rgba(204,255,0,0.45)]'
+                    : 'bg-[#181922] text-zinc-300 border-white/10 hover:border-white/30'
+                }`}
               >
-                {selectedCategory === 'Simulator' ? (
-                  <Car className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 shrink-0" />
-                ) : (
-                  <Monitor className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 shrink-0" />
-                )}
-                <span className="truncate">{screen} {selectedCategory === 'Simulator' ? '' : 'Zone'}</span>
+                <div>
+                  <div className="text-xs font-black">{station.id}</div>
+                  <div className={`text-[10px] font-mono mt-1 ${isSelected ? 'text-black/80' : 'text-zinc-400'}`}>
+                    {station.name.split(' ')[0]}
+                  </div>
+                </div>
+                <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${isSelected ? 'border-black bg-black' : 'border-zinc-600'}`}>
+                  {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-[#ccff00]"></div>}
+                </div>
               </button>
-            ))}
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Screen / Subcategory */}
+      {currentStation?.hasScreens && (
+        <div className="mb-6">
+          <label className="text-xs font-mono uppercase tracking-widest text-zinc-400 font-bold block mb-3">
+            2. Select {selectedCategory === 'Simulator' ? 'Vehicle Type' : 'Display Size'}
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            {currentStation.screens.map((screen) => {
+              const isSelected = selectedScreen === screen;
+              return (
+                <button
+                  key={screen}
+                  onClick={() => {
+                    setSelectedScreen(screen);
+                    setStartTime(null);
+                    setEndTime(null);
+                    setShowEndPicker(false);
+
+                    if (screen === '43" Standard' && selectedTeam === '4 Players') {
+                      setSelectedTeam('3 Players');
+                    }
+                  }}
+                  className={`p-4 rounded-2xl border text-xs font-bold font-orbitron text-left cursor-pointer transition-all flex items-center gap-3 ${
+                    isSelected
+                      ? 'border-[#ccff00] bg-[#ccff00]/15 text-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.35)] font-black'
+                      : 'border-white/10 bg-[#181922] text-zinc-400 hover:border-white/20'
+                  }`}
+                >
+                  {selectedCategory === 'Simulator' ? (
+                    <Car className="w-4 h-4 text-[#ccff00] shrink-0" />
+                  ) : (
+                    <Monitor className="w-4 h-4 text-[#ccff00] shrink-0" />
+                  )}
+                  <span className="truncate">{screen}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
 
-      {/* GAME SELECTION OPTION */}
-      {/* GAME SELECTION OPTION */}
+      {/* Game Selection */}
       {selectedCategory === 'PS5' && (
-        <div className="mt-4 sm:mt-5">
-          <label className="text-[11px] sm:text-xs font-mono uppercase tracking-widest text-zinc-400">
+        <div className="mb-6">
+          <label className="text-xs font-mono uppercase tracking-widest text-zinc-400 font-bold block mb-3">
             2. Select Game / Edition
           </label>
-          <div className="grid grid-cols-2 gap-2 mt-1.5">
+          <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => setSelectedGame('Standard')}
-              className={`p-2.5 sm:p-3 rounded-xl border text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${selectedGame === 'Standard'
-                  ? 'bg-cyan-500 text-black border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)]'
-                  : 'bg-white/5 text-zinc-400 border-white/10 hover:border-white/30'
-                }`}
+              className={`p-4 rounded-2xl border text-xs font-bold transition-all cursor-pointer font-orbitron ${
+                selectedGame === 'Standard'
+                  ? 'bg-[#ccff00] text-black border-[#ccff00] shadow-[0_0_20px_rgba(204,255,0,0.45)]'
+                  : 'bg-[#181922] text-zinc-300 border-white/10 hover:border-white/30'
+              }`}
             >
               Standard Games
             </button>
-
-            <div className="relative group">
-              <button
-                type="button"
-                disabled={true}
-                className="w-full h-full p-2.5 sm:p-3 rounded-xl border text-[11px] sm:text-xs font-bold bg-zinc-900/80 border-amber-500/30 text-amber-400/50 cursor-not-allowed flex items-center justify-center gap-1.5 font-orbitron"
-              >
-                <span>🔒 GTA 6 (Locked)</span>
-              </button>
-              <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black/90 text-amber-400 text-[10px] px-2 py-1 rounded border border-amber-500/40 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none font-mono z-20">
-                Revealing on Launch Day!
-              </div>
-            </div>
+            <button
+              type="button"
+              disabled={true}
+              className="p-4 rounded-2xl border text-xs font-bold bg-zinc-900 border-amber-500/30 text-amber-400/50 cursor-not-allowed font-orbitron flex items-center justify-center gap-1.5"
+            >
+              🔒 GTA 6
+            </button>
           </div>
         </div>
       )}
 
-      {/* PLAYERS */}
+      {/* Players */}
       {currentStation?.multiplayer && (
-        <div className="mt-4 sm:mt-5">
-          <label className="text-[11px] sm:text-xs font-mono uppercase tracking-widest text-zinc-400">
-            {selectedCategory === 'PS5' ? '4.' : '3.'} Select Players
+        <div className="mb-6">
+          <label className="text-xs font-mono uppercase tracking-widest text-zinc-400 font-bold block mb-3">
+            Select Players
           </label>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1.5">
-            {getPlayerOptions().map((playerOption) => (
-              <button
-                key={playerOption}
-                onClick={() => setSelectedTeam(playerOption)}
-                className={`p-2.5 sm:p-3 rounded-xl border text-center cursor-pointer transition-all ${selectedTeam === playerOption
-                    ? 'border-cyan-400 bg-cyan-400/10 text-white shadow-[0_0_12px_rgba(34,211,238,0.2)]'
-                    : 'border-white/10 bg-white/5 text-zinc-400 hover:border-white/20'
+          <div className="grid grid-cols-2 gap-3">
+            {getPlayerOptions().map((playerOption) => {
+              const isSelected = selectedTeam === playerOption;
+              return (
+                <button
+                  key={playerOption}
+                  onClick={() => setSelectedTeam(playerOption)}
+                  className={`p-3.5 rounded-2xl border text-center cursor-pointer transition-all font-mono text-xs ${
+                    isSelected
+                      ? 'border-[#ccff00] bg-[#ccff00]/20 text-[#ccff00] font-bold shadow-md'
+                      : 'border-white/10 bg-[#181922] text-zinc-400 hover:border-white/20'
                   }`}
-              >
-                <div className="text-[11px] sm:text-xs font-bold font-orbitron text-cyan-400">
+                >
                   {playerOption}
-                </div>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
 
-      {/* TIMELINE BAR */}
-      <div className="mt-5 sm:mt-6">
-        <label className="text-[11px] sm:text-xs font-sans text-zinc-400 font-semibold block mb-2">
-          Slide horizontally to check timeline availability
+      {/* Timeline Bar */}
+      <div className="mb-6 bg-[#181922] border border-white/10 p-4 rounded-2xl shadow-inner">
+        <label className="text-xs font-sans text-zinc-300 font-bold block mb-2.5">
+          Timeline Availability
         </label>
-
-        <div className="relative overflow-x-auto pb-3 pt-1 touch-pan-x scrollbar-thin scrollbar-thumb-zinc-700">
-          <div className="min-w-[580px] sm:min-w-[650px] px-1">
-            <div className="flex justify-between items-end mb-1">
+        <div className="relative overflow-x-auto pb-2 pt-1 no-scrollbar">
+          <div className="min-w-[620px] px-1">
+            <div className="flex justify-between items-end mb-2">
               {allBlocks.map((block) => {
                 const isFullHour = block % 60 === 0;
                 return (
-                  <div key={block} className="flex flex-col items-center min-w-[12px] sm:min-w-[14px]">
-                    <div className="h-3 sm:h-4 flex items-center justify-center">
+                  <div key={block} className="flex flex-col items-center min-w-[16px]">
+                    <div className="h-4 flex items-center justify-center">
                       {isFullHour && (
-                        <span className="text-[9px] sm:text-[10px] font-semibold text-zinc-300 font-sans tracking-tight">
+                        <span className="text-[10px] font-bold text-[#ccff00] font-mono">
                           {minutesToTimeString(block).replace(':00', '')}
                         </span>
                       )}
                     </div>
-                    <div className={`w-[1px] rounded-full transition-all mt-1 ${isFullHour ? 'h-2.5 sm:h-3 bg-zinc-300' : 'h-1 sm:h-1.5 bg-zinc-600'
-                      }`} />
+                    <div className={`w-[1px] rounded-full mt-1 ${isFullHour ? 'h-4 bg-[#ccff00]/60' : 'h-2.5 bg-zinc-600'}`} />
                   </div>
                 );
               })}
             </div>
 
-            <div className="relative w-full h-2.5 sm:h-3 bg-gradient-to-r from-zinc-600 via-zinc-400 to-zinc-600 rounded-sm overflow-hidden flex shadow-inner">
+            <div className="relative w-full h-4 bg-zinc-800 rounded-md overflow-hidden flex shadow-inner">
               {allBlocks.map((block) => {
                 const blockStatus = get15MinBlockStatus(block);
                 const isSelected = startTime !== null && endTime !== null && block >= startTime && block < endTime;
@@ -454,16 +513,17 @@ const BookingAvailability = ({
                 return (
                   <div
                     key={block}
-                    className={`flex-1 h-full border-r border-black/20 transition-all ${isSelected
-                        ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]'
+                    className={`flex-1 h-full border-r border-black/30 transition-all ${
+                      isSelected
+                        ? 'bg-[#ccff00] shadow-[0_0_12px_rgba(204,255,0,0.9)]'
                         : blockStatus === 'EXPIRED'
-                          ? 'bg-zinc-800/80 opacity-40'
-                          : blockStatus === 'APPROVED'
-                            ? 'bg-red-500/90 shadow-[inset_0_0_4px_rgba(0,0,0,0.5)]'
-                            : blockStatus === 'PENDING'
-                              ? 'bg-amber-400/90 shadow-[inset_0_0_4px_rgba(0,0,0,0.5)]'
-                              : 'bg-transparent'
-                      }`}
+                        ? 'bg-zinc-900 opacity-40'
+                        : blockStatus === 'APPROVED'
+                        ? 'bg-red-500/90'
+                        : blockStatus === 'PENDING'
+                        ? 'bg-amber-400/90'
+                        : 'bg-transparent'
+                    }`}
                   />
                 );
               })}
@@ -472,13 +532,12 @@ const BookingAvailability = ({
         </div>
       </div>
 
-      {/* START TIME SLOTS */}
-      <div className="mt-4 sm:mt-5">
-        <label className="text-[11px] sm:text-xs font-mono uppercase tracking-widest text-zinc-400">
+      {/* Start Slots */}
+      <div className="mb-6">
+        <label className="text-xs font-mono uppercase tracking-widest text-zinc-400 font-bold block mb-3">
           Available Start Slots
         </label>
-
-        <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 gap-2 mt-2 max-h-44 sm:max-h-48 overflow-y-auto pr-1">
+        <div className="grid grid-cols-3 gap-3 max-h-52 overflow-y-auto pr-1">
           {allBlocks.map((block) => {
             const blockStatus = get15MinBlockStatus(block);
             const isOccupied = blockStatus !== 'FREE';
@@ -489,16 +548,15 @@ const BookingAvailability = ({
                 key={block}
                 disabled={isOccupied}
                 onClick={() => handleStartSelect(block)}
-                className={`p-2 sm:p-2.5 min-h-[40px] rounded-lg border text-[11px] sm:text-xs font-bold font-mono transition-all flex items-center justify-center ${isSelected
-                    ? 'bg-cyan-500 text-black border-cyan-400 font-extrabold shadow-md'
+                className={`p-3.5 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-center ${
+                  isSelected
+                    ? 'bg-[#ccff00] text-black border-[#ccff00] font-black shadow-[0_0_15px_rgba(204,255,0,0.45)]'
                     : blockStatus === 'EXPIRED'
-                      ? 'bg-zinc-900/60 border-zinc-800 text-zinc-600 cursor-not-allowed line-through opacity-50'
-                      : blockStatus === 'APPROVED'
-                        ? 'bg-red-950/20 border-red-900/40 text-red-500/50 cursor-not-allowed line-through'
-                        : blockStatus === 'PENDING'
-                          ? 'bg-amber-950/20 border-amber-800/40 text-amber-500/60 cursor-not-allowed line-through'
-                          : 'bg-white/5 border-white/10 text-zinc-300 hover:border-cyan-400 cursor-pointer'
-                  }`}
+                    ? 'bg-zinc-900 border-zinc-800 text-zinc-600 cursor-not-allowed line-through opacity-40'
+                    : blockStatus === 'APPROVED' || blockStatus === 'PENDING'
+                    ? 'bg-red-950/20 border-red-900/40 text-red-400/50 cursor-not-allowed line-through'
+                    : 'bg-[#181922] border-white/10 text-zinc-300 hover:border-[#ccff00] cursor-pointer'
+                }`}
               >
                 {minutesToTimeString(block)}
               </button>
@@ -507,33 +565,33 @@ const BookingAvailability = ({
         </div>
       </div>
 
-      {/* SELECT DURATION */}
+      {/* Duration */}
       {showEndPicker && startTime !== null && (
-        <div className="mt-4 sm:mt-5 p-3 sm:p-4 rounded-2xl bg-zinc-900 border border-cyan-500/40">
-          <div className="flex items-center justify-between mb-2.5">
-            <span className="text-[11px] sm:text-xs font-mono text-cyan-400 font-bold uppercase flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Select Duration
+        <div className="mb-6 p-4.5 rounded-2xl bg-[#181922] border border-[#ccff00]/40 shadow-[0_0_20px_rgba(204,255,0,0.12)]">
+          <div className="flex items-center justify-between mb-3.5">
+            <span className="text-xs font-mono text-[#ccff00] font-bold uppercase flex items-center gap-1.5">
+              <Clock className="w-4 h-4 text-[#ccff00]" /> Select Duration
             </span>
-            <span className="text-[10px] sm:text-[11px] text-zinc-400 font-mono">
+            <span className="text-xs text-zinc-400 font-mono">
               Start: <strong className="text-white">{minutesToTimeString(startTime)}</strong>
             </span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-44 sm:max-h-48 overflow-y-auto pr-1">
+          <div className="grid grid-cols-2 gap-3">
             {getDurationOptions().map(({ durationMins, endMins }) => {
               const isSelected = endTime === endMins;
-
               return (
                 <button
                   key={endMins}
                   onClick={() => setEndTime(endMins)}
-                  className={`p-2 sm:p-2.5 rounded-lg border text-[11px] sm:text-xs font-bold font-mono transition-all text-center ${isSelected
-                      ? 'bg-emerald-500 text-black border-emerald-400 font-extrabold shadow-md'
-                      : 'bg-white/5 border-white/10 text-zinc-300 hover:border-emerald-400 cursor-pointer'
-                    }`}
+                  className={`p-3.5 rounded-xl border text-xs font-bold font-mono transition-all text-center ${
+                    isSelected
+                      ? 'bg-[#ccff00] text-black border-[#ccff00] font-black shadow-[0_0_15px_rgba(204,255,0,0.45)]'
+                      : 'bg-white/5 border-white/10 text-zinc-300 hover:border-[#ccff00] cursor-pointer'
+                  }`}
                 >
                   <div>{formatDurationText(durationMins)}</div>
-                  <span className="block text-[8px] sm:text-[9px] opacity-80 font-normal">
+                  <span className="block text-[10px] opacity-70 font-normal mt-0.5">
                     (Till {minutesToTimeString(endMins)})
                   </span>
                 </button>
@@ -543,29 +601,21 @@ const BookingAvailability = ({
         </div>
       )}
 
-      {/* SUMMARY BAR */}
+      {/* Bottom Sticky Action Bar */}
       {startTime !== null && endTime !== null && (
-        <div className="mt-5 p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-cyan-950/90 to-purple-950/90 border border-cyan-500/40 flex items-center justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            <div className="text-[10px] sm:text-[11px] text-cyan-300 font-mono truncate">
-              {bookingDate} • {selectedCategory} {currentStation?.hasScreens ? `(${selectedScreen})` : ''}
-              {selectedCategory === 'PS5' && selectedGame ? ` • ${selectedGame}` : ''}
-            </div>
-
-            <div className="text-sm sm:text-base font-black font-orbitron truncate">
+        <div className="fixed bottom-0 left-0 right-0 bg-[#0a0a0c]/95 backdrop-blur-lg border-t border-white/10 p-4 z-50 flex items-center justify-between max-w-xl mx-auto shadow-2xl">
+          <div>
+            <div className="text-[10px] font-mono text-zinc-400 uppercase">Selected Slot</div>
+            <div className="text-xs font-bold font-orbitron text-[#ccff00]">
               {minutesToTimeString(startTime)} - {minutesToTimeString(endTime)}
             </div>
-
-            <div className="text-[11px] sm:text-xs font-bold font-mono text-emerald-400 mt-0.5">
-              Total: ₹{dynamicTotalAmount} ({formatDurationText(endTime - startTime)})
-            </div>
+            <div className="text-base font-black font-orbitron text-white">₹{dynamicTotalAmount}</div>
           </div>
-
           <button
             onClick={onNext}
-            className="px-4 sm:px-5 py-2.5 rounded-xl bg-cyan-400 text-black font-orbitron text-xs font-black hover:bg-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.5)] cursor-pointer transition-all shrink-0"
+            className="px-7 py-3.5 bg-[#ccff00] hover:bg-[#b8e600] text-black font-black font-orbitron text-xs uppercase tracking-widest rounded-xl shadow-[0_0_20px_rgba(204,255,0,0.45)] cursor-pointer transition-all active:scale-95"
           >
-            NEXT &gt;
+            Proceed to Pay &gt;
           </button>
         </div>
       )}

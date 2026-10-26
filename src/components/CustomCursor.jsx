@@ -99,7 +99,7 @@ export const CustomCursor = () => {
       {/* Center Precision Dot */}
       <div
         ref={dotRef}
-        className="fixed top-0 left-0 w-1.5 h-1.5 bg-red-500 rounded-full pointer-events-none z-[99999]"
+        className="fixed top-0 left-0 w-1.5 h-1.5 bg-[#ccff00] rounded-full pointer-events-none z-[99999]"
         style={{ willChange: 'transform' }}
       />
 
@@ -108,15 +108,15 @@ export const CustomCursor = () => {
         ref={squareRef}
         className={`fixed top-0 left-0 pointer-events-none z-[99999] transition-all duration-150 ease-out border flex items-center justify-center ${
           isHovered
-            ? 'w-10 h-10 border-cyan-400 bg-cyan-400/20 shadow-[0_0_20px_rgba(34,211,238,0.6)]'
-            : 'w-7 h-7 border-red-500/80 bg-transparent'
+            ? 'w-10 h-10 border-[#ccff00] bg-[#ccff00]/20 shadow-[0_0_20px_rgba(204,255,0,0.5)]'
+            : 'w-7 h-7 border-[#ccff00]/80 bg-transparent'
         }`}
         style={{ willChange: 'transform' }}
       >
-        <span className="absolute -top-1 -left-1 w-2 h-2 border-t-2 border-l-2 border-red-500"></span>
-        <span className="absolute -top-1 -right-1 w-2 h-2 border-t-2 border-r-2 border-red-500"></span>
-        <span className="absolute -bottom-1 -left-1 w-2 h-2 border-b-2 border-l-2 border-red-500"></span>
-        <span className="absolute -bottom-1 -right-1 w-2 h-2 border-b-2 border-r-2 border-red-500"></span>
+        <span className="absolute -top-1 -left-1 w-2 h-2 border-t-2 border-l-2 border-[#ccff00]"></span>
+        <span className="absolute -top-1 -right-1 w-2 h-2 border-t-2 border-r-2 border-[#ccff00]"></span>
+        <span className="absolute -bottom-1 -left-1 w-2 h-2 border-b-2 border-l-2 border-[#ccff00]"></span>
+        <span className="absolute -bottom-1 -right-1 w-2 h-2 border-b-2 border-r-2 border-[#ccff00]"></span>
       </div>
     </>
   );

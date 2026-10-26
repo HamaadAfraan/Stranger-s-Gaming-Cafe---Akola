@@ -358,7 +358,7 @@ const GameCard = ({ game, onOpenModal }) => {
 
   return (
     <div
-      className="bg-[#0d0e12] border border-white/10 rounded-2xl overflow-hidden hover:border-cyan-400/50 transition duration-300 group flex flex-col justify-between"
+      className="bg-[#101014] border border-white/10 rounded-2xl overflow-hidden hover:border-[#ccff00]/50 transition duration-300 group flex flex-col justify-between shadow-lg"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -372,8 +372,8 @@ const GameCard = ({ game, onOpenModal }) => {
         {/* Loading Spinner Animation */}
         {isHovered && isVideoLoading && (
           <div className="absolute inset-0 bg-black/70 backdrop-blur-xs flex flex-col items-center justify-center z-10 space-y-2">
-            <div className="w-8 h-8 border-3 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-[10px] text-cyan-400 font-mono tracking-wider uppercase">Loading Trailer...</span>
+            <div className="w-8 h-8 border-3 border-[#ccff00] border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-[10px] text-[#ccff00] font-mono tracking-wider uppercase">Loading Trailer...</span>
           </div>
         )}
 
@@ -398,29 +398,29 @@ const GameCard = ({ game, onOpenModal }) => {
         )}
 
         {game.isPopular && (
-          <span className="absolute top-2.5 right-2.5 bg-red-600/90 text-white text-[9px] sm:text-[10px] font-bold uppercase px-2 py-0.5 rounded shadow z-20">
+          <span className="absolute top-2.5 right-2.5 bg-red-600/90 text-white text-[9px] sm:text-[10px] font-bold uppercase px-2.5 py-0.5 rounded shadow z-20 font-mono">
             Popular 🔥
           </span>
         )}
 
-        <span className="absolute bottom-2.5 left-2.5 bg-black/70 backdrop-blur-md text-cyan-400 border border-cyan-400/30 text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded z-20">
+        <span className="absolute bottom-2.5 left-2.5 bg-black/80 backdrop-blur-md text-[#ccff00] border border-[#ccff00]/30 text-[9px] sm:text-[10px] font-bold px-2.5 py-0.5 rounded z-20 font-mono">
           {game.genre}
         </span>
       </div>
 
       <div className="p-3.5 sm:p-4 flex-1 flex flex-col justify-between space-y-2.5 sm:space-y-3">
         <div>
-          <h3 className="text-sm sm:text-lg font-bold text-white group-hover:text-cyan-400 transition-colors line-clamp-1">
+          <h3 className="text-sm sm:text-lg font-bold text-white group-hover:text-[#ccff00] transition-colors line-clamp-1 font-orbitron">
             {game.name}
           </h3>
-          <div className="text-[11px] sm:text-xs text-gray-400 flex items-center gap-2 mt-0.5 sm:mt-1">
+          <div className="text-[11px] sm:text-xs text-gray-400 flex items-center gap-2 mt-0.5 sm:mt-1 font-mono">
             <span>👥 {game.players}</span>
           </div>
         </div>
 
         <button
           onClick={() => onOpenModal(game)}
-          className="w-full py-2 bg-cyan-400/10 hover:bg-cyan-400 text-cyan-400 hover:text-black border border-cyan-400/30 font-semibold text-xs rounded-xl transition duration-200 mt-1 cursor-pointer"
+          className="w-full py-2 bg-[#ccff00]/10 hover:bg-[#ccff00] text-[#ccff00] hover:text-black border border-[#ccff00]/30 font-bold text-xs rounded-xl transition duration-200 mt-1 cursor-pointer font-orbitron uppercase tracking-wider"
         >
           View Details & Consoles
         </button>
@@ -437,8 +437,8 @@ const ModalVideoPlayer = ({ mediaUrl, gameName }) => {
     <div className="relative h-44 sm:h-56 w-full shrink-0 bg-black">
       {isLoading && (
         <div className="absolute inset-0 bg-black/70 backdrop-blur-xs flex flex-col items-center justify-center z-10 space-y-2">
-          <div className="w-8 h-8 border-3 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-[10px] text-cyan-400 font-mono tracking-wider uppercase">Loading Trailer...</span>
+          <div className="w-8 h-8 border-3 border-[#ccff00] border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-[10px] text-[#ccff00] font-mono tracking-wider uppercase">Loading Trailer...</span>
         </div>
       )}
       {isVideoUrl(mediaUrl) ? (
@@ -494,15 +494,15 @@ export const GamesLibrary = () => {
   const displayedGames = showAll || isFilteringActive ? filteredGames : filteredGames.slice(0, 8);
 
   return (
-    <section id="games" className="py-10 sm:py-20 px-3 sm:px-6 max-w-7xl mx-auto border-t border-white/10 bg-[#070709] text-white font-sans">
+    <section id="games" className="py-10 sm:py-20 px-3 sm:px-6 max-w-7xl mx-auto border-t border-white/10 bg-[#0a0a0c] text-white font-sans">
       
       {/* Header */}
       <div className="mb-6 sm:mb-8 text-center">
-        <span className="text-cyan-400 text-[10px] sm:text-xs font-bold uppercase tracking-widest block mb-1">
+        <span className="text-[#ccff00] text-[10px] sm:text-xs font-bold uppercase tracking-widest block mb-1 font-mono">
           BILL MART MALL AKOLA • PRE-INSTALLED GAME LIBRARY
         </span>
         <h2 className="text-2xl sm:text-5xl font-black uppercase tracking-tight text-white font-orbitron">
-          GAME <span className="text-cyan-400 drop-shadow-[0_0_15px_rgba(34,211,238,0.4)]">COLLECTION</span>
+          GAME <span className="text-[#ccff00] drop-shadow-[0_0_15px_rgba(204,255,0,0.3)]">COLLECTION</span>
         </h2>
       </div>
 
@@ -512,10 +512,10 @@ export const GamesLibrary = () => {
           <button
             key={plat.id}
             onClick={() => { setSelectedPlatform(plat.id); setShowAll(false); }}
-            className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-lg whitespace-nowrap transition-all border cursor-pointer ${
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-lg whitespace-nowrap transition-all border cursor-pointer font-mono ${
               selectedPlatform === plat.id
-                ? 'bg-cyan-400 text-black border-cyan-400 font-bold shadow-[0_0_15px_rgba(34,211,238,0.4)]'
-                : 'bg-[#121318] text-gray-400 border-white/10 hover:border-cyan-400/40 hover:text-white'
+                ? 'bg-[#ccff00] text-black border-[#ccff00] font-bold shadow-[0_0_15px_rgba(204,255,0,0.3)]'
+                : 'bg-[#101014] text-gray-400 border-white/10 hover:border-[#ccff00]/40 hover:text-white'
             }`}
           >
             {plat.label}
@@ -524,14 +524,14 @@ export const GamesLibrary = () => {
       </div>
 
       {/* Search & Filters */}
-      <div className="bg-[#0e0f14] border border-white/10 p-3 sm:p-4 rounded-2xl mb-6 sm:mb-8 space-y-3 sm:space-y-4">
+      <div className="bg-[#101014] border border-white/10 p-3.5 sm:p-5 rounded-2xl mb-6 sm:mb-8 space-y-3.5 sm:space-y-4 shadow-xl">
         <div className="relative">
           <input
             type="text"
             placeholder="Search game title (e.g. Tekken, GTA)..."
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setShowAll(false); }}
-            className="w-full bg-[#16171f] border border-white/10 rounded-xl px-3.5 sm:px-4 py-2.5 sm:py-3 pl-9 sm:pl-10 text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition"
+            className="w-full bg-[#0a0a0c] border border-white/10 rounded-xl px-3.5 sm:px-4 py-2.5 sm:py-3 pl-9 sm:pl-10 text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#ccff00] transition font-mono"
           />
           <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 absolute left-3 top-3.5 sm:top-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -545,9 +545,9 @@ export const GamesLibrary = () => {
             <button
               key={genre}
               onClick={() => { setSelectedGenre(genre); setShowAll(false); }}
-              className={`px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-medium transition whitespace-nowrap shrink-0 sm:shrink cursor-pointer ${
+              className={`px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-medium transition whitespace-nowrap shrink-0 sm:shrink cursor-pointer font-mono ${
                 selectedGenre === genre
-                  ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-400/40'
+                  ? 'bg-[#ccff00]/15 text-[#ccff00] border border-[#ccff00]/40 font-bold'
                   : 'bg-[#181920] text-gray-400 border border-white/5 hover:text-white'
               }`}
             >
@@ -563,9 +563,9 @@ export const GamesLibrary = () => {
             <button
               key={p}
               onClick={() => { setSelectedPlayers(p); setShowAll(false); }}
-              className={`px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-medium transition whitespace-nowrap shrink-0 sm:shrink cursor-pointer ${
+              className={`px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-medium transition whitespace-nowrap shrink-0 sm:shrink cursor-pointer font-mono ${
                 selectedPlayers === p
-                  ? 'bg-red-500/20 text-red-400 border border-red-500/40 font-bold'
+                  ? 'bg-[#ccff00]/15 text-[#ccff00] border border-[#ccff00]/40 font-bold'
                   : 'bg-[#181920] text-gray-400 border border-white/5 hover:text-white'
               }`}
             >
@@ -576,7 +576,7 @@ export const GamesLibrary = () => {
       </div>
 
       <div className="text-[11px] sm:text-xs text-gray-400 mb-3 sm:mb-4 font-mono">
-        Showing <span className="text-cyan-400 font-bold">{displayedGames.length}</span> of <span className="text-white font-bold">{filteredGames.length}</span> games
+        Showing <span className="text-[#ccff00] font-bold">{displayedGames.length}</span> of <span className="text-white font-bold">{filteredGames.length}</span> games
       </div>
 
       {/* Game Cards Grid */}
@@ -597,7 +597,7 @@ export const GamesLibrary = () => {
             <div className="mt-8 text-center">
               <button
                 onClick={() => setShowAll(!showAll)}
-                className="px-6 py-3 bg-[#121318] hover:bg-cyan-400 text-cyan-400 hover:text-black border border-cyan-400/40 font-bold text-xs sm:text-sm rounded-xl transition duration-300 shadow-[0_0_15px_rgba(34,211,238,0.15)] cursor-pointer"
+                className="px-6 py-3 bg-[#101014] hover:bg-[#ccff00] text-[#ccff00] hover:text-black border border-[#ccff00]/40 font-bold text-xs sm:text-sm rounded-xl transition duration-300 shadow-[0_0_15px_rgba(204,255,0,0.15)] cursor-pointer font-orbitron uppercase tracking-wider"
               >
                 {showAll ? "Show Less ⬆️" : `Show More (${filteredGames.length - 8} More Games) ⬇️`}
               </button>
@@ -608,23 +608,27 @@ export const GamesLibrary = () => {
 
       {/* Modal Details */}
       {activeModalGame && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
-          <div className="bg-[#0f1015] border border-cyan-400/40 rounded-2xl max-w-md w-full overflow-hidden shadow-[0_0_30px_rgba(34,211,238,0.2)] max-h-[90vh] flex flex-col">
-            <div className="relative">
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 font-sans">
+          <div className="bg-[#101014] border border-[#ccff00]/40 rounded-2xl max-w-md w-full overflow-hidden shadow-[0_0_30px_rgba(204,255,0,0.2)] max-h-[90vh] flex flex-col relative">
+            
+            {/* Enlarged & Perfectly Positioned Round Close Button */}
+            <button
+              onClick={() => setActiveModalGame(null)}
+              className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 w-11 h-11 flex items-center justify-center bg-black/90 backdrop-blur-md text-white border-2 border-white/30 rounded-full hover:bg-[#ccff00] hover:text-black hover:border-[#ccff00] transition-all cursor-pointer z-50 shadow-2xl text-lg font-black"
+              aria-label="Close modal"
+            >
+              ✕
+            </button>
+
+            <div className="relative w-full">
               <ModalVideoPlayer mediaUrl={activeModalGame.mediaUrl} gameName={activeModalGame.name} />
-              <button
-                onClick={() => setActiveModalGame(null)}
-                className="absolute top-2.5 right-2.5 bg-black/70 text-white rounded-full p-1.5 hover:bg-red-600 transition cursor-pointer z-20"
-              >
-                ✕
-              </button>
             </div>
 
             <div className="p-4 sm:p-5 space-y-3.5 sm:space-y-4 overflow-y-auto">
               <div>
-                <h3 className="text-lg sm:text-xl font-bold text-white">{activeModalGame.name}</h3>
-                <div className="flex items-center gap-2.5 mt-1.5 text-[11px] sm:text-xs text-gray-400">
-                  <span className="bg-cyan-400/10 border border-cyan-400/20 text-cyan-400 px-2 py-0.5 rounded">
+                <h3 className="text-lg sm:text-xl font-black text-white font-orbitron">{activeModalGame.name}</h3>
+                <div className="flex items-center gap-2.5 mt-1.5 text-[11px] sm:text-xs text-gray-400 font-mono">
+                  <span className="bg-[#ccff00]/10 border border-[#ccff00]/20 text-[#ccff00] px-2 py-0.5 rounded font-bold">
                     {activeModalGame.genre}
                   </span>
                   <span>👥 {activeModalGame.players}</span>
@@ -632,22 +636,22 @@ export const GamesLibrary = () => {
               </div>
 
               {/* Game Description */}
-              <div className="bg-[#14151c] p-3 rounded-xl border border-white/5">
+              <div className="bg-[#0a0a0c] p-3 rounded-xl border border-white/5">
                 <h4 className="text-[10px] sm:text-[11px] font-mono uppercase text-gray-400 mb-1">About Game:</h4>
-                <p className="text-xs text-gray-300 leading-relaxed">
+                <p className="text-xs text-gray-300 leading-relaxed font-mono">
                   {activeModalGame.description}
                 </p>
               </div>
 
               <div>
-                <h4 className="text-[10px] sm:text-xs font-mono uppercase text-gray-500 mb-2">Available On Consoles:</h4>
+                <h4 className="text-[10px] sm:text-xs font-mono uppercase text-gray-400 mb-2">Available On Consoles:</h4>
                 <div className="flex flex-wrap gap-1.5 sm:gap-2">
                   {activeModalGame.platforms.map((platId) => {
                     const platName = PLATFORMS.find((p) => p.id === platId)?.label;
                     return (
                       <span
                         key={platId}
-                        className="bg-[#181a22] border border-white/10 text-white text-[11px] sm:text-xs px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg"
+                        className="bg-[#181a22] border border-white/10 text-white text-[11px] sm:text-xs px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg font-mono"
                       >
                         📺 {platName}
                       </span>
@@ -658,7 +662,7 @@ export const GamesLibrary = () => {
 
               <button
                 onClick={() => setActiveModalGame(null)}
-                className="w-full py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl transition cursor-pointer"
+                className="w-full py-3 bg-[#ccff00] hover:bg-[#b8e600] text-black font-black text-xs uppercase tracking-widest rounded-xl transition cursor-pointer font-orbitron shadow-lg shadow-[#ccff00]/20"
               >
                 Close
               </button>

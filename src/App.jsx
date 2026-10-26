@@ -14,7 +14,7 @@ import Login from './components/Login';
 import ProfilePage from './components/ProfilePage';
 import { GalleryExperience } from './components/GalleryExperience';
 
-// Firebase imports
+// Firebase imports (Unchanged)
 import { auth, db } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { collection, getDocs, onSnapshot } from 'firebase/firestore';
@@ -26,6 +26,24 @@ export default function App() {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [bookedSlots, setBookedSlots] = useState([]);
 
+  // 📱 iOS Safari Double-Tap Zoom Prevent Listener
+  useEffect(() => {
+    let lastTouchEnd = 0;
+    const handleTouchEnd = (event) => {
+      const now = new Date().getTime();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    };
+
+    document.addEventListener('touchend', handleTouchEnd, false);
+
+    return () => {
+      document.removeEventListener('touchend', handleTouchEnd, false);
+    };
+  }, []);
+
   // Firebase Auth State Listener (Safari Safe)
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
@@ -35,7 +53,7 @@ export default function App() {
     return () => unsubscribeAuth();
   }, []);
 
-  // Firestore se bookings fetch karne ka function
+  // Firestore bookings fetch function
   const fetchBookings = async () => {
     try {
       const querySnapshot = await getDocs(collection(db, 'bookings'));
@@ -49,7 +67,7 @@ export default function App() {
     }
   };
 
-  // Real-time listener for bookings using Firestore onSnapshot (Safari Safe alternative to WebSockets)
+  // Real-time listener for bookings using Firestore onSnapshot
   useEffect(() => {
     fetchBookings();
 
@@ -92,7 +110,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#08080a] text-white relative font-sans selection:bg-red-600 selection:text-white w-full overflow-x-hidden">
+    <div className="min-h-screen bg-[#0a0a0c] text-white relative font-sans selection:bg-[#ccff00] selection:text-black w-full overflow-x-hidden pb-16 md:pb-0">
       <div className="hidden md:block">
         <CustomCursor />
       </div>

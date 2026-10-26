@@ -23,14 +23,14 @@ export const Zones = () => {
   ];
 
   return (
-    <section id="zones" className="py-12 sm:py-24 px-3.5 sm:px-6 max-w-6xl mx-auto scroll-mt-20 border-t border-white/10 font-sans">
+    <section id="zones" className="py-12 sm:py-24 px-4 sm:px-6 max-w-6xl mx-auto scroll-mt-20 border-t border-white/10 font-sans">
       {/* Section Header */}
       <div className="text-center mb-8 sm:mb-14">
-        <span className="text-red-500 text-[10px] sm:text-xs font-bold uppercase tracking-widest block mb-1">
+        <span className="text-[#ccff00] text-[10px] sm:text-xs font-bold uppercase tracking-widest block mb-1 font-mono">
           HARDWARE & STATIONS IN AKOLA
         </span>
         <h2 className="text-2xl sm:text-5xl font-black font-orbitron text-center tracking-wider text-white">
-          ARENA <span className="text-cyan-400 drop-shadow-[0_0_15px_rgba(34,211,238,0.4)]">BATTLE ZONES</span>
+          ARENA <span className="text-[#ccff00] drop-shadow-[0_0_15px_rgba(204,255,0,0.3)]">BATTLE ZONES</span>
         </h2>
       </div>
 
@@ -39,26 +39,26 @@ export const Zones = () => {
         {zones.map((zone, idx) => (
           <div 
             key={idx} 
-            className="group rounded-2xl overflow-hidden bg-[#0b0c10] border border-white/10 hover:border-cyan-400/60 transition-all duration-300 hover:shadow-[0_0_25px_rgba(34,211,238,0.15)] flex flex-col justify-between"
+            className="group rounded-2xl overflow-hidden bg-[#101014] border border-white/10 hover:border-[#ccff00]/60 transition-all duration-300 hover:shadow-[0_0_25px_rgba(204,255,0,0.15)] flex flex-col justify-between"
           >
             <div>
               {/* Image Container */}
-              <div className="h-40 sm:h-52 overflow-hidden relative">
+              <div className="h-44 sm:h-52 overflow-hidden relative">
                 <img 
                   src={zone.img} 
                   alt={zone.title} 
                   loading="lazy"
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0b0c10] via-transparent to-transparent" />
-                <span className="absolute top-3 right-3 px-2.5 py-1 rounded-md bg-black/80 backdrop-blur-md text-cyan-400 text-[10px] sm:text-xs font-mono font-bold border border-cyan-400/30">
+                <div className="absolute inset-0 bg-gradient-to-t from-[#101014] via-transparent to-transparent" />
+                <span className="absolute top-3 right-3 px-2.5 py-1 rounded-md bg-black/80 backdrop-blur-md text-[#ccff00] text-[10px] sm:text-xs font-mono font-bold border border-[#ccff00]/30">
                   {zone.tag}
                 </span>
               </div>
 
               {/* Text Info */}
               <div className="p-4 sm:p-5">
-                <h3 className="text-base sm:text-lg font-bold font-orbitron text-white group-hover:text-cyan-400 transition-colors">
+                <h3 className="text-base sm:text-lg font-bold font-orbitron text-white group-hover:text-[#ccff00] transition-colors">
                   {zone.title}
                 </h3>
                 <p className="text-[11px] sm:text-xs text-zinc-400 mt-1.5 font-mono leading-relaxed">

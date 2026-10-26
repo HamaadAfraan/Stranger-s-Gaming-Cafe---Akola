@@ -1,22 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { Crosshair, Menu, X, User } from 'lucide-react';
+import { Menu, X, User } from 'lucide-react';
 import { auth, db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import profileImg from '../assets/profile.jpeg';
+import bannerImg from '../assets/banner.png';
 
 export const Navbar = ({ onOpenBooking, onOpenLogin, session, onOpenProfile }) => {
   const [activeTab, setActiveTab] = useState('home');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [currentAvatar, setCurrentAvatar] = useState(profileImg);
+  const [userName, setUserName] = useState('');
 
   const currentUser = session?.user || auth.currentUser;
 
-  // Safe Firebase Firestore fetch for avatar
+  // Safe Firebase Firestore fetch for avatar & user profile name
   useEffect(() => {
     let isMounted = true;
 
-    const fetchLatestAvatar = async () => {
+    const fetchLatestAvatarAndProfile = async () => {
       const userId = currentUser?.uid || currentUser?.id;
+
+      // Extract best fallback display name
+      const displayName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Gamer';
+      if (isMounted) setUserName(displayName);
+
       if (!userId) {
         if (isMounted) setCurrentAvatar(currentUser?.photoURL || profileImg);
         return;
@@ -27,21 +34,23 @@ export const Navbar = ({ onOpenBooking, onOpenLogin, session, onOpenProfile }) =
         const userSnap = await getDoc(userRef);
 
         if (isMounted) {
-          if (userSnap.exists() && userSnap.data().avatar_url) {
-            setCurrentAvatar(userSnap.data().avatar_url);
+          if (userSnap.exists()) {
+            const data = userSnap.data();
+            if (data.avatar_url) setCurrentAvatar(data.avatar_url);
+            if (data.full_name) setUserName(data.full_name);
           } else {
             setCurrentAvatar(currentUser?.photoURL || profileImg);
           }
         }
       } catch (err) {
-        console.warn("Avatar fetch skipped/failed:", err.message);
+        console.warn("Avatar/Profile fetch skipped/failed:", err.message);
         if (isMounted) {
           setCurrentAvatar(currentUser?.photoURL || profileImg);
         }
       }
     };
 
-    fetchLatestAvatar();
+    fetchLatestAvatarAndProfile();
 
     return () => {
       isMounted = false;
@@ -101,34 +110,37 @@ export const Navbar = ({ onOpenBooking, onOpenLogin, session, onOpenProfile }) =
   ];
 
   return (
-    <nav className="fixed top-0 left-0 w-full bg-[#08080a]/95 backdrop-blur-lg z-50 border-b border-white/10 px-3.5 sm:px-8 py-3 sm:py-4 flex justify-between items-center font-sans">
+    <nav className="fixed top-0 left-0 w-full bg-[#0a0a0c]/95 backdrop-blur-lg z-50 border-b border-white/10 px-3 sm:px-8 py-2.5 sm:py-3.5 flex justify-between items-center font-sans">
       
-      {/* Brand Logo */}
-      <div className="flex items-center gap-2 min-w-0 shrink">
+      {/* Brand Logo - Responsive Banner Image */}
+      <div className="flex items-center min-w-0 shrink">
         <a 
           href="#home" 
           onClick={(e) => handleNavClick(e, 'home')}
-          className="text-red-500 font-black text-base xs:text-lg sm:text-xl md:text-2xl tracking-tighter flex items-center gap-1.5 font-orbitron truncate"
+          className="flex items-center group cursor-pointer"
         >
-          <Crosshair className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" /> 
-          <span className="truncate">STRANGER'S <span className="text-white hidden sm:inline"> GAMING CAFE</span></span>
+          <img 
+            src={bannerImg} 
+            alt="Stranger's Gaming Cafe" 
+            className="h-7 xs:h-8 sm:h-10 md:h-11 w-auto object-contain transition-transform group-hover:scale-105 drop-shadow-[0_0_10px_rgba(204,255,0,0.15)]"
+          />
         </a>
       </div>
 
       {/* Desktop Nav Links */}
-      <div className="hidden md:flex items-center gap-6 lg:gap-8 text-xs font-bold tracking-widest text-gray-400 uppercase">
+      <div className="hidden md:flex items-center gap-6 lg:gap-8 text-xs font-bold tracking-widest text-gray-400 uppercase font-mono">
         {navItems.map((item) => (
           <a
             key={item.id}
             href={`#${item.id}`}
             onClick={(e) => handleNavClick(e, item.id)}
             className={`relative py-1 transition-colors ${
-              activeTab === item.id ? 'text-white font-extrabold' : 'hover:text-white'
+              activeTab === item.id ? 'text-[#ccff00] font-extrabold' : 'hover:text-white'
             }`}
           >
             {item.label}
             {activeTab === item.id && (
-              <span className="absolute bottom-0 left-0 w-full h-[2px] bg-red-600 rounded-full transition-all duration-300"></span>
+              <span className="absolute bottom-0 left-0 w-full h-[2px] bg-[#ccff00] rounded-full transition-all duration-300 shadow-[0_0_8px_#ccff00]"></span>
             )}
           </a>
         ))}
@@ -137,18 +149,18 @@ export const Navbar = ({ onOpenBooking, onOpenLogin, session, onOpenProfile }) =
       {/* Action Buttons & Mobile Toggle */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         
-        {/* Gamer Profile Avatar */}
+        {/* Gamer Profile Avatar - HIDDEN ON MOBILE, VISIBLE ON DESKTOP */}
         {currentUser && (
           <button 
             onClick={onOpenProfile}
             title="Gamer Profile & Bookings"
-            className="p-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition duration-200 cursor-pointer overflow-hidden"
+            className="hidden sm:block p-0.5 bg-white/5 hover:bg-white/10 border border-[#ccff00]/30 rounded-full transition duration-200 cursor-pointer overflow-hidden"
           >
             <img 
               src={currentAvatar} 
-              onError={() => setCurrentAvatar(profileImg)} // Fallback if image load fails
+              onError={() => setCurrentAvatar(profileImg)} 
               alt="Gamer Avatar" 
-              className="w-8 h-8 rounded-full object-cover border border-red-500"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover border border-[#ccff00]"
             />
           </button>
         )}
@@ -162,7 +174,7 @@ export const Navbar = ({ onOpenBooking, onOpenLogin, session, onOpenProfile }) =
               onOpenBooking();
             }
           }}
-          className="bg-red-600 hover:bg-red-500 text-white font-bold px-3 sm:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs uppercase tracking-wider shadow-lg shadow-red-600/30 transition transform active:scale-95 sm:hover:scale-105 cursor-pointer whitespace-nowrap"
+          className="bg-[#ccff00] hover:bg-[#b8e600] text-black font-black px-3.5 sm:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs uppercase tracking-wider shadow-lg shadow-[#ccff00]/20 transition transform active:scale-95 sm:hover:scale-105 cursor-pointer whitespace-nowrap font-orbitron"
         >
           BOOK A STATION
         </button>
@@ -173,13 +185,13 @@ export const Navbar = ({ onOpenBooking, onOpenLogin, session, onOpenProfile }) =
           className="md:hidden text-gray-300 hover:text-white p-1.5 focus:outline-none rounded-lg bg-white/5 border border-white/10 active:bg-white/10"
           aria-label="Toggle menu"
         >
-          {isMobileMenuOpen ? <X className="w-5 h-5 text-red-500" /> : <Menu className="w-5 h-5" />}
+          {isMobileMenuOpen ? <X className="w-5 h-5 text-[#ccff00]" /> : <Menu className="w-5 h-5" />}
         </button>
       </div>
 
       {/* Mobile Drawer Navigation */}
       {isMobileMenuOpen && (
-        <div className="md:hidden fixed top-[57px] left-0 w-full bg-[#0b0c10]/98 backdrop-blur-xl border-b border-white/10 px-5 py-5 flex flex-col gap-2 font-orbitron shadow-2xl z-50">
+        <div className="md:hidden fixed top-[57px] left-0 w-full bg-[#101014]/98 backdrop-blur-xl border-b border-white/10 px-5 py-5 flex flex-col gap-2 font-orbitron shadow-2xl z-50">
           {navItems.map((item) => (
             <a
               key={item.id}
@@ -187,25 +199,38 @@ export const Navbar = ({ onOpenBooking, onOpenLogin, session, onOpenProfile }) =
               onClick={(e) => handleNavClick(e, item.id)}
               className={`text-xs font-bold tracking-widest py-3 px-3 rounded-lg flex items-center justify-between uppercase transition-all ${
                 activeTab === item.id 
-                  ? 'bg-red-600/15 text-red-400 border border-red-500/30 font-extrabold' 
+                  ? 'bg-[#ccff00]/15 text-[#ccff00] border border-[#ccff00]/40 font-extrabold' 
                   : 'text-gray-300 hover:text-white hover:bg-white/5'
               }`}
             >
               <span>{item.label}</span>
-              {activeTab === item.id && <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>}
+              {activeTab === item.id && <span className="w-1.5 h-1.5 rounded-full bg-[#ccff00]"></span>}
             </a>
           ))}
 
+          {/* Logged in User Section in Mobile Drawer */}
           {currentUser ? (
             <button
               onClick={() => {
                 setIsMobileMenuOpen(false);
                 onOpenProfile();
               }}
-              className="mt-2 text-xs font-bold tracking-widest py-3 px-3 rounded-lg flex items-center gap-2 text-gray-300 hover:text-white bg-white/5 border border-white/10 uppercase transition-all"
+              className="mt-3 py-3 px-3.5 rounded-xl flex items-center gap-3 bg-[#ccff00]/10 border border-[#ccff00]/40 text-left transition-all hover:bg-[#ccff00]/20 active:scale-[0.98]"
             >
-              <User className="w-4 h-4 text-red-500" />
-              <span>Gamer Profile & Bookings</span>
+              <img 
+                src={currentAvatar} 
+                onError={() => setCurrentAvatar(profileImg)} 
+                alt="Profile Avatar" 
+                className="w-9 h-9 rounded-full object-cover border-2 border-[#ccff00] shrink-0"
+              />
+              <div className="min-w-0 flex-1">
+                <span className="text-[10px] text-gray-400 font-mono block uppercase leading-none mb-1">
+                  GAMER PROFILE & BOOKINGS
+                </span>
+                <span className="text-xs font-black text-[#ccff00] truncate block uppercase font-orbitron tracking-wider">
+                  WELCOME, {userName}
+                </span>
+              </div>
             </button>
           ) : (
             <button
@@ -213,9 +238,9 @@ export const Navbar = ({ onOpenBooking, onOpenLogin, session, onOpenProfile }) =
                 setIsMobileMenuOpen(false);
                 onOpenLogin();
               }}
-              className="mt-2 text-xs font-bold tracking-widest py-3 px-3 rounded-lg flex items-center gap-2 text-gray-300 hover:text-white bg-white/5 border border-white/10 uppercase transition-all"
+              className="mt-2 text-xs font-bold tracking-widest py-3 px-3 rounded-lg flex items-center gap-2 text-gray-300 hover:text-[#ccff00] bg-white/5 border border-white/10 uppercase transition-all"
             >
-              <User className="w-4 h-4 text-red-500" />
+              <User className="w-4 h-4 text-[#ccff00]" />
               <span>Login / Signup</span>
             </button>
           )}

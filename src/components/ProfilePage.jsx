@@ -1172,7 +1172,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
         </div>
       )}
 
-      {selectedRecord && (
+{selectedRecord && (
         <div 
           className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fadeIn"
           onClick={() => setSelectedRecord(null)}
@@ -1207,11 +1207,20 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
               </div>
 
               <div className="flex justify-between items-center border-b border-white/5 pb-1.5">
-                <span className="text-gray-400">Date:</span>
+                <span className="text-gray-400">Booking Date:</span>
                 <span className="font-semibold text-purple-300">
                   {formatDateString(selectedRecord.data.bookingDate || selectedRecord.data.date || selectedRecord.data.created_at)}
                 </span>
               </div>
+
+              {selectedRecord.type === 'booking' && (
+                <div className="flex justify-between items-center border-b border-white/5 pb-1.5">
+                  <span className="text-gray-400">Booked At (Time):</span>
+                  <span className="font-mono font-bold text-emerald-300">
+                    {selectedRecord.data.created_time || selectedRecord.data.bookedTime || selectedRecord.data.time || 'N/A'}
+                  </span>
+                </div>
+              )}
 
               <div className="flex justify-between items-center border-b border-white/5 pb-1.5">
                 <span className="text-gray-400">Customer Name:</span>
@@ -1239,12 +1248,34 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                   </div>
                 </>
               ) : (
-                <div className="flex justify-between items-center border-b border-white/5 pb-1.5">
-                  <span className="text-gray-400">Station / Details:</span>
-                  <span className="font-bold text-cyan-400">
-                    {selectedRecord.data.screen || selectedRecord.data.category || 'Standard Booking'}
-                  </span>
-                </div>
+                <>
+                  <div className="flex justify-between items-center border-b border-white/5 pb-1.5">
+                    <span className="text-gray-400">Station / Platform:</span>
+                    <span className="font-bold text-cyan-400">
+                      {selectedRecord.data.station_id || selectedRecord.data.stationId || selectedRecord.data.platform || selectedRecord.data.category || selectedRecord.data.screen || 'Standard Booking'}
+                      {selectedRecord.data.screen && selectedRecord.data.screen !== selectedRecord.data.platform ? ` (${selectedRecord.data.screen})` : ''}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center border-b border-white/5 pb-1.5">
+                    <span className="text-gray-400">Reserved Slot Time:</span>
+                    <span className="font-semibold text-cyan-300">
+                      {selectedRecord.data.slot_time || selectedRecord.data.slot || selectedRecord.data.time_slot || selectedRecord.data.timeSlot || 'N/A'}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center border-b border-white/5 pb-1.5">
+                    <span className="text-gray-400">Duration / Team:</span>
+                    <span className="font-medium text-slate-300">
+                      {[selectedRecord.data.duration, selectedRecord.data.team].filter(Boolean).join(' • ') || 'Standard Slot'}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center border-b border-white/5 pb-1.5">
+                    <span className="text-gray-400">Transaction UTR / Ref:</span>
+                    <span className="font-mono text-amber-300">{selectedRecord.data.utr || 'N/A'}</span>
+                  </div>
+                </>
               )}
 
               <div className="flex justify-between items-center border-b border-white/5 pb-1.5">
@@ -1257,9 +1288,9 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
               </div>
 
               <div className="pt-2 flex justify-between items-center text-sm font-bold font-orbitron">
-                <span className="text-gray-300">Total Amount:</span>
+                <span className="text-gray-300">Total Amount Paid:</span>
                 <span className="font-extrabold text-emerald-400 text-base">
-                  ₹{selectedRecord.data.amount || selectedRecord.data.price || '0'}
+                  ₹{selectedRecord.data.amount || selectedRecord.data.price || selectedRecord.data.total_amount || '0'}
                 </span>
               </div>
             </div>
