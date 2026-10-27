@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-// Firebase Auth Imports + Google Auth Provider
-import { auth } from '../firebase';
+// Firebase Auth & Firestore Imports
+import { auth, db } from '../firebase';
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
   sendPasswordResetEmail,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  signOut
 } from 'firebase/auth';
-import { X, Eye, EyeOff } from 'lucide-react';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { X, Eye, EyeOff, User, Phone, CheckCircle2 } from 'lucide-react';
 
 export default function Login({ onClose, onLoginSuccess }) {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -24,6 +26,39 @@ export default function Login({ onClose, onLoginSuccess }) {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
+  // Profile Completion Modal States (Jab naya account bane ya Google login ho)
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [pendingUser, setPendingUser] = useState(null);
+  const [profileName, setProfileName] = useState('');
+  const [profilePhone, setProfilePhone] = useState('');
+  const [profileSaving, setProfileSaving] = useState(false);
+
+  // Helper to check if profile exists in Firestore
+  const checkAndPromptProfile = async (user) => {
+    try {
+      const userRef = doc(db, 'profiles', user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists() && userSnap.data().phone && userSnap.data().name) {
+        // Profile already complete hai
+        onLoginSuccess(user);
+      } else {
+        // Profile incomplete ya nahi hai -> Modal kholo
+        setPendingUser(user);
+        setProfileName(user.displayName || '');
+        setProfilePhone(user.phoneNumber || '');
+        setShowProfileModal(true);
+      }
+    } catch (err) {
+      console.error("Profile check error:", err);
+      // Fallback agar Firestore error ho toh bhi modal dikha do
+      setPendingUser(user);
+      setProfileName(user.displayName || '');
+      setProfilePhone('');
+      setShowProfileModal(true);
+    }
+  };
+
   // Google Sign-In Handler
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
@@ -34,7 +69,7 @@ export default function Login({ onClose, onLoginSuccess }) {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       setGoogleLoading(false);
-      onLoginSuccess(result.user);
+      await checkAndPromptProfile(result.user);
     } catch (error) {
       setGoogleLoading(false);
       console.error("Google Sign-In Error:", error);
@@ -57,7 +92,6 @@ export default function Login({ onClose, onLoginSuccess }) {
 
     try {
       if (isForgotPassword) {
-        // Firebase Forgot Password Handler
         await sendPasswordResetEmail(auth, email);
         setLoading(false);
         setSuccessMsg('Password reset link sent to your registered email!');
@@ -65,7 +99,6 @@ export default function Login({ onClose, onLoginSuccess }) {
       }
 
       if (isSignUp) {
-        // Check if passwords match
         if (password !== confirmPassword) {
           setLoading(false);
           setErrorMsg('Please check password: Passwords do not match!');
@@ -78,22 +111,20 @@ export default function Login({ onClose, onLoginSuccess }) {
           return;
         }
 
-        // Firebase Sign Up for new gamers
-        await createUserWithEmailAndPassword(auth, email, password);
+        // Firebase Sign Up
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         setLoading(false);
-        setSuccessMsg('Account created successfully! You can now log in.');
-        setIsSignUp(false);
-        setPassword('');
-        setConfirmPassword('');
+        
+        // Sign up ke turant baad profile modal kholo taaki name/phone save ho sake
+        await checkAndPromptProfile(userCredential.user);
       } else {
         // Firebase Login for existing gamers
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         setLoading(false);
-        onLoginSuccess(userCredential.user);
+        await checkAndPromptProfile(userCredential.user);
       }
     } catch (error) {
       setLoading(false);
-      // Firebase error messages user-friendly banane ke liye
       let message = error.message;
       if (error.code === 'auth/invalid-credential') {
         message = 'Invalid email or password. Please try again.';
@@ -106,8 +137,140 @@ export default function Login({ onClose, onLoginSuccess }) {
     }
   };
 
+  // Save Profile Handler from Modal
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    if (!profileName.trim() || !profilePhone.trim()) {
+      setErrorMsg('Please enter both name and phone number.');
+      return;
+    }
+
+    if (profilePhone.trim().length < 10) {
+      setErrorMsg('Please enter a valid phone number.');
+      return;
+    }
+
+    setProfileSaving(true);
+    setErrorMsg('');
+
+    try {
+      if (pendingUser) {
+        const userRef = doc(db, 'profiles', pendingUser.uid);
+        await setDoc(userRef, {
+          id: pendingUser.uid,
+          name: profileName.trim(),
+          phone: profilePhone.trim(),
+          email: pendingUser.email || email,
+          avatar_url: pendingUser.photoURL || '',
+          gamer_points: 0,
+          redeemable_diamonds: 0,
+          updated_at: new Date().toISOString()
+        }, { merge: true });
+
+        setShowProfileModal(false);
+        setProfileSaving(false);
+        onLoginSuccess(pendingUser);
+      }
+    } catch (err) {
+      console.error("Profile save error:", err);
+      setErrorMsg('Failed to save profile. Please try again.');
+      setProfileSaving(false);
+    }
+  };
+
+  // Cancel / Back Handler -> Force Logout
+  const handleCancelProfile = async () => {
+    try {
+      if (auth.currentUser) {
+        await signOut(auth);
+      }
+    } catch (e) {
+      console.error("Logout error:", e);
+    }
+    setShowProfileModal(false);
+    setPendingUser(null);
+    setErrorMsg('Account setup cancelled. Please log in again.');
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md px-4 font-sans">
+      
+      {/* PROFILE COMPLETION MODAL */}
+      {showProfileModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md px-4">
+          <div className="bg-[#12131a] border border-[#ccff00] p-6 sm:p-8 rounded-2xl w-full max-w-md shadow-[0_0_40px_rgba(204,255,0,0.2)] text-white relative animate-fadeIn">
+            
+            <h3 className="text-lg sm:text-xl font-black mb-1 text-center font-orbitron text-[#ccff00] uppercase tracking-wide">
+              Complete Your Profile
+            </h3>
+            <p className="text-gray-400 text-xs text-center mb-5 font-mono">
+              Please provide your name and phone number to link your cafe bookings & rewards.
+            </p>
+
+            {errorMsg && (
+              <p className="text-red-400 text-xs mb-4 bg-red-950/50 p-3 rounded-xl border border-red-800/60 font-mono">
+                {errorMsg}
+              </p>
+            )}
+
+            <form onSubmit={handleSaveProfile} className="space-y-4 font-mono text-xs">
+              <div>
+                <label className="block uppercase tracking-wider mb-1.5 text-gray-300 font-bold">
+                  Your Name *
+                </label>
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    value={profileName} 
+                    onChange={(e) => setProfileName(e.target.value)} 
+                    required
+                    placeholder="Enter your full name"
+                    className="w-full p-3.5 pl-10 rounded-xl bg-[#0a0a0c] border border-white/10 text-white focus:outline-none focus:border-[#ccff00]"
+                  />
+                  <User className="w-4 h-4 text-zinc-400 absolute left-3.5 top-4" />
+                </div>
+              </div>
+
+              <div>
+                <label className="block uppercase tracking-wider mb-1.5 text-gray-300 font-bold">
+                  Phone Number *
+                </label>
+                <div className="relative">
+                  <input 
+                    type="tel" 
+                    value={profilePhone} 
+                    onChange={(e) => setProfilePhone(e.target.value)} 
+                    required
+                    placeholder="10-digit mobile number"
+                    className="w-full p-3.5 pl-10 rounded-xl bg-[#0a0a0c] border border-white/10 text-white focus:outline-none focus:border-[#ccff00]"
+                  />
+                  <Phone className="w-4 h-4 text-zinc-400 absolute left-3.5 top-4" />
+                </div>
+              </div>
+
+              <div className="pt-2 flex gap-3">
+                <button
+                  type="button"
+                  onClick={handleCancelProfile}
+                  className="flex-1 py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 font-orbitron font-bold uppercase rounded-xl cursor-pointer transition-colors"
+                >
+                  Cancel / Logout
+                </button>
+                <button
+                  type="submit"
+                  disabled={profileSaving}
+                  className="flex-1 py-3.5 bg-[#ccff00] hover:bg-[#b8e600] text-black font-orbitron font-black uppercase rounded-xl shadow-[0_0_15px_rgba(204,255,0,0.3)] cursor-pointer transition-colors"
+                >
+                  {profileSaving ? 'Saving...' : 'Save & Continue'}
+                </button>
+              </div>
+            </form>
+
+          </div>
+        </div>
+      )}
+
+      {/* MAIN LOGIN / SIGNUP CARD */}
       <div className="bg-[#101014] border border-[#ccff00]/30 p-6 sm:p-8 rounded-2xl w-full max-w-md shadow-[0_0_30px_rgba(0,0,0,0.8)] text-white relative animate-fadeIn">
         
         {/* Close Button */}
@@ -217,7 +380,7 @@ export default function Login({ onClose, onLoginSuccess }) {
             </div>
           )}
 
-          {/* Confirm Password Field (Only shown during Sign Up) */}
+          {/* Confirm Password Field */}
           {isSignUp && !isForgotPassword && (
             <div className="mb-5">
               <label className="block text-[10px] uppercase tracking-wider mb-1.5 text-gray-300 font-mono">

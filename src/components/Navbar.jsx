@@ -5,7 +5,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import profileImg from '../assets/profile.jpeg';
 import bannerImg from '../assets/banner.png';
 
-export const Navbar = ({ onOpenBooking, onOpenLogin, session, onOpenProfile }) => {
+export const Navbar = ({ onOpenBooking, onOpenLogin, session, onOpenProfile, onGoHome }) => {
   const [activeTab, setActiveTab] = useState('home');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [currentAvatar, setCurrentAvatar] = useState(profileImg);
@@ -20,7 +20,6 @@ export const Navbar = ({ onOpenBooking, onOpenLogin, session, onOpenProfile }) =
     const fetchLatestAvatarAndProfile = async () => {
       const userId = currentUser?.uid || currentUser?.id;
 
-      // Extract best fallback display name
       const displayName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Gamer';
       if (isMounted) setUserName(displayName);
 
@@ -37,7 +36,8 @@ export const Navbar = ({ onOpenBooking, onOpenLogin, session, onOpenProfile }) =
           if (userSnap.exists()) {
             const data = userSnap.data();
             if (data.avatar_url) setCurrentAvatar(data.avatar_url);
-            if (data.full_name) setUserName(data.full_name);
+            if (data.name) setUserName(data.name);
+            else if (data.full_name) setUserName(data.full_name);
           } else {
             setCurrentAvatar(currentUser?.photoURL || profileImg);
           }
@@ -88,16 +88,26 @@ export const Navbar = ({ onOpenBooking, onOpenLogin, session, onOpenProfile }) =
     setActiveTab(id);
     setIsMobileMenuOpen(false);
 
-    const targetElement = document.getElementById(id);
-    if (targetElement) {
-      const navbarHeight = 70;
-      const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
-
-      window.scrollTo({
-        top: targetPosition,
-        behavior: 'smooth',
-      });
+    // Agar onGoHome diya gaya hai, toh pehle home view par le aao
+    if (onGoHome) {
+      onGoHome();
     }
+
+    // Thoda delay dekar element par scroll karo taaki home view render ho jaye
+    setTimeout(() => {
+      const targetElement = document.getElementById(id);
+      if (targetElement) {
+        const navbarHeight = 70;
+        const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
+
+        window.scrollTo({
+          top: targetPosition,
+          behavior: 'smooth',
+        });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }, 50);
   };
 
   const navItems = [
@@ -149,35 +159,30 @@ export const Navbar = ({ onOpenBooking, onOpenLogin, session, onOpenProfile }) =
       {/* Action Buttons & Mobile Toggle */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         
-        {/* Gamer Profile Avatar - HIDDEN ON MOBILE, VISIBLE ON DESKTOP */}
-        {currentUser && (
+        {currentUser ? (
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button 
+              onClick={onOpenProfile}
+              title="Gamer Profile & Bookings"
+              className="p-0.5 bg-white/5 hover:bg-white/10 border border-[#ccff00]/40 rounded-full transition duration-200 cursor-pointer overflow-hidden active:scale-95"
+            >
+              <img 
+                src={currentAvatar} 
+                onError={() => setCurrentAvatar(profileImg)} 
+                alt="Gamer Avatar" 
+                className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover border border-[#ccff00]"
+              />
+            </button>
+          </div>
+        ) : (
           <button 
-            onClick={onOpenProfile}
-            title="Gamer Profile & Bookings"
-            className="hidden sm:block p-0.5 bg-white/5 hover:bg-white/10 border border-[#ccff00]/30 rounded-full transition duration-200 cursor-pointer overflow-hidden"
+            onClick={onOpenLogin}
+            className="bg-[#ccff00] hover:bg-[#b8e600] text-black font-black px-3.5 sm:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs uppercase tracking-wider shadow-lg shadow-[#ccff00]/20 transition transform active:scale-95 sm:hover:scale-105 cursor-pointer whitespace-nowrap font-orbitron flex items-center gap-1.5"
           >
-            <img 
-              src={currentAvatar} 
-              onError={() => setCurrentAvatar(profileImg)} 
-              alt="Gamer Avatar" 
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover border border-[#ccff00]"
-            />
+            <User className="w-3.5 h-3.5" />
+            <span>LOG IN / SIGN UP</span>
           </button>
         )}
-
-        {/* Book a Station Button */}
-        <button 
-          onClick={() => {
-            if (!currentUser) {
-              onOpenLogin();
-            } else {
-              onOpenBooking();
-            }
-          }}
-          className="bg-[#ccff00] hover:bg-[#b8e600] text-black font-black px-3.5 sm:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs uppercase tracking-wider shadow-lg shadow-[#ccff00]/20 transition transform active:scale-95 sm:hover:scale-105 cursor-pointer whitespace-nowrap font-orbitron"
-        >
-          BOOK A STATION
-        </button>
 
         {/* Mobile Menu Toggle Button */}
         <button
@@ -208,7 +213,6 @@ export const Navbar = ({ onOpenBooking, onOpenLogin, session, onOpenProfile }) =
             </a>
           ))}
 
-          {/* Logged in User Section in Mobile Drawer */}
           {currentUser ? (
             <button
               onClick={() => {
@@ -241,7 +245,7 @@ export const Navbar = ({ onOpenBooking, onOpenLogin, session, onOpenProfile }) =
               className="mt-2 text-xs font-bold tracking-widest py-3 px-3 rounded-lg flex items-center gap-2 text-gray-300 hover:text-[#ccff00] bg-white/5 border border-white/10 uppercase transition-all"
             >
               <User className="w-4 h-4 text-[#ccff00]" />
-              <span>Login / Signup</span>
+              <span>LOG IN / SIGN UP</span>
             </button>
           )}
         </div>

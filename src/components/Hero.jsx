@@ -1,5 +1,6 @@
 import React from 'react';
 import { Sparkles, ShieldCheck, Flame } from 'lucide-react';
+import bannerImg from '../assets/banner.png';
 
 export const Hero = ({ onOpenBooking }) => {
   return (
@@ -13,13 +14,17 @@ export const Hero = ({ onOpenBooking }) => {
         <Flame className="w-4 h-4 sm:w-5 sm:h-5 text-[#ccff00] animate-pulse shrink-0" /> EAT • SLEEP • GAME • REPEAT
       </div>
 
-      {/* Responsive Title Header */}
-      <h1 className="text-2xl xs:text-3xl sm:text-5xl md:text-7xl font-black mb-3.5 sm:mb-6 tracking-tight uppercase leading-snug sm:leading-none font-orbitron text-white break-words w-full">
-        BEST GAMING CAFE In AKOLA<br />
-        <span className="text-[#ccff00] drop-shadow-[0_0_25px_rgba(204,255,0,0.35)]">
-          STRANGER'S GAMING
-        </span>
-      </h1>
+      {/* Responsive Logo Banner Header */}
+      <div className="w-full flex flex-col items-center justify-center mb-4 sm:mb-6 px-2">
+        <div className="text-[11px] sm:text-xs font-bold tracking-[0.25em] text-[#ccff00] uppercase font-mono mb-2">
+          MOST PREMIUM GAMING CAFE IN AKOLA
+        </div>
+        <img 
+          src={bannerImg} 
+          alt="Stranger's Gaming Cafe" 
+          className="w-full max-w-[280px] xs:max-w-[340px] sm:max-w-[480px] md:max-w-[580px] h-auto object-contain drop-shadow-[0_0_30px_rgba(204,255,0,0.3)] transition-transform hover:scale-105"
+        />
+      </div>
 
       {/* Hero Subtitle with Local Keywords */}
       <p className="text-gray-400 text-xs sm:text-base md:text-lg max-w-2xl sm:max-w-3xl mx-auto mb-6 sm:mb-10 font-medium leading-relaxed px-1 sm:px-2 font-mono">
@@ -50,7 +55,7 @@ export const Hero = ({ onOpenBooking }) => {
           </span>
           <span className="text-gray-700">•</span>
           <span className="flex items-center gap-1.5 text-[#ccff00] whitespace-nowrap">
-            <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />HIGH SPEED WI-FI
+            <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> HIGH SPEED WI-FI
           </span>
           <span className="text-gray-700">•</span>
           <span className="flex items-center gap-1.5 text-[#ccff00] whitespace-nowrap">

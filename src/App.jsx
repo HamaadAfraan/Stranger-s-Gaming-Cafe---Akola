@@ -20,11 +20,20 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { collection, getDocs, onSnapshot } from 'firebase/firestore';
 
 export default function App() {
-  const [currentView, setCurrentView] = useState('home'); // 'home' or 'profile'
+  // 1️⃣ CHANGE: Page refresh hone par localStorage se purana view check karega
+  const [currentView, setCurrentView] = useState(() => {
+    return localStorage.getItem('current_app_view') || 'home';
+  });
+
   const [session, setSession] = useState(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [bookedSlots, setBookedSlots] = useState([]);
+
+  // 2️⃣ CHANGE: Jab bhi currentView badlega, usko localStorage me save kar denge
+  useEffect(() => {
+    localStorage.setItem('current_app_view', currentView);
+  }, [currentView]);
 
   // 📱 iOS Safari Double-Tap Zoom Prevent Listener
   useEffect(() => {
@@ -116,11 +125,12 @@ export default function App() {
       </div>
 
       <Navbar
-        onOpenBooking={handleOpenBooking}
-        onOpenLogin={() => setShowLoginModal(true)}
-        session={session}
-        onOpenProfile={() => setCurrentView('profile')}
-      />
+  onOpenBooking={handleOpenBooking}
+  onOpenLogin={() => setShowLoginModal(true)}
+  session={session}
+  onOpenProfile={() => setCurrentView('profile')}
+  onGoHome={() => setCurrentView('home')}  // <-- Yeh line add karni hai
+/>
 
       {currentView === 'profile' && session ? (
         <ProfilePage
