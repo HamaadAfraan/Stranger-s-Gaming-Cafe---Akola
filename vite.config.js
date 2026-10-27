@@ -8,17 +8,13 @@ export default defineConfig({
     tailwindcss(),
   ],
   server: {
+    host: true, 
+    port: 5173,
     maxHttpHeaderSize: 1048576,
     allowedHosts: [
       'handiwork-pegboard-rebuild.ngrok-free.dev',
+      '.ngrok-free.dev',
+      '192.168.1.13', // 
     ],
-    proxy: {
-      '/supabase': {
-        target: 'https://ftpcjyecegugofftcoco.supabase.co',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/supabase/, ''),
-        ws: true,
-      },
-    },
   },
 });

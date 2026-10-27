@@ -11,7 +11,7 @@ export const Footer = () => {
         </p>
         
         <p className="text-[10px] sm:text-[11px] text-zinc-500 tracking-wide">
-          © 2026 ALL RIGHTS RESERVED. BILL MART MALL, AKOLA, MAHARASHTRA.
+          © 2026 ALL RIGHTS RESERVED.
         </p>
 
       </div>
