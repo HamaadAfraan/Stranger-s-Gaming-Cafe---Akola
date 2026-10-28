@@ -4,28 +4,27 @@ import { Sparkles, ShieldCheck, Wifi, Wind, Coffee, Volume2 } from 'lucide-react
 export const GalleryExperience = () => {
   const [activeTab, setActiveTab] = useState('all'); // 'all', 'photos', 'videos', 'amenities'
 
-  // Aap yahan apne cafe ki real images aur video links daal sakte hain
   const mediaItems = [
     {
       type: 'image',
-      title: 'PS5 VIP Zone (55" 4K HDR)',
+      title: 'PS5 VIP Lounge (4K QLED Displays)',
       category: 'photos',
       url: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=1000&auto=format&fit=crop',
-      badge: 'VIP LOUNGE'
+      badge: 'PS5 VIP BAY'
     },
     {
       type: 'image',
-      title: 'Esports 200Hz PC Arena',
+      title: 'Pro Esports PC Arena (200Hz)',
       category: 'photos',
       url: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1000&auto=format&fit=crop',
-      badge: 'PRO RIGS'
+      badge: 'HIGH-END RIGS'
     },
     {
       type: 'image',
-      title: 'Racing Simulator Cockpit',
+      title: 'Pro Racing Simulators (PXN & Logitech)',
       category: 'photos',
       url: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=1000&auto=format&fit=crop',
-      badge: 'SIMULATOR'
+      badge: 'SIMULATOR BAY'
     },
     {
       type: 'video',
@@ -36,27 +35,51 @@ export const GalleryExperience = () => {
     },
     {
       type: 'image',
-      title: 'Cafe Ambience & Neon Vibe',
+      title: 'Cyberpunk Neon Heartbeat Vibe',
       category: 'photos',
       url: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1000&auto=format&fit=crop',
-      badge: 'VIBE'
+      badge: 'AMBIENCE'
     },
     {
       type: 'image',
-      title: 'Automatic Hot Beverage Bar',
+      title: 'Cafe Desire Instant Beverage Bar',
       category: 'photos',
       url: 'https://images.unsplash.com/photo-1509785307050-d4066910ec1e?q=80&w=1000&auto=format&fit=crop',
-      badge: 'CAFE DESIRE'
+      badge: 'REFRESHMENTS'
     }
   ];
 
   const amenities = [
-    { icon: <Wind className="w-6 h-6 text-[#ccff00]" />, title: 'Fully Air-Conditioned', desc: 'Powerful climate control to keep you cool during intense multiplayer battles.' },
-    { icon: <Wifi className="w-6 h-6 text-[#ccff00]" />, title: 'Ultra High-Speed Fiber', desc: 'Low ping, zero packet loss dedicated fiber network for competitive esports.' },
-    { icon: <Coffee className="w-6 h-6 text-[#ccff00]" />, title: 'Hot Beverage Vending', desc: 'Instant cardamom tea and NESCAFÉ coffee available 24/7 via Cafe Desire VM20.' },
-    { icon: <ShieldCheck className="w-6 h-6 text-[#ccff00]" />, title: 'Comfortable Gaming Chairs', desc: 'Ergonomic racing seats designed for long-hour marathon gaming sessions.' },
-    { icon: <Volume2 className="w-6 h-6 text-[#ccff00]" />, title: 'Immersive Surround Audio', desc: 'High-end gaming headphones and surround sound setups for ultimate spatial awareness.' },
-    { icon: <Sparkles className="w-6 h-6 text-[#ccff00]" />, title: 'Neon Ambient Lighting', desc: 'Futuristic cyberpunk interior aesthetics with custom heartbeat light curves.' }
+    { 
+      icon: <Wind className="w-6 h-6 text-[#ccff00]" />, 
+      title: 'Dual Daikin 4-Star ACs', 
+      desc: 'Powered by twin 1.5-ton Daikin air conditioners maintained at a crisp 24°C–25°C to handle Akola heat during marathon sessions.' 
+    },
+    { 
+      icon: <Wifi className="w-6 h-6 text-[#ccff00]" />, 
+      title: 'Ultra-Low Ping Fiber Network', 
+      desc: 'Dedicated high-speed broadband configured with ASTER multi-seat architecture for zero packet loss in competitive BGMI & Valorant.' 
+    },
+    { 
+      icon: <Coffee className="w-6 h-6 text-[#ccff00]" />, 
+      title: 'Cafe Desire VM20 Vending Bar', 
+      desc: 'Instant Cardamom tea and Nescafé coffee served fresh in half (65ml) & full (130ml) cups to keep your energy levels peaked.' 
+    },
+    { 
+      icon: <ShieldCheck className="w-6 h-6 text-[#ccff00]" />, 
+      title: 'Ergonomic Gaming Stations', 
+      desc: 'Equipped with premium 4-finger full-gyro iPhone setups, mechanical keyboards, and cushioned gaming armchairs.' 
+    },
+    { 
+      icon: <Volume2 className="w-6 h-6 text-[#ccff00]" />, 
+      title: 'Spatial Surround Audio', 
+      desc: 'High-fidelity gaming headsets and immersive acoustic setups for pinpoint footsteps and crystal-clear voice comms.' 
+    },
+    { 
+      icon: <Sparkles className="w-6 h-6 text-[#ccff00]" />, 
+      title: 'Custom Neon Heartbeat Wall', 
+      desc: 'Handcrafted 5-meter neon light installation across an 8ft gaming wall delivering an unmatched esports aesthetic.' 
+    }
   ];
 
   const filteredMedia = activeTab === 'amenities' 
@@ -71,13 +94,13 @@ export const GalleryExperience = () => {
       {/* Header */}
       <div className="text-center mb-10 sm:mb-14">
         <span className="bg-[#ccff00]/10 text-[#ccff00] border border-[#ccff00]/30 text-[10px] sm:text-xs font-black px-3.5 py-1.5 rounded-full uppercase tracking-widest mb-3 inline-block font-mono shadow-[0_0_12px_rgba(204,255,0,0.15)]">
-          EXPLORE THE ARENA
+          BILL MART MALL AKOLA • LIVE EXPERIENCE
         </span>
         <h2 className="text-2xl sm:text-5xl font-black uppercase tracking-tight font-orbitron text-white mt-1">
           CAFE GALLERY & <span className="text-[#ccff00] drop-shadow-[0_0_15px_rgba(204,255,0,0.3)]">AMENITIES</span>
         </h2>
         <p className="text-gray-400 text-xs sm:text-sm max-w-2xl mx-auto mt-2 font-mono">
-          Step inside Akola’s ultimate gaming paradise. Check out our state-of-the-art setups, premium AC comfort, and world-class facilities.
+          Explore Akola's premier gaming destination. From power-packed PS5 lounges to lightning-fast esports PCs and simulation rigs.
         </p>
 
         {/* Filter Tabs */}
@@ -151,7 +174,7 @@ export const GalleryExperience = () => {
                   {item.title}
                 </h3>
                 <p className="text-[11px] text-zinc-400 mt-1 font-mono">
-                  Experience professional gaming gear and supreme hospitality at Stranger's Gaming Cafe.
+                  Engineered for hardcore gamers and casual squads at Stranger's Gaming Cafe, Bill Mart Mall.
                 </p>
               </div>
             </div>

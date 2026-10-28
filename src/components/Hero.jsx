@@ -17,7 +17,7 @@ export const Hero = ({ onOpenBooking }) => {
       {/* Responsive Logo Banner Header */}
       <div className="w-full flex flex-col items-center justify-center mb-4 sm:mb-6 px-2">
         <div className="text-[11px] sm:text-xs font-bold tracking-[0.25em] text-[#ccff00] uppercase font-mono mb-2">
-          MOST PREMIUM GAMING CAFE IN AKOLA
+          MOST PREMIUM GAMING CAFE IN AKOLA!
         </div>
         <img 
           src={bannerImg} 
@@ -51,11 +51,15 @@ export const Hero = ({ onOpenBooking }) => {
       <div className="w-full max-w-xl sm:max-w-full bg-[#101014] border border-white/10 px-3.5 sm:px-8 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl shadow-lg">
         <div className="flex flex-row flex-wrap justify-center items-center gap-x-4 gap-y-2 text-gray-300 text-[10px] sm:text-xs font-bold tracking-wider sm:tracking-widest uppercase font-mono">
           <span className="flex items-center gap-1.5 text-[#ccff00] whitespace-nowrap">
-            <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> FULL A/C
+            <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> Chilled A/C
           </span>
           <span className="text-gray-700">•</span>
           <span className="flex items-center gap-1.5 text-[#ccff00] whitespace-nowrap">
             <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> HIGH SPEED WI-FI
+          </span>
+          <span className="text-gray-700">•</span>
+          <span className="flex items-center gap-1.5 text-[#ccff00] whitespace-nowrap">
+            <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> Premium Seating
           </span>
           <span className="text-gray-700">•</span>
           <span className="flex items-center gap-1.5 text-[#ccff00] whitespace-nowrap">
