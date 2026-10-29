@@ -14,7 +14,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
   const [bookingSubTab, setBookingSubTab] = useState('upcoming');
   const [walletTab, setWalletTab] = useState('redeemable');
 
-  const [bookingSortMode, setBookingSortMode] = useState('time'); 
+  const [bookingSortMode, setBookingSortMode] = useState('time');
   const [bookingSortDir, setBookingSortDir] = useState('desc');
 
   const [diamondSortMode, setDiamondSortMode] = useState('time');
@@ -25,9 +25,14 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
 
   const [showTierModal, setShowTierModal] = useState(false);
 
+  const currentUser = session?.user || auth.currentUser;
+  const userId = currentUser?.uid || currentUser?.id;
+  const userEmail = currentUser?.email || '';
+
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState('');
+  // Google photoURL ko default priority do taaki hamesha latest fetch ho
+  const [avatarUrl, setAvatarUrl] = useState(currentUser?.photoURL || '');
 
   const [showCropModal, setShowCropModal] = useState(false);
   const [rawImageSrc, setRawImageSrc] = useState('');
@@ -39,9 +44,15 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
   const dragStartRef = useRef({ x: 0, y: 0 });
   const lastTouchDistRef = useRef(null);
 
-  const currentUser = session?.user || auth.currentUser;
-  const userId = currentUser?.uid || currentUser?.id;
-  const userEmail = currentUser?.email || '';
+  // Helper to extract initials for text avatar fallback (e.g. "Hamaad Afraan" -> "HA")
+  const getInitials = (nameStr) => {
+    if (!nameStr) return 'G';
+    const parts = nameStr.trim().split(' ');
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    return parts[0].substring(0, 2).toUpperCase();
+  };
 
   const getSafeStorage = (key, defaultVal = 0) => {
     try {
@@ -202,6 +213,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
           if (isMounted) {
             setName(currentUser.displayName || '');
             setPhone(userPhone);
+            // Google photoURL ko pehli priority do
             setAvatarUrl(currentUser.photoURL || '');
           }
 
@@ -212,7 +224,12 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                 const data = userSnap.data();
                 if (data.name) setName(data.name);
                 if (data.phone) setPhone(data.phone);
-                if (data.avatar_url) setAvatarUrl(data.avatar_url);
+                
+                // Agar Firestore me avatar_url hai toh wo lo, warna Google auth photoURL ya fallback
+                const activePhoto = data.avatar_url && data.avatar_url.trim() !== '' 
+                  ? data.avatar_url 
+                  : (currentUser?.photoURL || '');
+                setAvatarUrl(activePhoto);
 
                 const pts = data.gamer_points ?? data.points ?? data.score ?? 0;
                 const parsedPts = parseInt(pts, 10) || 0;
@@ -444,7 +461,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     setLoading(true);
     setMessage('');
 
-    const finalAvatar = avatarUrl && avatarUrl.trim() !== '' ? avatarUrl : profileImg;
+    const finalAvatar = avatarUrl && avatarUrl.trim() !== '' ? avatarUrl : (currentUser?.photoURL || '');
 
     try {
       const userRef = doc(db, 'profiles', userId);
@@ -511,7 +528,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     setRechargeLoading(true);
 
     const options = {
-      key: import.meta.env.VITE_RAZORPAY_KEY_ID, 
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
       amount: selectedPack.price * 100,
       currency: "INR",
       name: "Stranger's Gaming Cafe",
@@ -674,9 +691,9 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
       }
 
       if (dir === 'desc') {
-        return valB - valA; 
+        return valB - valA;
       } else {
-        return valA - valB; 
+        return valA - valB;
       }
     });
   };
@@ -719,17 +736,20 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     CONQUEROR: { color: 'from-amber-400/90 to-yellow-600/90 border-yellow-300/80 text-black', icon: '👑', min: 10000, max: 'Infinity' }
   };
 
-  const calculatedTier = gamerPoints >= 10000 ? 'CONQUEROR' : 
-                         gamerPoints >= 8500 ? 'ACE_DOMINATOR' : 
-                         gamerPoints >= 7000 ? 'ACE' : 
-                         gamerPoints >= 5000 ? 'CROWN' : 
-                         gamerPoints >= 3000 ? 'DIAMOND' : 
-                         gamerPoints >= 1800 ? 'PLATINUM' : 
-                         gamerPoints >= 1000 ? 'GOLD' : 
-                         gamerPoints >= 500 ? 'SILVER' : 
-                         gamerPoints >= 200 ? 'BRONZE' : 'ROOKIE';
+  const calculatedTier = gamerPoints >= 10000 ? 'CONQUEROR' :
+    gamerPoints >= 8500 ? 'ACE_DOMINATOR' :
+      gamerPoints >= 7000 ? 'ACE' :
+        gamerPoints >= 5000 ? 'CROWN' :
+          gamerPoints >= 3000 ? 'DIAMOND' :
+            gamerPoints >= 1800 ? 'PLATINUM' :
+              gamerPoints >= 1000 ? 'GOLD' :
+                gamerPoints >= 500 ? 'SILVER' :
+                  gamerPoints >= 200 ? 'BRONZE' : 'ROOKIE';
 
   const currentBadge = tierBadges[calculatedTier] || tierBadges['BRONZE'];
+
+  // Safe image display helper prioritizing Google photo -> Firestore photo -> Initials
+  const displayAvatar = avatarUrl && avatarUrl.trim() !== '' ? avatarUrl : (currentUser?.photoURL || '');
 
   return (
     <div className="min-h-screen bg-[#0a0a0c] text-white pt-20 pb-28 px-4 sm:px-6 font-sans relative overflow-x-hidden">
@@ -782,8 +802,8 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
           <>
             <div className="bg-[#181922] border border-white/10 rounded-2xl p-5 relative shadow-[0_4px_25px_rgba(0,0,0,0.6)]">
               <div className="absolute top-4 right-4">
-                <div 
-                  onClick={() => setShowTierModal(true)} 
+                <div
+                  onClick={() => setShowTierModal(true)}
                   className={`bg-gradient-to-r ${currentBadge ? currentBadge.color : 'from-amber-700/80 to-amber-900/80'} px-3.5 py-2 rounded-xl border flex items-center gap-1.5 shadow-md cursor-pointer hover:scale-105 transition-all`}
                 >
                   <span className="text-sm">{currentBadge ? currentBadge.icon : '🥉'}</span>
@@ -793,11 +813,27 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
 
               <div className="flex items-center gap-4 pr-24 sm:pr-28">
                 <div className="relative shrink-0">
-                  <img src={avatarUrl || profileImg} alt="Avatar" className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.3)]" />
+                  {displayAvatar !== '' ? (
+                    <img 
+                      src={displayAvatar} 
+                      alt="Avatar" 
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.3)]" 
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#ccff00]/20 border-2 border-[#ccff00] text-[#ccff00] font-black font-orbitron flex items-center justify-center text-lg sm:text-xl shadow-[0_0_15px_rgba(204,255,0,0.3)]">
+                      {getInitials(name)}
+                    </div>
+                  )}
                 </div>
-                <div className="overflow-hidden">
-                  <h2 className="text-base sm:text-lg font-black font-orbitron text-white truncate">{name || 'Gamer'}</h2>
-                  <p className="text-xs text-zinc-400 font-mono truncate mt-0.5">{phone || 'No phone added'}</p>
+                <div className="overflow-hidden flex-1">
+                  <h2 className="text-xs sm:text-sm font-black font-orbitron text-white leading-tight break-words pr-2">
+                    {name || 'Gamer'}
+                  </h2>
+                  <p className="text-[11px] text-zinc-400 font-mono truncate mt-0.5">{phone || 'No phone added'}</p>
                   <p className="text-[10px] text-zinc-400 font-mono truncate mt-0.5">{userEmail || 'Guest User'}</p>
                 </div>
               </div>
@@ -883,38 +919,38 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                 <ChevronRight className="w-4 h-4 text-zinc-500" />
               </a>
 
-<button 
-  onClick={() => {
-    const inviteUrl = 'strangersgamingcafeakola.in';
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(inviteUrl)
-        .then(() => {
-          showToast('Link Copied To Clipboard', 'success', 'Invite');
-        })
-        .catch(() => {
-          showToast('Failed to copy link', 'error', 'Error');
-        });
-    } else {
-      showToast('Clipboard access not available', 'error', 'Error');
-    }
-  }} 
-  className="w-full p-4 flex items-center justify-between text-left hover:bg-white/5 transition-all cursor-pointer group"
->
-  <div className="flex items-center gap-3.5">
-    <div className="w-8 h-8 rounded-xl bg-[#0a0a0c] border border-white/10 flex items-center justify-center text-emerald-400">
-      <Share2 className="w-4 h-4" />
-    </div>
-    <div>
-      <span className="text-xs font-black font-orbitron text-white group-hover:text-emerald-400 transition-colors block">
-        Invite a Friend
-      </span>
-      <span className="text-[10px] text-zinc-400 font-mono">
-        Earn rewards together!
-      </span>
-    </div>
-  </div>
-  <ChevronRight className="w-4 h-4 text-zinc-500" />
-</button>
+              <button
+                onClick={() => {
+                  const inviteUrl = 'strangersgamingcafeakola.in';
+                  if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(inviteUrl)
+                      .then(() => {
+                        showToast('Link Copied To Clipboard', 'success', 'Invite');
+                      })
+                      .catch(() => {
+                        showToast('Failed to copy link', 'error', 'Error');
+                      });
+                  } else {
+                    showToast('Clipboard access not available', 'error', 'Error');
+                  }
+                }}
+                className="w-full p-4 flex items-center justify-between text-left hover:bg-white/5 transition-all cursor-pointer group"
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="w-8 h-8 rounded-xl bg-[#0a0a0c] border border-white/10 flex items-center justify-center text-emerald-400">
+                    <Share2 className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-black font-orbitron text-white group-hover:text-emerald-400 transition-colors block">
+                      Invite a Friend
+                    </span>
+                    <span className="text-[10px] text-zinc-400 font-mono">
+                      Earn rewards together!
+                    </span>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-zinc-500" />
+              </button>
             </div>
 
             <button onClick={handleLogoutClick} className="w-full py-4 bg-red-950/30 hover:bg-red-900/40 border border-red-500/40 text-red-400 rounded-2xl text-xs font-black font-orbitron uppercase tracking-widest transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg">
@@ -930,17 +966,17 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
               <h2 className="text-xs sm:text-sm font-black font-orbitron text-white uppercase tracking-wider flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-[#ccff00]" /> My Bookings Manager
               </h2>
-              
+
               {/* CLEAN SORT CONTROLS */}
               <div className="flex items-center gap-1.5 font-mono text-xs">
-                <button 
+                <button
                   onClick={() => setBookingSortMode(prev => prev === 'time' ? 'session' : 'time')}
                   className="px-2.5 py-1.5 bg-[#0a0a0c] hover:bg-[#ccff00] hover:text-black border border-white/10 font-bold rounded-xl transition-all cursor-pointer text-zinc-300"
                 >
                   {bookingSortMode === 'time' ? '⏱️ Sort by Time' : '📅 Sort by Session'}
                 </button>
 
-                <button 
+                <button
                   onClick={() => setBookingSortDir(prev => prev === 'desc' ? 'asc' : 'desc')}
                   className="px-2.5 py-1.5 bg-[#0a0a0c] hover:bg-[#ccff00] hover:text-black border border-white/10 font-bold rounded-xl transition-all cursor-pointer text-[#ccff00] flex items-center gap-1"
                 >
@@ -1174,14 +1210,14 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
 
                   {/* DIAMOND LEDGER SORT CONTROLS */}
                   <div className="flex items-center gap-1.5 font-mono text-xs">
-                    <button 
+                    <button
                       onClick={() => setDiamondSortMode(prev => prev === 'time' ? 'session' : 'time')}
                       className="px-2.5 py-1.5 bg-[#0a0a0c] hover:bg-cyan-500 hover:text-black border border-cyan-500/40 font-bold rounded-xl transition-all cursor-pointer text-cyan-300"
                     >
                       {diamondSortMode === 'time' ? '⏱️ Sort by Time' : '📅 Sort by Session'}
                     </button>
 
-                    <button 
+                    <button
                       onClick={() => setDiamondSortDir(prev => prev === 'desc' ? 'asc' : 'desc')}
                       className="px-2.5 py-1.5 bg-[#0a0a0c] hover:bg-cyan-500 hover:text-black border border-cyan-500/40 font-bold rounded-xl transition-all cursor-pointer text-cyan-300 flex items-center gap-1"
                     >
@@ -1191,7 +1227,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                   </div>
                 </div>
 
-                {userRecharges.length === 0 && userBookings.filter(b => b.payment_method === 'diamonds').length === 0 && userCafePayments.length === 0 ? (
+                {userRecharges.length === 0 && userBookings.filter(b => b.payment_method === 'diamonds' || Number(b.amount || 0) > 0).length === 0 && userCafePayments.length === 0 ? (
                   <div className="text-center py-12 bg-[#181922] border border-white/10 rounded-2xl">
                     <p className="text-zinc-400 text-xs uppercase tracking-widest font-mono">No redeemable diamond transactions found.</p>
                   </div>
@@ -1208,18 +1244,35 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                       isAddition: true
                     }));
 
-                    const diamondBookings = userBookings.filter(b => b.payment_method === 'diamonds').map(b => {
+                    const bookingEvents = [];
+                    userBookings.forEach(b => {
                       const amount = Number(b.amount || b.price || 0);
-                      return {
-                        id: b.id,
-                        type: 'booking_spend',
-                        title: `🎮 Spent on Booking (${b.screen || b.category || 'Station'})`,
-                        subText: `Booking ID: ${b.id} • Slot: ${b.slot_time || b.slot || 'N/A'}`,
-                        date: b.bookingDate || b.date || b.created_at || '',
-                        createdAt: b.createdAt || b.created_at || b.bookingDate || b.date || '',
-                        change: amount,
-                        isAddition: false
-                      };
+                      if (b.payment_method === 'diamonds') {
+                        bookingEvents.push({
+                          id: b.id,
+                          type: 'booking_spend',
+                          title: `🎮 Spent on Booking (${b.screen || b.category || 'Station'})`,
+                          subText: `Booking ID: ${b.id} • Slot: ${b.slot_time || b.slot || 'N/A'}`,
+                          date: b.bookingDate || b.date || b.created_at || '',
+                          createdAt: b.createdAt || b.created_at || b.bookingDate || b.date || '',
+                          change: amount,
+                          isAddition: false
+                        });
+                      } else {
+                        const earnedCb = Math.floor(amount * 0.10);
+                        if (earnedCb > 0) {
+                          bookingEvents.push({
+                            id: `${b.id}-cb`,
+                            type: 'booking_cashback',
+                            title: `✨ Earned 10% Cashback from Booking`,
+                            subText: `Booking ID: ${b.id} (${b.screen || b.category || 'Station'})`,
+                            date: b.bookingDate || b.date || b.created_at || '',
+                            createdAt: b.createdAt || b.created_at || b.bookingDate || b.date || '',
+                            change: earnedCb,
+                            isAddition: true
+                          });
+                        }
+                      }
                     });
 
                     const cafeCashbacks = userCafePayments.filter(p => Number(p.cashback_diamonds || 0) > 0).map(p => ({
@@ -1233,12 +1286,12 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                       isAddition: true
                     }));
 
-                    const allDiamondEvents = [...rechargeItems, ...diamondBookings, ...cafeCashbacks];
+                    const allDiamondEvents = [...rechargeItems, ...bookingEvents, ...cafeCashbacks];
                     
-                    const sortedEvents = sortItemsGeneric(allDiamondEvents, diamondSortMode, diamondSortDir);
+                    const sortedAsc = [...allDiamondEvents].sort((a, b) => getTimestampMillis(a) - getTimestampMillis(b));
 
                     let runningBal = 0;
-                    const mappedWithRunning = sortedEvents.map(item => {
+                    const mappedWithRunning = sortedAsc.map(item => {
                       const prev = runningBal;
                       if (item.isAddition) {
                         runningBal += item.change;
@@ -1248,7 +1301,13 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                       return { ...item, startBal: prev, endBal: runningBal };
                     });
 
-                    return mappedWithRunning.map((item, idx) => (
+                    const finalDisplayedEvents = mappedWithRunning.sort((a, b) => {
+                      const tA = getTimestampMillis(a);
+                      const tB = getTimestampMillis(b);
+                      return diamondSortDir === 'desc' ? tB - tA : tA - tB;
+                    });
+
+                    return finalDisplayedEvents.map((item, idx) => (
                       <div key={item.id || idx} className="bg-[#181922] border border-white/10 p-4 rounded-2xl flex justify-between items-center shadow-xl font-mono">
                         <div>
                           <span className={`text-xs font-bold font-orbitron block ${item.isAddition ? 'text-[#ccff00]' : 'text-red-400'}`}>
@@ -1288,14 +1347,14 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
 
                   {/* LEAGUE HISTORY SORT CONTROLS */}
                   <div className="flex items-center gap-1.5 font-mono text-xs">
-                    <button 
+                    <button
                       onClick={() => setLeagueSortMode(prev => prev === 'time' ? 'session' : 'time')}
                       className="px-2.5 py-1.5 bg-[#0a0a0c] hover:bg-[#ccff00] hover:text-black border border-[#ccff00]/40 font-bold rounded-xl transition-all cursor-pointer text-[#ccff00]"
                     >
                       {leagueSortMode === 'time' ? '⏱️ Sort by Time' : '📅 Sort by Session'}
                     </button>
 
-                    <button 
+                    <button
                       onClick={() => setLeagueSortDir(prev => prev === 'desc' ? 'asc' : 'desc')}
                       className="px-2.5 py-1.5 bg-[#0a0a0c] hover:bg-[#ccff00] hover:text-black border border-[#ccff00]/40 font-bold rounded-xl transition-all cursor-pointer text-[#ccff00] flex items-center gap-1"
                     >
@@ -1342,7 +1401,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                     });
 
                     const allActivities = [...formattedBookings, ...formattedCafePayments];
-                    
+
                     const sortedActivities = sortItemsGeneric(allActivities, leagueSortMode, leagueSortDir);
 
                     let runningSum = 0;
@@ -1404,15 +1463,14 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
               ].map((tier) => {
                 const isCurrent = calculatedTier === tier.key;
                 const isCompleted = gamerPoints > tier.minPts && !isCurrent;
-                
+
                 return (
-                  <div key={tier.key} className={`p-3 rounded-xl border flex items-center justify-between ${
-                    isCurrent 
-                      ? 'bg-[#ccff00]/15 border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.3)]' 
-                      : isCompleted 
-                        ? 'bg-[#181922] border-emerald-500/30' 
+                  <div key={tier.key} className={`p-3 rounded-xl border flex items-center justify-between ${isCurrent
+                      ? 'bg-[#ccff00]/15 border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.3)]'
+                      : isCompleted
+                        ? 'bg-[#181922] border-emerald-500/30'
                         : 'bg-[#181922] border-white/10'
-                  }`}>
+                    }`}>
                     <div className="flex items-center gap-3">
                       <span className="text-lg">{tier.icon}</span>
                       <div>
@@ -1423,13 +1481,12 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className={`text-[9px] font-bold px-2.5 py-1 rounded-lg uppercase block ${
-                        isCurrent 
-                          ? 'bg-[#ccff00] text-black font-black' 
-                          : isCompleted 
-                            ? 'bg-emerald-950/80 border border-emerald-500/40 text-emerald-300' 
+                      <span className={`text-[9px] font-bold px-2.5 py-1 rounded-lg uppercase block ${isCurrent
+                          ? 'bg-[#ccff00] text-black font-black'
+                          : isCompleted
+                            ? 'bg-emerald-950/80 border border-emerald-500/40 text-emerald-300'
                             : 'bg-white/5 text-zinc-500'
-                      }`}>
+                        }`}>
                         {isCurrent ? 'ACTIVE' : isCompleted ? 'COMPLETED' : 'LOCKED'}
                       </span>
                     </div>

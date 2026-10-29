@@ -3,13 +3,13 @@ import { X, CheckCircle2 } from 'lucide-react';
 import BookingAvailability from './Booking/BookingAvailability';
 import BookingPayment from './Booking/BookingPayment';
 import { auth, db } from '../firebase';
-import { 
-  collection, 
-  addDoc, 
-  doc, 
-  getDoc, 
-  updateDoc, 
-  serverTimestamp 
+import {
+  collection,
+  addDoc,
+  doc,
+  getDoc,
+  updateDoc,
+  serverTimestamp
 } from 'firebase/firestore';
 
 const getTodayDateString = () => {
@@ -214,7 +214,7 @@ export const BookingModal = ({
             try {
               const docRef = doc(db, 'profiles', userId);
               const docSnap = await getDoc(docRef);
-              
+
               if (docSnap.exists()) {
                 const data = docSnap.data();
                 setFormData((prev) => ({
@@ -288,7 +288,7 @@ export const BookingModal = ({
     if (rawValue.length <= 20) {
       setFormData((prev) => ({ ...prev, phone: rawValue }));
     }
-  }; 
+  };
 
   const isNameValid = formData.name.trim().length >= 2;
   const isPhoneValid = formData.phone.trim().replace(/[\s+\-]/g, '').length >= 7;
@@ -334,6 +334,7 @@ export const BookingModal = ({
     const earnedGamerPoints = Math.floor(Number(bookingPrice) / 10);
     const earnedCashbackDiamonds = paymentMethod === 'diamonds' ? 0 : Math.floor(Number(bookingPrice) * 0.10);
 
+    // BookingModal.jsx ke andar saveBookingToFirebase function ka updated logic:
     const saveBookingToFirebase = async (paymentIdVal) => {
       setIsSubmitting(true);
       let finalUtRDisplay = '';
@@ -371,6 +372,7 @@ export const BookingModal = ({
       };
 
       try {
+        // 1. Save Booking Document
         await addDoc(collection(db, 'bookings'), bookingDetails);
 
         if (currentUserId) {
@@ -380,9 +382,11 @@ export const BookingModal = ({
           if (paymentMethod === 'diamonds') {
             newRedeemableDiamonds = Math.max(0, userRedeemableDiamonds - bookingPrice);
           } else {
+            // Cash / UPI booking par 10% Diamond Cashback add hoga
             newRedeemableDiamonds = userRedeemableDiamonds + earnedCashbackDiamonds;
           }
 
+          // 2. Update User Profile Balances
           const userDocRef = doc(db, 'profiles', currentUserId);
           await updateDoc(userDocRef, {
             gamer_points: newGamerPoints,
@@ -458,7 +462,7 @@ export const BookingModal = ({
   return (
     <div className="fixed inset-0 z-[10000] bg-[#0a0a0c] overflow-y-auto w-full min-h-screen font-sans">
       <div className="w-full max-w-xl mx-auto px-4 py-6 sm:px-6 min-h-screen flex flex-col justify-start">
-        
+
         {/* Top Header Bar */}
         <div className="flex items-center justify-between pb-4 mb-5 border-b border-white/10 sticky top-0 bg-[#0a0a0c]/95 backdrop-blur-md z-40 pt-2">
           <div>
@@ -621,4 +625,3 @@ export const BookingModal = ({
 };
 
 export default BookingModal;
-

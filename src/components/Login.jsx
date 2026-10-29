@@ -69,15 +69,35 @@ export default function Login({ onClose, onLoginSuccess }) {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       setGoogleLoading(false);
-      await checkAndPromptProfile(result.user);
+
+      const user = result.user;
+      
+      // Google photo URL securely capture karo
+      const googlePhotoUrl = user.photoURL || '';
+
+      const userRef = doc(db, 'profiles', user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists() && userSnap.data().phone && userSnap.data().name) {
+        // Agar profile pehle se bani hai, toh Google ki latest photoURL ko turant sync/update kar do
+        await setDoc(userRef, { 
+          avatar_url: googlePhotoUrl 
+        }, { merge: true });
+        
+        onLoginSuccess(user);
+      } else {
+        // Agar naya user hai, toh profile modal kholo
+        setPendingUser(user);
+        setProfileName(user.displayName || '');
+        setProfilePhone(user.phoneNumber || '');
+        setShowProfileModal(true);
+      }
     } catch (error) {
       setGoogleLoading(false);
       console.error("Google Sign-In Error:", error);
       let message = error.message;
       if (error.code === 'auth/popup-closed-by-user') {
         message = 'Sign-in window was closed. Please try again.';
-      } else if (error.code === 'auth/cancelled-popup-request') {
-        message = 'Sign-in process was cancelled.';
       }
       setErrorMsg(message);
     }
@@ -155,13 +175,16 @@ export default function Login({ onClose, onLoginSuccess }) {
 
     try {
       if (pendingUser) {
+        // Google photo URL ya empty string (email signup ke liye)
+        const userAvatar = pendingUser.photoURL || auth.currentUser?.photoURL || '';
+
         const userRef = doc(db, 'profiles', pendingUser.uid);
         await setDoc(userRef, {
           id: pendingUser.uid,
           name: profileName.trim(),
           phone: profilePhone.trim(),
           email: pendingUser.email || email,
-          avatar_url: pendingUser.photoURL || '',
+          avatar_url: userAvatar, // Google DP ya default fallback handle karne ke liye clean URL
           gamer_points: 0,
           redeemable_diamonds: 0,
           updated_at: new Date().toISOString()
