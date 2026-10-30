@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Info, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { X, HelpCircle, Info, ArrowLeft } from 'lucide-react';
 
 const BookingPayment = ({
   bookingDate,
@@ -16,14 +16,21 @@ const BookingPayment = ({
   formData,
   handleNameChange,
   handlePhoneChange,
+  handleUtrChange,
   isNameValid,
   isPhoneValid,
   errorMessage,
   isSubmitting,
+  getAppUri,
+  standardUpiUri,
+  getDynamicUpiQrUrl,
+  UPI_ID,
   onBack,
   onConfirm,
 }) => {
+  const [showUtrHelp, setShowUtrHelp] = useState(false);
   const [showPlatformChargeHelp, setShowPlatformChargeHelp] = useState(false);
+  const [activeAppHelp, setActiveAppHelp] = useState('phonepe');
   const [paymentMethod, setPaymentMethod] = useState('upi');
 
   const PLATFORM_FEE = 20;
@@ -45,7 +52,7 @@ const BookingPayment = ({
 
       <div>
         <h3 className="text-xl sm:text-2xl font-black font-orbitron text-white uppercase tracking-wide">
-          SECURE <span className="text-[#ccff00]">CHECKOUT</span>
+          PAYMENT & <span className="text-[#ccff00]">DETAILS</span>
         </h3>
 
         <p className="text-[11px] sm:text-xs text-zinc-400 mt-0.5 font-mono">
@@ -65,14 +72,18 @@ const BookingPayment = ({
         <div className="mt-4 p-4 rounded-2xl bg-[#181922] border border-white/10 space-y-2.5 text-xs font-mono shadow-md">
           <div className="flex justify-between text-zinc-300">
             <span className="text-zinc-400">Platform / Zone:</span>
+
             <span className="font-bold text-[#ccff00] font-orbitron truncate ml-2">
               {selectedCategory}{' '}
-              {currentStation?.hasScreens ? `(${selectedScreen})` : ''}
+              {currentStation?.hasScreens
+                ? `(${selectedScreen})`
+                : ''}
             </span>
           </div>
 
           <div className="flex justify-between text-zinc-300">
             <span className="text-zinc-400">Selected Time Slot:</span>
+
             <span className="font-bold text-white">
               {minutesToTimeString(startTime)} - {minutesToTimeString(endTime)}
             </span>
@@ -80,6 +91,7 @@ const BookingPayment = ({
 
           <div className="flex justify-between text-zinc-300">
             <span className="text-zinc-400">Duration / Players:</span>
+
             <span className="text-zinc-300">
               {formatDurationText(endTime - startTime)} • {selectedTeam}
             </span>
@@ -94,9 +106,10 @@ const BookingPayment = ({
                 title="Platform Charge Info"
                 className="inline-flex items-center justify-center p-0.5 rounded-full text-zinc-400 hover:text-[#ccff00] hover:bg-white/10 transition-all cursor-pointer"
               >
-                <Info className="w-4 h-4 text-[#ccff00]" />
+                <HelpCircle className="w-4 h-4 text-[#ccff00]" />
               </button>
             </div>
+
             <span>₹{finalTotalAmount}</span>
           </div>
         </div>
@@ -108,17 +121,19 @@ const BookingPayment = ({
             <label className="text-xs text-zinc-400 font-mono block mb-1.5">
               Full Name <span className="text-[#ccff00]">*</span>
             </label>
+
             <input
               type="text"
-              placeholder="Letters only (e.g. Hamaad Afraan)"
+              placeholder="Letters only (e.g. John Doe)"
               value={formData.name}
               onChange={handleNameChange}
-              className={`w-full p-3.5 rounded-xl bg-[#0a0a0c] border text-xs text-white placeholder:text-zinc-600 outline-none font-mono transition-all ${formData.name.length > 0 && !isNameValid
+              className={`w-full p-3.5 rounded-xl bg-[#0a0a0c] border text-xs text-white placeholder:text-zinc-600 outline-none font-mono transition-all ${
+                formData.name.length > 0 && !isNameValid
                   ? 'border-amber-500/80'
                   : isNameValid
-                    ? 'border-[#ccff00] focus:border-[#ccff00] bg-[#ccff00]/5'
-                    : 'border-white/10 focus:border-[#ccff00]'
-                }`}
+                  ? 'border-[#ccff00] focus:border-[#ccff00] bg-[#ccff00]/5'
+                  : 'border-white/10 focus:border-[#ccff00]'
+              }`}
             />
           </div>
 
@@ -127,22 +142,25 @@ const BookingPayment = ({
               <label className="text-xs text-zinc-400 font-mono block">
                 Mobile Number <span className="text-[#ccff00]">*</span>
               </label>
+
               <span className="text-[10px] font-mono font-bold text-zinc-500">
                 {formData.phone.length}/10
               </span>
             </div>
+
             <input
               type="tel"
               inputMode="numeric"
               placeholder="Exact 10-digit mobile number"
               value={formData.phone}
               onChange={handlePhoneChange}
-              className={`w-full p-3.5 rounded-xl bg-[#0a0a0c] border text-xs text-white placeholder:text-zinc-600 outline-none font-mono tracking-wider transition-all ${formData.phone.length > 0 && !isPhoneValid
+              className={`w-full p-3.5 rounded-xl bg-[#0a0a0c] border text-xs text-white placeholder:text-zinc-600 outline-none font-mono tracking-wider transition-all ${
+                formData.phone.length > 0 && !isPhoneValid
                   ? 'border-amber-500/80 focus:border-amber-500'
                   : isPhoneValid
-                    ? 'border-[#ccff00] focus:border-[#ccff00] bg-[#ccff00]/5'
-                    : 'border-white/10 focus:border-[#ccff00]'
-                }`}
+                  ? 'border-[#ccff00] focus:border-[#ccff00] bg-[#ccff00]/5'
+                  : 'border-white/10 focus:border-[#ccff00]'
+              }`}
             />
           </div>
         </div>
@@ -156,36 +174,96 @@ const BookingPayment = ({
             <button
               type="button"
               onClick={() => setPaymentMethod('upi')}
-              className={`p-4 rounded-2xl font-orbitron text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-2.5 ${paymentMethod === 'upi'
+              className={`p-4 rounded-2xl font-orbitron text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-2.5 ${
+                paymentMethod === 'upi'
                   ? 'bg-[#ccff00] text-black border-[#ccff00] shadow-[0_0_20px_rgba(204,255,0,0.45)]'
                   : 'bg-[#181922] text-zinc-400 border-white/10 hover:bg-white/10'
-                }`}
+              }`}
             >
-              <span>⚡</span> Razorpay UPI / Cards
+              <span>💳</span> UPI / QR Pay
             </button>
 
             <button
               type="button"
               onClick={() => setPaymentMethod('diamonds')}
-              className={`p-4 rounded-2xl font-orbitron text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-2.5 ${paymentMethod === 'diamonds'
+              className={`p-4 rounded-2xl font-orbitron text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-2.5 ${
+                paymentMethod === 'diamonds'
                   ? 'bg-[#ccff00] text-black border-[#ccff00] shadow-[0_0_20px_rgba(204,255,0,0.45)]'
                   : 'bg-[#181922] text-[#ccff00] border-white/10 hover:bg-white/10'
-                }`}
+              }`}
             >
               <span>💎</span> Diamonds ({userRedeemableDiamonds})
             </button>
           </div>
         </div>
 
+        {/* CONDITIONAL PAYMENT VIEW */}
         {paymentMethod === 'upi' ? (
-          <div className="mt-4 bg-[#181922] p-5 rounded-2xl border border-white/10 text-center space-y-3 shadow-md">
-            <div className="w-12 h-12 bg-[#ccff00]/10 border border-[#ccff00]/30 rounded-full flex items-center justify-center mx-auto text-[#ccff00]">
-              <ShieldCheck className="w-6 h-6" />
+          <div className="mt-4 bg-[#181922] p-4.5 rounded-2xl border border-white/10 space-y-4 shadow-md">
+            <div>
+              <p className="text-xs font-mono text-[#ccff00] font-bold mb-3 text-center uppercase tracking-wider">
+                ⚡ Pay Directly via App / UPI Deep Link
+              </p>
+
+              <div className="grid grid-cols-2 gap-3">
+                <a
+                  href={getAppUri('phonepe', finalPayAmount)}
+                  className="p-3.5 rounded-xl bg-purple-950/60 border border-purple-500/40 hover:bg-purple-900 text-white font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
+                >
+                  <span>💜</span> PhonePe
+                </a>
+
+                <a
+                  href={getAppUri('gpay', finalPayAmount)}
+                  className="p-3.5 rounded-xl bg-blue-950/60 border border-blue-500/40 hover:bg-blue-900 text-white font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
+                >
+                  <span>🌐</span> Google Pay
+                </a>
+
+                <a
+                  href={getAppUri('paytm', finalPayAmount)}
+                  className="p-3.5 rounded-xl bg-cyan-950/60 border border-cyan-500/40 hover:bg-cyan-900 text-white font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
+                >
+                  <span>💙</span> Paytm
+                </a>
+
+                <a
+                  href={typeof standardUpiUri === 'function' ? standardUpiUri(finalPayAmount) : standardUpiUri}
+                  className="p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 hover:bg-emerald-900 text-white font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
+                >
+                  <span>⚡</span> Any UPI App
+                </a>
+              </div>
+
+              <div className="relative my-3.5 text-center">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-white/10" />
+                </div>
+
+                <span className="relative bg-[#181922] px-3 text-[10px] text-zinc-400 font-mono">
+                  OR SCAN QR CODE
+                </span>
+              </div>
             </div>
-            <h4 className="font-orbitron font-bold text-white text-sm">Instant Automated Payment</h4>
-            <p className="text-xs text-zinc-400 font-mono leading-relaxed">
-              Click below to open Razorpay secure checkout. Supports UPI (GPay, PhonePe, Paytm), Credit/Debit Cards, and Netbanking. Slot confirms instantly!
-            </p>
+
+            {/* QR */}
+            <div className="text-center pt-1">
+              <div className="w-40 h-40 bg-white p-3 rounded-2xl mx-auto flex items-center justify-center shadow-lg">
+                <img
+                  src={getDynamicUpiQrUrl(finalPayAmount)}
+                  alt="Dynamic Payment QR Code"
+                  className="w-36 h-36 object-contain mx-auto"
+                />
+              </div>
+
+              <div className="text-base font-black font-orbitron mt-3 text-[#ccff00]">
+                Scan to Pay : ₹{finalPayAmount}
+              </div>
+
+              <p className="text-[11px] font-mono text-zinc-400 mt-1.5">
+                🔒 Amount is paying to (<span className="text-white font-bold">{UPI_ID}</span>). Enter UTR below after payment.
+              </p>
+            </div>
           </div>
         ) : (
           <div className="mt-4 bg-[#181922] p-4.5 rounded-2xl border border-[#ccff00]/30 text-center space-y-3.5 shadow-md">
@@ -202,9 +280,37 @@ const BookingPayment = ({
             </div>
             {!hasEnoughDiamonds && (
               <p className="text-xs text-red-400 font-mono font-bold">
-                ❌ Insufficient diamonds! Please choose Razorpay UPI.
+                ❌ Insufficient diamonds! Please choose UPI.
               </p>
             )}
+          </div>
+        )}
+
+        {/* UTR Input Section with Enhanced Mobile Clearance */}
+        {paymentMethod === 'upi' && (
+          <div className="mt-5 relative z-10 p-4 rounded-2xl bg-[#181922] border border-[#ccff00]/40 shadow-[0_0_20px_rgba(204,255,0,0.1)]">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs text-zinc-300 font-mono font-bold flex items-center gap-1">
+                Transaction ID / UTR <span className="text-[#ccff00]">*</span>
+              </label>
+
+              <button
+                type="button"
+                onClick={() => setShowUtrHelp(true)}
+                className="text-[11px] text-[#ccff00] hover:text-[#b8e600] font-mono flex items-center gap-1 bg-[#ccff00]/10 border border-[#ccff00]/30 px-2.5 py-1 rounded-lg cursor-pointer transition-all shrink-0"
+              >
+                <HelpCircle className="w-3.5 h-3.5 text-[#ccff00]" />
+                Where to find?
+              </button>
+            </div>
+
+            <input
+              type="text"
+              placeholder="Enter 12-digit UTR or Ref No."
+              value={formData.utr}
+              onChange={handleUtrChange}
+              className="w-full p-3.5 rounded-xl bg-[#0a0a0c] border border-white/20 text-xs text-white placeholder:text-zinc-500 outline-none font-mono tracking-wider focus:border-[#ccff00] focus:ring-1 focus:ring-[#ccff00] transition-all"
+            />
           </div>
         )}
 
@@ -227,6 +333,7 @@ const BookingPayment = ({
               onConfirm({
                 paymentMethod,
                 finalPayAmount: finalTotalAmount,
+                utrValue: formData.utr,
               })
             }
             className="px-8 py-3.5 bg-[#ccff00] hover:bg-[#b8e600] text-black font-black font-orbitron text-xs uppercase tracking-widest rounded-xl shadow-[0_0_20px_rgba(204,255,0,0.45)] cursor-pointer transition-all active:scale-95 disabled:opacity-50"
@@ -234,8 +341,8 @@ const BookingPayment = ({
             {isSubmitting
               ? 'PROCESSING...'
               : paymentMethod === 'diamonds'
-                ? 'REDEEM & CONFIRM'
-                : `Pay ₹${finalPayAmount} via Razorpay`}
+              ? 'REDEEM & CONFIRM'
+              : `Pay ₹{finalPayAmount} Now`}
           </button>
         </div>
       </div>
@@ -282,6 +389,130 @@ const BookingPayment = ({
               className="mt-4 w-full py-3 rounded-xl bg-[#ccff00] text-black font-orbitron font-bold text-xs cursor-pointer hover:bg-[#b8e600]"
             >
               UNDERSTOOD
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* UTR HELP POPUP */}
+      {showUtrHelp && (
+        <div className="fixed inset-0 z-[10001] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-[#12131a] border border-[#ccff00]/50 rounded-2xl w-full max-w-md p-5 relative text-white shadow-2xl max-h-[90vh] overflow-y-auto">
+            <button
+              type="button"
+              onClick={() => setShowUtrHelp(false)}
+              className="absolute top-3 right-3 p-1.5 rounded-full bg-white/10 text-zinc-400 hover:text-white cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <h4 className="text-lg font-black font-orbitron text-[#ccff00] flex items-center gap-2">
+              <HelpCircle className="w-5 h-5 text-[#ccff00]" />
+              Transaction ID / UTR Help
+            </h4>
+
+            <p className="text-xs text-zinc-300 font-mono mt-1.5">
+              Which app did you use? Copy any of these fields from your payment receipt:
+            </p>
+
+            <div className="grid grid-cols-2 gap-2.5 mt-4">
+              {[
+                { id: 'phonepe', name: 'PhonePe' },
+                { id: 'gpay', name: 'Google Pay' },
+                { id: 'paytm', name: 'Paytm' },
+                { id: 'other', name: 'Other / BHIM' },
+              ].map((app) => (
+                <button
+                  key={app.id}
+                  type="button"
+                  onClick={() => setActiveAppHelp(app.id)}
+                  className={`p-2.5 rounded-xl font-mono text-xs font-bold border transition-all cursor-pointer ${
+                    activeAppHelp === app.id
+                      ? 'bg-[#ccff00] text-black border-[#ccff00] font-extrabold shadow-[0_0_12px_rgba(204,255,0,0.3)]'
+                      : 'bg-white/5 text-zinc-400 border-white/10 hover:border-white/30'
+                  }`}
+                >
+                  {app.name}
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-4 p-4 rounded-xl bg-black/60 border border-white/10 text-xs font-mono">
+              {activeAppHelp === 'phonepe' && (
+                <div>
+                  <div className="text-purple-400 font-bold mb-1">
+                    📱 PhonePe Guidance:
+                  </div>
+                  <p className="text-zinc-300 mb-2">
+                    You can enter either field under Payment Details:
+                  </p>
+                  <div className="bg-zinc-900 p-3 rounded-xl border border-purple-500/30 text-amber-300 space-y-1.5 text-xs">
+                    <div>
+                      - <strong>UTR:</strong> 332202148824 (12 digits)
+                    </div>
+                    <div className="break-all">
+                      - <strong>PhonePe Transaction ID:</strong> T260901152...
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeAppHelp === 'gpay' && (
+                <div>
+                  <div className="text-blue-400 font-bold mb-1">
+                    🌐 Google Pay Guidance:
+                  </div>
+                  <p className="text-zinc-300 mb-2">
+                    Copy either of these IDs from your transaction screen:
+                  </p>
+                  <div className="bg-zinc-900 p-3 rounded-xl border border-blue-500/30 text-amber-300 space-y-1.5 text-xs">
+                    <div>
+                      - <strong>UPI transaction ID:</strong> 616969042990 (12 digits)
+                    </div>
+                    <div className="break-all">
+                      - <strong>Google transaction ID:</strong> CICAgJj-ItfINg
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeAppHelp === 'paytm' && (
+                <div>
+                  <div className="text-cyan-400 font-bold mb-1">
+                    💙 Paytm Guidance:
+                  </div>
+                  <p className="text-zinc-300 mb-2">
+                    Use either field shown on your payment status screen:
+                  </p>
+                  <div className="bg-zinc-900 p-3 rounded-xl border border-cyan-500/30 text-amber-300 space-y-1.5 text-xs">
+                    <div>
+                      - <strong>UPI Ref No:</strong> 441584215640 (12 digits)
+                    </div>
+                    <div className="break-all">
+                      - <strong>Order ID:</strong> 202402181928050066
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeAppHelp === 'other' && (
+                <div>
+                  <div className="text-emerald-400 font-bold mb-1">
+                    🏦 Other Apps / Banking:
+                  </div>
+                  <p className="text-zinc-300 mb-2">
+                    Copy any Reference Number, RRN, or Transaction ID from your payment receipt.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowUtrHelp(false)}
+              className="mt-4 w-full py-3 rounded-xl bg-[#ccff00] text-black font-orbitron font-bold text-xs cursor-pointer hover:bg-[#b8e600]"
+            >
+              GOT IT
             </button>
           </div>
         </div>

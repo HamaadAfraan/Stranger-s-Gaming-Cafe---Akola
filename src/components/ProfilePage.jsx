@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { auth, db } from '../firebase';
 import { updatePassword, signOut } from 'firebase/auth';
-import { doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import profileImg from '../assets/profile.jpeg';
 
 export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }) {
@@ -39,7 +39,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
   const [baseScale, setBaseScale] = useState(1);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
-
+  const [rechargeUtr, setRechargeUtr] = useState('');
   const isDraggingRef = useRef(false);
   const dragStartRef = useRef({ x: 0, y: 0 });
   const lastTouchDistRef = useRef(null);
@@ -54,6 +54,38 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     return parts[0].substring(0, 2).toUpperCase();
   };
 
+  const handleRechargeSubmit = async () => {
+    if (!rechargeUtr || rechargeUtr.trim().length < 6) {
+      showToast('Please enter a valid UTR / Transaction ID.', 'error', 'Invalid UTR');
+      return;
+    }
+
+    setRechargeLoading(true);
+    try {
+      await addDoc(collection(db, 'diamond_recharges'), {
+        user_id: userId,
+        email: userEmail,
+        customer_name: name || 'Gamer',
+        phone: phone || '',
+        amount: selectedPack.price,
+        diamonds: selectedPack.diamonds,
+        utr: rechargeUtr.trim(),
+        status: 'PENDING',
+        createdAt: serverTimestamp(),
+        created_at: new Date().toISOString()
+      });
+
+      showToast(`🎉 UTR submitted successfully! Recharge pending admin verification.`, 'success', 'Submitted');
+      setShowRechargeModal(false);
+      setRechargeUtr('');
+      fetchUserData(userEmail, userId, phone);
+    } catch (err) {
+      console.error('Recharge save error:', err);
+      showToast('Failed to submit UTR. Please contact cafe support.', 'error', 'Error');
+    } finally {
+      setRechargeLoading(false);
+    }
+  };
   const getSafeStorage = (key, defaultVal = 0) => {
     try {
       const val = localStorage.getItem(key);
@@ -112,7 +144,20 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     { price: 2000, diamonds: 2500, label: 'Pro Pack (Bonus)' },
     { price: 5000, diamonds: 6000, label: 'Legendary VIP Pack' },
   ];
+  const UPI_ID = 'hamaad.afraan@ybl';
 
+  const getDynamicUpiQrUrl = (price) => {
+    const uri = `upi://pay?pa=${UPI_ID}&pn=Stranger's Gaming Cafe&am=${price}&cu=INR&tn=Diamond Recharge`;
+    return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(uri)}`;
+  };
+
+  const getAppUri = (appType, price) => {
+    const uri = `upi://pay?pa=${UPI_ID}&pn=Stranger's Gaming Cafe&am=${price}&cu=INR&tn=Diamond Recharge`;
+    if (appType === 'phonepe') {
+      return `phonepe://pay?${uri.replace('upi://pay?', '')}`;
+    }
+    return uri;
+  };
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [activeTab, bookingSubTab, walletTab]);
@@ -224,10 +269,10 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                 const data = userSnap.data();
                 if (data.name) setName(data.name);
                 if (data.phone) setPhone(data.phone);
-                
-                // Agar Firestore me avatar_url hai toh wo lo, warna Google auth photoURL ya fallback
-                const activePhoto = data.avatar_url && data.avatar_url.trim() !== '' 
-                  ? data.avatar_url 
+
+                // Fix: Pehle Firestore ka avatar check karo, agar nahi hai toh Google Auth ka photoURL lo
+                const activePhoto = (data.avatar_url && data.avatar_url.trim() !== '')
+                  ? data.avatar_url
                   : (currentUser?.photoURL || '');
                 setAvatarUrl(activePhoto);
 
@@ -814,10 +859,11 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
               <div className="flex items-center gap-4 pr-24 sm:pr-28">
                 <div className="relative shrink-0">
                   {displayAvatar !== '' ? (
-                    <img 
-                      src={displayAvatar} 
-                      alt="Avatar" 
-                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.3)]" 
+                    <img
+                      src={displayAvatar}
+                      alt="Avatar"
+                      referrerPolicy="no-referrer"
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.3)]"
                       onError={(e) => {
                         e.target.onerror = null;
                         e.target.style.display = 'none';
@@ -1244,10 +1290,17 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                       isAddition: true
                     }));
 
-                    const bookingEvents = [];
+const bookingEvents = [];
                     userBookings.forEach(b => {
                       const amount = Number(b.amount || b.price || 0);
-                      if (b.payment_method === 'diamonds') {
+                      const isDiamondPayment = 
+                        b.payment_method === 'diamonds' || 
+                        String(b.utr || '').toLowerCase().includes('diamond') || 
+                        String(b.payment_id || '').toLowerCase().includes('diamond') ||
+                        String(b.payment_method || '').toLowerCase().includes('diamond');
+
+                      if (isDiamondPayment) {
+                        // Agar booking diamonds se hui hai, toh sirf spend (-amount) show hoga, koi cashback nahi!
                         bookingEvents.push({
                           id: b.id,
                           type: 'booking_spend',
@@ -1259,6 +1312,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                           isAddition: false
                         });
                       } else {
+                        // Agar payment Rupees me hai, tabhi 10% redeemable cashback milega
                         const earnedCb = Math.floor(amount * 0.10);
                         if (earnedCb > 0) {
                           bookingEvents.push({
@@ -1287,7 +1341,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                     }));
 
                     const allDiamondEvents = [...rechargeItems, ...bookingEvents, ...cafeCashbacks];
-                    
+
                     const sortedAsc = [...allDiamondEvents].sort((a, b) => getTimestampMillis(a) - getTimestampMillis(b));
 
                     let runningBal = 0;
@@ -1466,10 +1520,10 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
 
                 return (
                   <div key={tier.key} className={`p-3 rounded-xl border flex items-center justify-between ${isCurrent
-                      ? 'bg-[#ccff00]/15 border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.3)]'
-                      : isCompleted
-                        ? 'bg-[#181922] border-emerald-500/30'
-                        : 'bg-[#181922] border-white/10'
+                    ? 'bg-[#ccff00]/15 border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.3)]'
+                    : isCompleted
+                      ? 'bg-[#181922] border-emerald-500/30'
+                      : 'bg-[#181922] border-white/10'
                     }`}>
                     <div className="flex items-center gap-3">
                       <span className="text-lg">{tier.icon}</span>
@@ -1482,10 +1536,10 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                     </div>
                     <div className="text-right">
                       <span className={`text-[9px] font-bold px-2.5 py-1 rounded-lg uppercase block ${isCurrent
-                          ? 'bg-[#ccff00] text-black font-black'
-                          : isCompleted
-                            ? 'bg-emerald-950/80 border border-emerald-500/40 text-emerald-300'
-                            : 'bg-white/5 text-zinc-500'
+                        ? 'bg-[#ccff00] text-black font-black'
+                        : isCompleted
+                          ? 'bg-emerald-950/80 border border-emerald-500/40 text-emerald-300'
+                          : 'bg-white/5 text-zinc-500'
                         }`}>
                         {isCurrent ? 'ACTIVE' : isCompleted ? 'COMPLETED' : 'LOCKED'}
                       </span>
@@ -1522,11 +1576,14 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
         <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 z-[9999] overflow-y-auto" onClick={() => setShowRechargeModal(false)}>
           <div className="bg-[#12131a] border border-[#ccff00]/40 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl relative text-white my-auto max-h-[90vh] overflow-y-auto font-sans" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center border-b border-white/10 pb-3 sticky top-0 bg-[#12131a] z-10">
-              <h2 className="text-xs sm:text-sm font-black font-orbitron text-[#ccff00] uppercase tracking-wider flex items-center gap-1.5"><Gem className="w-4 h-4 text-[#ccff00] animate-bounce" /> ADD DIAMONDS</h2>
+              <h2 className="text-xs sm:text-sm font-black font-orbitron text-[#ccff00] uppercase tracking-wider flex items-center gap-1.5">
+                <Gem className="w-4 h-4 text-[#ccff00] animate-bounce" /> ADD DIAMONDS VIA UPI
+              </h2>
               <button onClick={() => setShowRechargeModal(false)} className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-400 hover:text-white cursor-pointer">&times;</button>
             </div>
-            <div className="space-y-2">
-              <label className="block text-xs font-mono uppercase tracking-wider text-zinc-300 font-bold">Select Diamond Pack (Redeemable Only):</label>
+
+            <div className="space-y-3">
+              <label className="block text-xs font-mono uppercase tracking-wider text-zinc-300 font-bold">Select Diamond Pack:</label>
               <div className="grid grid-cols-1 gap-2.5">
                 {DIAMOND_PACKS.map((pack, idx) => (
                   <div key={idx} onClick={() => setSelectedPack(pack)} className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${selectedPack.price === pack.price ? 'bg-[#ccff00]/15 border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.3)]' : 'bg-[#181922] border-white/10 hover:border-white/30'}`}>
@@ -1539,8 +1596,35 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                 ))}
               </div>
             </div>
-            <button onClick={handleRazorpayRecharge} disabled={rechargeLoading} className="w-full py-3.5 bg-[#ccff00] hover:bg-[#b8e600] text-black font-black font-orbitron text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer shadow-[0_0_15px_rgba(204,255,0,0.3)] disabled:opacity-50">
-              {rechargeLoading ? 'PROCESSING...' : `Pay ₹${selectedPack.price} via Razorpay`}
+
+            {/* UPI QR & APPS FOR RECHARGE */}
+            <div className="bg-[#181922] p-4 rounded-xl border border-white/10 text-center space-y-3">
+              <p className="text-xs font-mono text-[#ccff00] font-bold uppercase">Scan & Pay ₹{selectedPack.price}</p>
+              <div className="w-36 h-36 bg-white p-2 rounded-xl mx-auto flex items-center justify-center">
+                <img src={getDynamicUpiQrUrl(selectedPack.price)} alt="Recharge QR" className="w-32 h-32 object-contain" />
+              </div>
+              <p className="text-[11px] font-mono text-zinc-400">UPI ID: <strong className="text-white">hamaad.afraan@ybl</strong></p>
+
+              <div className="grid grid-cols-2 gap-2 pt-1 font-mono text-[11px]">
+                <a href={getAppUri('phonepe', selectedPack.price)} className="py-2 bg-purple-950/60 border border-purple-500/40 text-purple-300 rounded-xl font-bold">PhonePe App</a>
+                <a href={getAppUri('gpay', selectedPack.price)} className="py-2 bg-blue-950/60 border border-blue-500/40 text-blue-300 rounded-xl font-bold">GPay / Paytm</a>
+              </div>
+            </div>
+
+            {/* UTR INPUT FOR RECHARGE */}
+            <div className="space-y-1.5 font-mono text-xs">
+              <label className="block text-zinc-300 font-bold uppercase">Enter UTR / Transaction ID *</label>
+              <input
+                type="text"
+                placeholder="e.g. 423156789012"
+                value={rechargeUtr}
+                onChange={(e) => setRechargeUtr(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))}
+                className="w-full p-3 rounded-xl bg-[#0a0a0c] border border-[#ccff00]/50 text-[#ccff00] font-bold tracking-wider focus:outline-none focus:border-[#ccff00]"
+              />
+            </div>
+
+            <button onClick={handleRechargeSubmit} disabled={rechargeLoading || !rechargeUtr || rechargeUtr.length < 6} className="w-full py-3.5 bg-[#ccff00] hover:bg-[#b8e600] text-black font-black font-orbitron text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer shadow-[0_0_15px_rgba(204,255,0,0.3)] disabled:opacity-50">
+              {rechargeLoading ? 'SUBMITTING...' : `Submit UTR for ${selectedPack.diamonds} Diamonds`}
             </button>
           </div>
         </div>
@@ -1606,6 +1690,17 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
 
             {selectedRecord.type === 'booking' ? (
               <div className="space-y-2.5 text-xs font-mono">
+                <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                  <span className="text-zinc-400 uppercase">Status:</span>
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase font-orbitron ${String(selectedRecord.data.status).toUpperCase() === 'APPROVED' || String(selectedRecord.data.status).toUpperCase() === 'CONFIRMED'
+                    ? 'bg-emerald-950/80 border border-emerald-500/40 text-emerald-300'
+                    : String(selectedRecord.data.status).toUpperCase() === 'REJECTED'
+                      ? 'bg-red-950/80 border border-red-500/40 text-red-300'
+                      : 'bg-amber-950/80 border border-amber-500/40 text-amber-300 animate-pulse'
+                    }`}>
+                    {selectedRecord.data.status || 'PENDING'}
+                  </span>
+                </div>
                 <div className="flex justify-between border-b border-white/5 pb-2">
                   <span className="text-zinc-400 uppercase">Booking ID:</span>
                   <span className="text-[#ccff00] font-bold font-orbitron">{selectedRecord.data.id || 'STR-1454'}</span>
@@ -1645,7 +1740,9 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
 
                 <div className="flex justify-between border-b border-white/5 pb-2">
                   <span className="text-zinc-400 uppercase">Duration / Team:</span>
-                  <span className="text-purple-300">{selectedRecord.data.duration || '30 min • 1 Player'}</span>
+                  <span className="text-purple-300">
+                    {selectedRecord.data.duration || '30 min'} {selectedRecord.data.team ? `• ${selectedRecord.data.team}` : ''}
+                  </span>
                 </div>
 
                 <div className="flex justify-between border-b border-white/5 pb-2">
