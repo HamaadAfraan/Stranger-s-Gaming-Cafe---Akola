@@ -967,7 +967,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
 
               <button
                 onClick={() => {
-                  const inviteUrl = 'strangersgamingcafeakola.in';
+                  const inviteUrl = 'strangersgamingcafeakola.com';
                   if (navigator.clipboard && navigator.clipboard.writeText) {
                     navigator.clipboard.writeText(inviteUrl)
                       .then(() => {
