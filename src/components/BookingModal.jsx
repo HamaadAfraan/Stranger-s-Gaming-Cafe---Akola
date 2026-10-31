@@ -178,6 +178,19 @@ export const BookingModal = ({
   bookedSlots = [],
   onBookingCreated,
 }) => {
+
+  const currentUser = auth.currentUser;
+
+  // AGAR LOGGED IN NAHI HAI TOH KUCH RENDER MAT KARO (NO BLINK)
+  if (isOpen && !currentUser) {
+    onClose();
+    // Apka login modal open karne ka custom event ya state trigger:
+    window.dispatchEvent(new CustomEvent('open-login-modal'));
+    return null;
+  }
+
+  if (!isOpen) return null;
+
   const [bookingDate, setBookingDate] = useState(getTodayDateString());
   const [selectedCategory, setSelectedCategory] = useState('PS5');
   const [selectedScreen, setSelectedScreen] = useState('55" VIP');
@@ -208,36 +221,45 @@ export const BookingModal = ({
     return now.getHours() * 60 + now.getMinutes();
   });
 
-  useEffect(() => {
-    const fetchUserData = async () => {
+useEffect(() => {
+    const checkAuthAndFetchData = async () => {
       if (isOpen) {
         try {
           const currentUser = auth.currentUser;
-          if (currentUser) {
-            const userId = currentUser.uid;
-            try {
-              const docRef = doc(db, 'profiles', userId);
-              const docSnap = await getDoc(docRef);
-              
-              if (docSnap.exists()) {
-                const data = docSnap.data();
-                setFormData((prev) => ({
-                  ...prev,
-                  name: data.name || currentUser.displayName || '',
-                  phone: data.phone || currentUser.phoneNumber || '',
-                }));
-                setUserGamerPoints(parseInt(data.gamer_points, 10) || 0);
-                setUserRedeemableDiamonds(parseInt(data.redeemable_diamonds, 10) || 0);
-              } else {
-                setFormData((prev) => ({
-                  ...prev,
-                  name: currentUser.displayName || '',
-                  phone: currentUser.phoneNumber || '',
-                }));
-              }
-            } catch (profileError) {
-              console.warn("Firestore profile fetch error:", profileError);
+          
+          // GUARD CHECK: Agar user logged in nahi hai, toh modal band karo aur login trigger karo
+          if (!currentUser) {
+            onClose(); // Modal close kar do
+            // Agar aapke paas global login modal kholne ka event ya function hai, 
+            // toh yahan dispatch kar sakte hain:
+            window.dispatchEvent(new CustomEvent('open-login-modal'));
+            return;
+          }
+
+          // Agar logged in hai, tabhi profile details fetch hongi
+          const userId = currentUser.uid;
+          try {
+            const docRef = doc(db, 'profiles', userId);
+            const docSnap = await getDoc(docRef);
+            
+            if (docSnap.exists()) {
+              const data = docSnap.data();
+              setFormData((prev) => ({
+                ...prev,
+                name: data.name || currentUser.displayName || '',
+                phone: data.phone || currentUser.phoneNumber || '',
+              }));
+              setUserGamerPoints(parseInt(data.gamer_points, 10) || 0);
+              setUserRedeemableDiamonds(parseInt(data.redeemable_diamonds, 10) || 0);
+            } else {
+              setFormData((prev) => ({
+                ...prev,
+                name: currentUser.displayName || '',
+                phone: currentUser.phoneNumber || '',
+              }));
             }
+          } catch (profileError) {
+            console.warn("Firestore profile fetch error:", profileError);
           }
         } catch (authError) {
           console.warn("Auth session error:", authError);
@@ -245,7 +267,7 @@ export const BookingModal = ({
       }
     };
 
-    fetchUserData();
+    checkAuthAndFetchData();
   }, [isOpen]);
 
   useEffect(() => {
@@ -635,3 +657,4 @@ const handleConfirmBooking = async ({ paymentMethod, finalPayAmount, utrValue })
 };
 
 export default BookingModal;
+

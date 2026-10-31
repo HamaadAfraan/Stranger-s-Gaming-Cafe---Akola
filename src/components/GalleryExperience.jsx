@@ -30,7 +30,7 @@ export const GalleryExperience = () => {
       type: 'video',
       title: 'Stranger\'s Gaming Cafe Cinematic Walkthrough',
       category: 'videos',
-      url: 'https://www.youtube.com/embed/4MjXpsCoNs0', 
+      url: 'https://www.youtube.com/embed/Om7k2z9Q5Ks', 
       badge: 'CAFE TOUR'
     },
     {

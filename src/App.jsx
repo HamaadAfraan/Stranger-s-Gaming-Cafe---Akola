@@ -108,7 +108,14 @@ export default function App() {
     };
   }, [isBookingOpen]);
 
-  const handleOpenBooking = () => {
+const handleOpenBooking = () => {
+    // Agar user logged in nahi hai, toh Login modal open karo aur booking roko
+    if (!session) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    // Agar logged in hai, tabhi booking khulegi
     fetchBookings();
     setIsBookingOpen(true);
   };

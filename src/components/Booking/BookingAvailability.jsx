@@ -306,43 +306,40 @@ const BookingAvailability = ({
           <label className="text-xs font-mono uppercase tracking-widest text-zinc-400 flex items-center gap-1.5 font-bold">
             <Calendar className="w-4 h-4 text-[#ccff00]" /> Select Date
           </label>
-          <input
-            type="date"
-            min={todayStr}
-            max={maxDateStr}
-            value={bookingDate}
-            onChange={(e) => setBookingDate(e.target.value)}
-            className="bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 text-xs font-mono text-[#ccff00] cursor-pointer [color-scheme:dark]"
-          />
+
         </div>
-        <div className="flex gap-2.5 overflow-x-auto no-scrollbar py-1">
-          {datesList.map((d) => {
-            const isSelected = bookingDate === d.dateString;
-            return (
-              <button
-                key={d.dateString}
-                onClick={() => setBookingDate(d.dateString)}
-                className={`flex flex-col items-center justify-center min-w-[70px] py-3.5 px-3 rounded-2xl border transition-all cursor-pointer font-mono shrink-0 ${
-                  isSelected
-                    ? 'bg-[#ccff00] text-black border-[#ccff00] font-bold shadow-[0_0_20px_rgba(204,255,0,0.45)] scale-105'
+
+        {/* Overflow Container */}
+        <div className="w-full overflow-x-auto no-scrollbar py-1">
+          {/* Inner Flex Container with 'w-fit mx-auto' (Magic Fix!) */}
+          <div className="flex gap-2 w-fit mx-auto min-w-full justify-center px-2">
+            {datesList.map((d) => {
+              const isSelected = bookingDate === d.dateString;
+              return (
+                <button
+                  key={d.dateString}
+                  onClick={() => setBookingDate(d.dateString)}
+                  className={`flex flex-col items-center justify-center text-center min-w-[62px] py-2 px-2 rounded-xl border transition-all cursor-pointer font-mono shrink-0 ${isSelected
+                    ? 'bg-[#ccff00] text-black border-[#ccff00] font-bold shadow-[0_0_15px_rgba(204,255,0,0.45)] scale-105'
                     : 'bg-[#181922] text-zinc-400 border-white/10 hover:border-[#ccff00]/40 hover:text-white'
-                }`}
-              >
-                <span className="text-[10px] uppercase">{d.dayName}</span>
-                <span className="text-lg font-black font-orbitron my-0.5">{d.dayNum}</span>
-                <span className="text-[10px] uppercase">{d.monthName}</span>
-              </button>
-            );
-          })}
+                    }`}
+                >
+                  <span className="text-[9px] uppercase leading-none">{d.dayName}</span>
+                  <span className="text-base font-black font-orbitron my-1 leading-none">{d.dayNum}</span>
+                  <span className="text-[9px] uppercase leading-none">{d.monthName}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
       {/* Platform Selection */}
       <div className="mb-6">
-        <label className="text-xs font-mono uppercase tracking-widest text-zinc-400 font-bold block mb-3">
+        <label className="text-xs font-mono uppercase tracking-widest text-zinc-400 font-bold block mb-2.5">
           1. Select Platform
         </label>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2.5">
           {stations.map((station) => {
             const isSelected = selectedCategory === station.id;
             return (
@@ -362,19 +359,18 @@ const BookingAvailability = ({
                   }
                   if (setSelectedGame) setSelectedGame('Standard');
                 }}
-                className={`p-4 rounded-2xl font-orbitron text-xs font-bold transition-all border cursor-pointer text-left flex items-center justify-between ${
-                  isSelected
-                    ? 'bg-[#ccff00] text-black border-[#ccff00] shadow-[0_0_20px_rgba(204,255,0,0.45)]'
+                className={`py-2.5 px-3 rounded-xl font-orbitron text-xs font-bold transition-all border cursor-pointer text-left flex items-center justify-between ${isSelected
+                    ? 'bg-[#ccff00] text-black border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.45)]'
                     : 'bg-[#181922] text-zinc-300 border-white/10 hover:border-white/30'
-                }`}
+                  }`}
               >
                 <div>
                   <div className="text-xs font-black">{station.id}</div>
-                  <div className={`text-[10px] font-mono mt-1 ${isSelected ? 'text-black/80' : 'text-zinc-400'}`}>
+                  <div className={`text-[9px] font-mono mt-0.5 ${isSelected ? 'text-black/80' : 'text-zinc-400'}`}>
                     {station.name.split(' ')[0]}
                   </div>
                 </div>
-                <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${isSelected ? 'border-black bg-black' : 'border-zinc-600'}`}>
+                <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${isSelected ? 'border-black bg-black' : 'border-zinc-600'}`}>
                   {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-[#ccff00]"></div>}
                 </div>
               </button>
@@ -386,10 +382,10 @@ const BookingAvailability = ({
       {/* Screen / Subcategory */}
       {currentStation?.hasScreens && (
         <div className="mb-6">
-          <label className="text-xs font-mono uppercase tracking-widest text-zinc-400 font-bold block mb-3">
+          <label className="text-xs font-mono uppercase tracking-widest text-zinc-400 font-bold block mb-2.5">
             2. Select {selectedCategory === 'Simulator' ? 'Vehicle Type' : 'Display Size'}
           </label>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2.5">
             {currentStation.screens.map((screen) => {
               const isSelected = selectedScreen === screen;
               return (
@@ -405,11 +401,10 @@ const BookingAvailability = ({
                       setSelectedTeam('3 Players');
                     }
                   }}
-                  className={`p-4 rounded-2xl border text-xs font-bold font-orbitron text-left cursor-pointer transition-all flex items-center gap-3 ${
-                    isSelected
+                  className={`py-2.5 px-3 rounded-xl border text-xs font-bold font-orbitron text-left cursor-pointer transition-all flex items-center gap-2.5 ${isSelected
                       ? 'border-[#ccff00] bg-[#ccff00]/15 text-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.35)] font-black'
                       : 'border-white/10 bg-[#181922] text-zinc-400 hover:border-white/20'
-                  }`}
+                    }`}
                 >
                   {selectedCategory === 'Simulator' ? (
                     <Car className="w-4 h-4 text-[#ccff00] shrink-0" />
@@ -427,25 +422,24 @@ const BookingAvailability = ({
       {/* Game Selection */}
       {selectedCategory === 'PS5' && (
         <div className="mb-6">
-          <label className="text-xs font-mono uppercase tracking-widest text-zinc-400 font-bold block mb-3">
+          <label className="text-xs font-mono uppercase tracking-widest text-zinc-400 font-bold block mb-2.5">
             2. Select Game / Edition
           </label>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2.5">
             <button
               type="button"
               onClick={() => setSelectedGame('Standard')}
-              className={`p-4 rounded-2xl border text-xs font-bold transition-all cursor-pointer font-orbitron ${
-                selectedGame === 'Standard'
-                  ? 'bg-[#ccff00] text-black border-[#ccff00] shadow-[0_0_20px_rgba(204,255,0,0.45)]'
+              className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition-all cursor-pointer font-orbitron ${selectedGame === 'Standard'
+                  ? 'bg-[#ccff00] text-black border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.45)]'
                   : 'bg-[#181922] text-zinc-300 border-white/10 hover:border-white/30'
-              }`}
+                }`}
             >
               Standard Games
             </button>
             <button
               type="button"
               disabled={true}
-              className="p-4 rounded-2xl border text-xs font-bold bg-zinc-900 border-amber-500/30 text-amber-400/50 cursor-not-allowed font-orbitron flex items-center justify-center gap-1.5"
+              className="py-2.5 px-3 rounded-xl border text-xs font-bold bg-zinc-900 border-amber-500/30 text-amber-400/50 cursor-not-allowed font-orbitron flex items-center justify-center gap-1.5"
             >
               🔒 GTA 6
             </button>
@@ -456,21 +450,20 @@ const BookingAvailability = ({
       {/* Players */}
       {currentStation?.multiplayer && (
         <div className="mb-6">
-          <label className="text-xs font-mono uppercase tracking-widest text-zinc-400 font-bold block mb-3">
+          <label className="text-xs font-mono uppercase tracking-widest text-zinc-400 font-bold block mb-2.5">
             Select Players
           </label>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2.5">
             {getPlayerOptions().map((playerOption) => {
               const isSelected = selectedTeam === playerOption;
               return (
                 <button
                   key={playerOption}
                   onClick={() => setSelectedTeam(playerOption)}
-                  className={`p-3.5 rounded-2xl border text-center cursor-pointer transition-all font-mono text-xs ${
-                    isSelected
+                  className={`py-2.5 px-3 rounded-xl border text-center cursor-pointer transition-all font-mono text-xs ${isSelected
                       ? 'border-[#ccff00] bg-[#ccff00]/20 text-[#ccff00] font-bold shadow-md'
                       : 'border-white/10 bg-[#181922] text-zinc-400 hover:border-white/20'
-                  }`}
+                    }`}
                 >
                   {playerOption}
                 </button>
@@ -479,33 +472,33 @@ const BookingAvailability = ({
           </div>
         </div>
       )}
-
       {/* Timeline Bar */}
-      <div className="mb-6 bg-[#181922] border border-white/10 p-4 rounded-2xl shadow-inner">
-        <label className="text-xs font-sans text-zinc-300 font-bold block mb-2.5">
+      <div className="mb-5 bg-[#181922] border border-white/10 p-2.5 rounded-xl shadow-inner">
+        <label className="text-xs font-sans text-zinc-300 font-bold block mb-1.5">
           Timeline Availability
         </label>
-        <div className="relative overflow-x-auto pb-2 pt-1 no-scrollbar">
+        <div className="relative overflow-x-auto pb-0.5 pt-0 no-scrollbar">
           <div className="min-w-[620px] px-1">
-            <div className="flex justify-between items-end mb-2">
+            <div className="flex justify-between items-end mb-1">
               {allBlocks.map((block) => {
                 const isFullHour = block % 60 === 0;
                 return (
                   <div key={block} className="flex flex-col items-center min-w-[16px]">
-                    <div className="h-4 flex items-center justify-center">
+                    <div className="h-3 flex items-center justify-center">
                       {isFullHour && (
-                        <span className="text-[10px] font-bold text-[#ccff00] font-mono">
+                        <span className="text-[9px] font-bold text-[#ccff00] font-mono">
                           {minutesToTimeString(block).replace(':00', '')}
                         </span>
                       )}
                     </div>
-                    <div className={`w-[1px] rounded-full mt-1 ${isFullHour ? 'h-4 bg-[#ccff00]/60' : 'h-2.5 bg-zinc-600'}`} />
+                    <div className={`w-[1px] rounded-full mt-0.5 ${isFullHour ? 'h-2.5 bg-[#ccff00]/60' : 'h-1.5 bg-zinc-600'}`} />
                   </div>
                 );
               })}
             </div>
 
-            <div className="relative w-full h-4 bg-zinc-800 rounded-md overflow-hidden flex shadow-inner">
+            {/* Yahan bar ki height h-3.5 se karke h-2.5 kar di hai */}
+            <div className="relative w-full h-2.5 bg-zinc-800 rounded-sm overflow-hidden flex shadow-inner">
               {allBlocks.map((block) => {
                 const blockStatus = get15MinBlockStatus(block);
                 const isSelected = startTime !== null && endTime !== null && block >= startTime && block < endTime;
@@ -513,17 +506,16 @@ const BookingAvailability = ({
                 return (
                   <div
                     key={block}
-                    className={`flex-1 h-full border-r border-black/30 transition-all ${
-                      isSelected
-                        ? 'bg-[#ccff00] shadow-[0_0_12px_rgba(204,255,0,0.9)]'
+                    className={`flex-1 h-full border-r border-black/30 transition-all ${isSelected
+                        ? 'bg-[#ccff00] shadow-[0_0_10px_rgba(204,255,0,0.9)]'
                         : blockStatus === 'EXPIRED'
-                        ? 'bg-zinc-900 opacity-40'
-                        : blockStatus === 'APPROVED'
-                        ? 'bg-red-500/90'
-                        : blockStatus === 'PENDING'
-                        ? 'bg-amber-400/90'
-                        : 'bg-transparent'
-                    }`}
+                          ? 'bg-zinc-900 opacity-40'
+                          : blockStatus === 'APPROVED'
+                            ? 'bg-red-500/90'
+                            : blockStatus === 'PENDING'
+                              ? 'bg-amber-400/90'
+                              : 'bg-transparent'
+                      }`}
                   />
                 );
               })}
@@ -532,12 +524,12 @@ const BookingAvailability = ({
         </div>
       </div>
 
-      {/* Start Slots */}
+{/* Start Slots */}
       <div className="mb-6">
-        <label className="text-xs font-mono uppercase tracking-widest text-zinc-400 font-bold block mb-3">
+        <label className="text-xs font-mono uppercase tracking-widest text-zinc-400 font-bold block mb-2.5">
           Available Start Slots
         </label>
-        <div className="grid grid-cols-3 gap-3 max-h-52 overflow-y-auto pr-1">
+        <div className="grid grid-cols-3 gap-2.5 max-h-48 overflow-y-auto pr-1">
           {allBlocks.map((block) => {
             const blockStatus = get15MinBlockStatus(block);
             const isOccupied = blockStatus !== 'FREE';
@@ -548,7 +540,7 @@ const BookingAvailability = ({
                 key={block}
                 disabled={isOccupied}
                 onClick={() => handleStartSelect(block)}
-                className={`p-3.5 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-center ${
+                className={`py-2 px-2 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-center ${
                   isSelected
                     ? 'bg-[#ccff00] text-black border-[#ccff00] font-black shadow-[0_0_15px_rgba(204,255,0,0.45)]'
                     : blockStatus === 'EXPIRED'
@@ -565,33 +557,33 @@ const BookingAvailability = ({
         </div>
       </div>
 
-      {/* Duration */}
+{/* Duration */}
       {showEndPicker && startTime !== null && (
-        <div className="mb-6 p-4.5 rounded-2xl bg-[#181922] border border-[#ccff00]/40 shadow-[0_0_20px_rgba(204,255,0,0.12)]">
-          <div className="flex items-center justify-between mb-3.5">
+        <div className="mb-4 p-2.5 rounded-xl bg-[#181922] border border-[#ccff00]/40 shadow-[0_0_15px_rgba(204,255,0,0.12)]">
+          <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-mono text-[#ccff00] font-bold uppercase flex items-center gap-1.5">
-              <Clock className="w-4 h-4 text-[#ccff00]" /> Select Duration
+              <Clock className="w-3.5 h-3.5 text-[#ccff00]" /> Select Duration
             </span>
-            <span className="text-xs text-zinc-400 font-mono">
+            <span className="text-[11px] text-zinc-400 font-mono">
               Start: <strong className="text-white">{minutesToTimeString(startTime)}</strong>
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2">
             {getDurationOptions().map(({ durationMins, endMins }) => {
               const isSelected = endTime === endMins;
               return (
                 <button
                   key={endMins}
                   onClick={() => setEndTime(endMins)}
-                  className={`p-3.5 rounded-xl border text-xs font-bold font-mono transition-all text-center ${
+                  className={`py-1.5 px-2 rounded-lg border text-xs font-bold font-mono transition-all text-center ${
                     isSelected
-                      ? 'bg-[#ccff00] text-black border-[#ccff00] font-black shadow-[0_0_15px_rgba(204,255,0,0.45)]'
+                      ? 'bg-[#ccff00] text-black border-[#ccff00] font-black shadow-[0_0_12px_rgba(204,255,0,0.45)]'
                       : 'bg-white/5 border-white/10 text-zinc-300 hover:border-[#ccff00] cursor-pointer'
                   }`}
                 >
                   <div>{formatDurationText(durationMins)}</div>
-                  <span className="block text-[10px] opacity-70 font-normal mt-0.5">
+                  <span className="block text-[8px] opacity-70 font-normal mt-0.2">
                     (Till {minutesToTimeString(endMins)})
                   </span>
                 </button>
@@ -601,19 +593,19 @@ const BookingAvailability = ({
         </div>
       )}
 
-      {/* Bottom Sticky Action Bar */}
+{/* Bottom Sticky / Floating Action Bar */}
       {startTime !== null && endTime !== null && (
-        <div className="fixed bottom-0 left-0 right-0 bg-[#0a0a0c]/95 backdrop-blur-lg border-t border-white/10 p-4 z-50 flex items-center justify-between max-w-xl mx-auto shadow-2xl">
+        <div className="sticky bottom-3 mt-6 bg-[#181922]/95 backdrop-blur-md border border-white/15 p-3 rounded-2xl z-40 flex items-center justify-between shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
           <div>
-            <div className="text-[10px] font-mono text-zinc-400 uppercase">Selected Slot</div>
-            <div className="text-xs font-bold font-orbitron text-[#ccff00]">
+            <div className="text-[9px] font-mono text-zinc-400 uppercase leading-none mb-1">Selected Slot</div>
+            <div className="text-[11px] font-bold font-orbitron text-[#ccff00] leading-tight">
               {minutesToTimeString(startTime)} - {minutesToTimeString(endTime)}
             </div>
-            <div className="text-base font-black font-orbitron text-white">₹{dynamicTotalAmount}</div>
+            <div className="text-sm font-black font-orbitron text-white mt-0.5">₹{dynamicTotalAmount}</div>
           </div>
           <button
             onClick={onNext}
-            className="px-7 py-3.5 bg-[#ccff00] hover:bg-[#b8e600] text-black font-black font-orbitron text-xs uppercase tracking-widest rounded-xl shadow-[0_0_20px_rgba(204,255,0,0.45)] cursor-pointer transition-all active:scale-95"
+            className="px-5 py-2.5 bg-[#ccff00] hover:bg-[#b8e600] text-black font-black font-orbitron text-[11px] uppercase tracking-wider rounded-xl shadow-[0_0_15px_rgba(204,255,0,0.4)] cursor-pointer transition-all active:scale-95 shrink-0"
           >
             Proceed to Pay &gt;
           </button>
