@@ -194,50 +194,10 @@ const BookingPayment = ({
         {/* CONDITIONAL PAYMENT VIEW */}
         {paymentMethod === 'upi' ? (
           <div className="mt-3.5 bg-[#181922] p-3.5 rounded-xl border border-white/10 space-y-3 shadow-md">
-            <div>
-              <p className="text-[11px] font-mono text-[#ccff00] font-bold mb-2.5 text-center uppercase tracking-wider">
-                ⚡ Pay Directly via App / UPI Deep Link
-              </p>
-
-              <div className="grid grid-cols-2 gap-2.5">
-                <a
-                  href={getAppUri('phonepe', finalPayAmount)}
-                  className="py-2.5 px-3 rounded-xl bg-purple-950/60 border border-purple-500/40 hover:bg-purple-900 text-white font-mono text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer"
-                >
-                  <span>💜</span> PhonePe
-                </a>
-
-                <a
-                  href={getAppUri('gpay', finalPayAmount)}
-                  className="py-2.5 px-3 rounded-xl bg-blue-950/60 border border-blue-500/40 hover:bg-blue-900 text-white font-mono text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer"
-                >
-                  <span>🌐</span> Google Pay
-                </a>
-
-                <a
-                  href={getAppUri('paytm', finalPayAmount)}
-                  className="py-2.5 px-3 rounded-xl bg-cyan-950/60 border border-cyan-500/40 hover:bg-cyan-900 text-white font-mono text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer"
-                >
-                  <span>💙</span> Paytm
-                </a>
-
-                <a
-                  href={typeof standardUpiUri === 'function' ? standardUpiUri(finalPayAmount) : standardUpiUri}
-                  className="py-2.5 px-3 rounded-xl bg-emerald-950/60 border border-emerald-500/40 hover:bg-emerald-900 text-white font-mono text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer"
-                >
-                  <span>⚡</span> Any UPI App
-                </a>
-              </div>
-
-              <div className="relative my-3 text-center">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-white/10" />
-                </div>
-                <span className="relative bg-[#181922] px-2.5 text-[9px] text-zinc-400 font-mono">
-                  OR SCAN QR CODE
-                </span>
-              </div>
-            </div>
+            <div className="bg-[#181922] p-4 rounded-xl border border-emerald-500/30 text-center space-y-2">
+                    <p className="text-xs text-zinc-300 font-mono">RULE</p>
+                    <div className="text-sm font-black font-orbitron text-[#ccff00]">Take A Screenshot of QR & Pay From Your Favourite UPI App & Enter Tarnsaction ID</div>
+                  </div>
 
             {/* QR */}
             <div className="text-center pt-0.5">
@@ -253,9 +213,9 @@ const BookingPayment = ({
                 Scan to Pay : ₹{finalPayAmount}
               </div>
 
-              <p className="text-[10px] font-mono text-zinc-400 mt-1">
+          {/*}    <p className="text-[10px] font-mono text-zinc-400 mt-1">
                 🔒 Paying to (<span className="text-white font-bold">{UPI_ID}</span>). Enter UTR below after payment.
-              </p>
+              </p> */}
             </div>
           </div>
         ) : (
