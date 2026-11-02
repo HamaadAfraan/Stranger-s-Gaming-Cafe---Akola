@@ -255,9 +255,12 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
               if (!isMounted) return;
               const allRecharges = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
               const filtered = allRecharges.filter(r => {
-                return (userEmail && r.email && r.email.toLowerCase() === userEmail.toLowerCase()) ||
-                  (userId && r.user_id && String(r.user_id) === String(userId)) ||
-                  (userPhone && r.phone && String(r.phone) === String(userPhone));
+                const matchEmail = userEmail && r.email && r.email.toLowerCase() === userEmail.toLowerCase();
+                const matchUserId = userId && r.user_id && String(r.user_id) === String(userId);
+                const matchPhone = userPhone && r.phone && String(r.phone) === String(userPhone);
+                
+                // Agar inme se ek bhi match ho gaya, toh user ko recharge dikh jayega!
+                return matchEmail || matchUserId || matchPhone;
               });
               setUserRecharges(filtered);
             });
