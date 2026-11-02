@@ -31,7 +31,6 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  // Google photoURL ko default priority do taaki hamesha latest fetch ho
   const [avatarUrl, setAvatarUrl] = useState(currentUser?.photoURL || '');
 
   const [showCropModal, setShowCropModal] = useState(false);
@@ -39,12 +38,10 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
   const [baseScale, setBaseScale] = useState(1);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
-  const [rechargeUtr, setRechargeUtr] = useState('');
   const isDraggingRef = useRef(false);
   const dragStartRef = useRef({ x: 0, y: 0 });
   const lastTouchDistRef = useRef(null);
 
-  // Helper to extract initials for text avatar fallback (e.g. "Hamaad Afraan" -> "HA")
   const getInitials = (nameStr) => {
     if (!nameStr) return 'G';
     const parts = nameStr.trim().split(' ');
@@ -54,38 +51,6 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     return parts[0].substring(0, 2).toUpperCase();
   };
 
-  const handleRechargeSubmit = async () => {
-    if (!rechargeUtr || rechargeUtr.trim().length < 6) {
-      showToast('Please enter a valid UTR / Transaction ID.', 'error', 'Invalid UTR');
-      return;
-    }
-
-    setRechargeLoading(true);
-    try {
-      await addDoc(collection(db, 'diamond_recharges'), {
-        user_id: userId,
-        email: userEmail,
-        customer_name: name || 'Gamer',
-        phone: phone || '',
-        amount: selectedPack.price,
-        diamonds: selectedPack.diamonds,
-        utr: rechargeUtr.trim(),
-        status: 'PENDING',
-        createdAt: serverTimestamp(),
-        created_at: new Date().toISOString()
-      });
-
-      showToast(`🎉 UTR submitted successfully! Recharge pending admin verification.`, 'success', 'Submitted');
-      setShowRechargeModal(false);
-      setRechargeUtr('');
-      fetchUserData(userEmail, userId, phone);
-    } catch (err) {
-      console.error('Recharge save error:', err);
-      showToast('Failed to submit UTR. Please contact cafe support.', 'error', 'Error');
-    } finally {
-      setRechargeLoading(false);
-    }
-  };
   const getSafeStorage = (key, defaultVal = 0) => {
     try {
       const val = localStorage.getItem(key);
@@ -144,20 +109,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     { price: 2000, diamonds: 2500, label: 'Pro Pack (Bonus)' },
     { price: 5000, diamonds: 6000, label: 'Legendary VIP Pack' },
   ];
-  const UPI_ID = 'hamaad.afraan@ybl';
 
-  const getDynamicUpiQrUrl = (price) => {
-    const uri = `upi://pay?pa=${UPI_ID}&pn=Stranger's Gaming Cafe&am=${price}&cu=INR&tn=Diamond Recharge`;
-    return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(uri)}`;
-  };
-
-  const getAppUri = (appType, price) => {
-    const uri = `upi://pay?pa=${UPI_ID}&pn=Stranger's Gaming Cafe&am=${price}&cu=INR&tn=Diamond Recharge`;
-    if (appType === 'phonepe') {
-      return `phonepe://pay?${uri.replace('upi://pay?', '')}`;
-    }
-    return uri;
-  };
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [activeTab, bookingSubTab, walletTab]);
@@ -258,7 +210,6 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
           if (isMounted) {
             setName(currentUser.displayName || '');
             setPhone(userPhone);
-            // Google photoURL ko pehli priority do
             setAvatarUrl(currentUser.photoURL || '');
           }
 
@@ -270,7 +221,6 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                 if (data.name) setName(data.name);
                 if (data.phone) setPhone(data.phone);
 
-                // Fix: Pehle Firestore ka avatar check karo, agar nahi hai toh Google Auth ka photoURL lo
                 const activePhoto = (data.avatar_url && data.avatar_url.trim() !== '')
                   ? data.avatar_url
                   : (currentUser?.photoURL || '');
@@ -645,7 +595,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     const earnedLeaguePoints = Math.floor(cleanAmount / 10);
 
     const options = {
-      key: "rzp_test_TszUvKcYnqDLYa",
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
       amount: cleanAmount * 100,
       currency: "INR",
       name: "Stranger's Gaming Cafe",
@@ -662,6 +612,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
             cashback_diamonds: cashbackDiamonds,
             league_points: earnedLeaguePoints,
             payment_id: response.razorpay_payment_id,
+            utr: response.razorpay_payment_id,
             status: 'SUCCESS',
             createdAt: new Date(),
             created_at: new Date().toISOString()
@@ -792,8 +743,6 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                   gamerPoints >= 200 ? 'BRONZE' : 'ROOKIE';
 
   const currentBadge = tierBadges[calculatedTier] || tierBadges['BRONZE'];
-
-  // Safe image display helper prioritizing Google photo -> Firestore photo -> Initials
   const displayAvatar = avatarUrl && avatarUrl.trim() !== '' ? avatarUrl : (currentUser?.photoURL || '');
 
   return (
@@ -1013,7 +962,6 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                 <Calendar className="w-4 h-4 text-[#ccff00]" /> My Bookings Manager
               </h2>
 
-              {/* CLEAN SORT CONTROLS */}
               <div className="flex items-center gap-1.5 font-mono text-xs">
                 <button
                   onClick={() => setBookingSortMode(prev => prev === 'time' ? 'session' : 'time')}
@@ -1151,7 +1099,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
               <div className="text-center py-16 bg-[#181922] border border-white/10 rounded-2xl space-y-2">
                 <div className="text-3xl">☕</div>
                 <h4 className="text-sm font-black font-orbitron text-white">No direct cafe payments yet!</h4>
-                <p className="text-xs text-zinc-400 font-mono">Scan & pay at the cafe counter to earn redeemable diamond cashback.</p>
+                <p className="text-xs text-zinc-400 font-mono">Pay via Razorpay at the cafe counter to earn redeemable diamond cashback.</p>
               </div>
             ) : (
               userCafePayments.map((p, idx) => (
@@ -1161,11 +1109,11 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                     <span className="text-[10px] text-zinc-400 block mt-0.5">ID: {p.payment_id || p.utr} • ⏱️ {formatDateTimeString(p.created_at)}</span>
                   </div>
                   <div className="text-right font-mono">
-                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase block mb-1 ${String(p.status || '').toUpperCase() === 'APPROVED' ? 'bg-emerald-950 text-emerald-300' :
+                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase block mb-1 ${String(p.status || '').toUpperCase() === 'SUCCESS' || String(p.status || '').toUpperCase() === 'APPROVED' ? 'bg-emerald-950 text-emerald-300' :
                         String(p.status || '').toUpperCase() === 'REJECTED' ? 'bg-red-950 text-red-300' :
                           'bg-amber-950 text-amber-300 animate-pulse'
                       }`}>
-                      {p.status || 'PENDING'}
+                      {p.status || 'SUCCESS'}
                     </span>
                     <span className="text-xs font-black text-[#ccff00]">₹{p.amount}</span>
                   </div>
@@ -1257,7 +1205,6 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                     <span className="text-sm font-black font-orbitron text-cyan-200">💎 {redeemableDiamonds} Diamonds</span>
                   </div>
 
-                  {/* DIAMOND LEDGER SORT CONTROLS */}
                   <div className="flex items-center gap-1.5 font-mono text-xs">
                     <button
                       onClick={() => setDiamondSortMode(prev => prev === 'time' ? 'session' : 'time')}
@@ -1303,7 +1250,6 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                         String(b.payment_method || '').toLowerCase().includes('diamond');
 
                       if (isDiamondPayment) {
-                        // Agar booking diamonds se hui hai, toh sirf spend (-amount) show hoga, koi cashback nahi!
                         bookingEvents.push({
                           id: b.id,
                           type: 'booking_spend',
@@ -1315,7 +1261,6 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                           isAddition: false
                         });
                       } else {
-                        // Agar payment Rupees me hai, tabhi 10% redeemable cashback milega
                         const earnedCb = Math.floor(amount * 0.10);
                         if (earnedCb > 0) {
                           bookingEvents.push({
@@ -1402,7 +1347,6 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                     </div>
                   </div>
 
-                  {/* LEAGUE HISTORY SORT CONTROLS */}
                   <div className="flex items-center gap-1.5 font-mono text-xs">
                     <button
                       onClick={() => setLeagueSortMode(prev => prev === 'time' ? 'session' : 'time')}
@@ -1458,7 +1402,6 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                     });
 
                     const allActivities = [...formattedBookings, ...formattedCafePayments];
-
                     const sortedActivities = sortItemsGeneric(allActivities, leagueSortMode, leagueSortDir);
 
                     let runningSum = 0;
@@ -1575,12 +1518,13 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
         </div>
       )}
 
+      {/* DIAMOND RECHARGE MODAL (RAZORPAY) */}
       {showRechargeModal && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 z-[9999] overflow-y-auto" onClick={() => setShowRechargeModal(false)}>
           <div className="bg-[#12131a] border border-[#ccff00]/40 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl relative text-white my-auto max-h-[90vh] overflow-y-auto font-sans" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center border-b border-white/10 pb-3 sticky top-0 bg-[#12131a] z-10">
               <h2 className="text-xs sm:text-sm font-black font-orbitron text-[#ccff00] uppercase tracking-wider flex items-center gap-1.5">
-                <Gem className="w-4 h-4 text-[#ccff00] animate-bounce" /> ADD DIAMONDS VIA UPI
+                <Gem className="w-4 h-4 text-[#ccff00] animate-bounce" /> ADD DIAMONDS VIA RAZORPAY
               </h2>
               <button onClick={() => setShowRechargeModal(false)} className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-400 hover:text-white cursor-pointer">&times;</button>
             </div>
@@ -1600,39 +1544,14 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
               </div>
             </div>
 
-            {/* UPI QR & APPS FOR RECHARGE */}
-            <div className="bg-[#181922] p-4 rounded-xl border border-white/10 text-center space-y-3">
-              <p className="text-xs font-mono text-[#ccff00] font-bold uppercase">Scan & Pay ₹{selectedPack.price}</p>
-              <div className="w-36 h-36 bg-white p-2 rounded-xl mx-auto flex items-center justify-center">
-                <img src={getDynamicUpiQrUrl(selectedPack.price)} alt="Recharge QR" className="w-32 h-32 object-contain" />
-              </div>
-              <p className="text-[11px] font-mono text-zinc-400">UPI ID: <strong className="text-white">hamaad.afraan@ybl</strong></p>
-
-              <div className="grid grid-cols-2 gap-2 pt-1 font-mono text-[11px]">
-                <a href={getAppUri('phonepe', selectedPack.price)} className="py-2 bg-purple-950/60 border border-purple-500/40 text-purple-300 rounded-xl font-bold">PhonePe App</a>
-                <a href={getAppUri('gpay', selectedPack.price)} className="py-2 bg-blue-950/60 border border-blue-500/40 text-blue-300 rounded-xl font-bold">GPay / Paytm</a>
-              </div>
-            </div>
-
-            {/* UTR INPUT FOR RECHARGE */}
-            <div className="space-y-1.5 font-mono text-xs">
-              <label className="block text-zinc-300 font-bold uppercase">Enter UTR / Transaction ID *</label>
-              <input
-                type="text"
-                placeholder="e.g. 423156789012"
-                value={rechargeUtr}
-                onChange={(e) => setRechargeUtr(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))}
-                className="w-full p-3 rounded-xl bg-[#0a0a0c] border border-[#ccff00]/50 text-[#ccff00] font-bold tracking-wider focus:outline-none focus:border-[#ccff00]"
-              />
-            </div>
-
-            <button onClick={handleRechargeSubmit} disabled={rechargeLoading || !rechargeUtr || rechargeUtr.length < 6} className="w-full py-3.5 bg-[#ccff00] hover:bg-[#b8e600] text-black font-black font-orbitron text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer shadow-[0_0_15px_rgba(204,255,0,0.3)] disabled:opacity-50">
-              {rechargeLoading ? 'SUBMITTING...' : `Submit UTR for ${selectedPack.diamonds} Diamonds`}
+            <button onClick={handleRazorpayRecharge} disabled={rechargeLoading} className="w-full py-3.5 bg-[#ccff00] hover:bg-[#b8e600] text-black font-black font-orbitron text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer shadow-[0_0_15px_rgba(204,255,0,0.3)] disabled:opacity-50">
+              {rechargeLoading ? 'PROCESSING...' : `PAY ₹${selectedPack.price} VIA RAZORPAY`}
             </button>
           </div>
         </div>
       )}
 
+      {/* PAY TO CAFE MODAL (RAZORPAY) */}
       {showCafePayModal && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 z-[9999] overflow-y-auto" onClick={() => setShowCafePayModal(false)}>
           <div className="bg-[#12131a] border border-emerald-500/50 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl relative text-white my-auto max-h-[90vh] overflow-y-auto font-sans" onClick={(e) => e.stopPropagation()}>
@@ -1659,89 +1578,12 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
               />
             </div>
 
-            {cafePayAmount > 0 && Number(cafePayAmount) > 0 && (
-              <>
-                {/* UPI APPS & QR FOR CAFE PAY */}
-                <div className="bg-[#181922] p-4 rounded-xl border border-white/10 text-center space-y-3">
-                  <p className="text-xs font-mono text-emerald-400 font-bold uppercase">Scan & Pay ₹{cafePayAmount}</p>
-                  <div className="w-36 h-36 bg-white p-2 rounded-xl mx-auto flex items-center justify-center">
-                    <img src={getDynamicUpiQrUrl(Number(cafePayAmount))} alt="Cafe Pay QR" className="w-32 h-32 object-contain" />
-                  </div>
-                  <p className="text-[11px] font-mono text-zinc-400">UPI ID: <strong className="text-white">{UPI_ID}</strong></p>
-
-                  <div className="bg-[#181922] p-4 rounded-xl border border-emerald-500/30 text-center space-y-2">
-                    <p className="text-xs text-zinc-300 font-mono">RULE</p>
-                    <div className="text-sm font-black font-orbitron text-[#ccff00]">Take A Screenshot of QR & Pay From Your Favourite UPI App & Enter Tarnsaction ID</div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 pt-1 font-mono text-[11px]">
-                    {/* phone pe button <a href={getAppUri('phonepe', Number(cafePayAmount))} className="py-2 bg-purple-950/60 border border-purple-500/40 text-purple-300 rounded-xl font-bold">PhonePe App</a>*/}
-                    {/* <a href={getAppUri('gpay', Number(cafePayAmount))} className="py-2 bg-blue-950/60 border border-blue-500/40 text-blue-300 rounded-xl font-bold">GPay / Paytm</a>*/}
-                  </div>
-                </div>
-
-                {/* UTR INPUT */}
-                <div className="space-y-1.5 font-mono text-xs">
-                  <label className="block text-zinc-300 font-bold uppercase">Enter UTR / Transaction ID *</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 423156789012"
-                    value={rechargeUtr}
-                    onChange={(e) => setRechargeUtr(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))}
-                    className="w-full p-3 rounded-xl bg-[#0a0a0c] border border-emerald-500/50 text-emerald-300 font-bold tracking-wider focus:outline-none focus:border-emerald-400"
-                  />
-                </div>
-              </>
-            )}
-
             <button
-              onClick={async () => {
-                const cleanAmount = Number(cafePayAmount);
-                if (!cleanAmount || cleanAmount <= 0) {
-                  showToast('Please enter a valid payment amount.', 'error', 'Invalid Amount');
-                  return;
-                }
-                if (!rechargeUtr || rechargeUtr.trim().length < 6) {
-                  showToast('Please enter a valid UTR / Transaction ID.', 'error', 'Invalid UTR');
-                  return;
-                }
-
-                setCafePayLoading(true);
-                const cashbackDiamonds = Math.floor(cleanAmount * 0.10);
-                const earnedLeaguePoints = Math.floor(cleanAmount / 10);
-
-                try {
-                  await addDoc(collection(db, 'cafe_direct_payments'), {
-                    user_id: userId,
-                    email: userEmail,
-                    customer_name: name || 'Gamer',
-                    phone: phone || '',
-                    amount: cleanAmount,
-                    cashback_diamonds: cashbackDiamonds,
-                    league_points: earnedLeaguePoints,
-                    payment_id: rechargeUtr.trim(),
-                    utr: rechargeUtr.trim(),
-                    status: 'PENDING', // Admin verify karega tab approved hoga
-                    createdAt: serverTimestamp(),
-                    created_at: new Date().toISOString()
-                  });
-
-                  showToast(`🎉 Payment submitted successfully! Pending admin verification.`, 'success', 'Submitted');
-                  setShowCafePayModal(false);
-                  setCafePayAmount('');
-                  setRechargeUtr('');
-                  fetchUserData(userEmail, userId, phone);
-                } catch (err) {
-                  console.error('Cafe payment record error:', err);
-                  showToast('Failed to submit payment. Contact support.', 'error', 'Error');
-                } finally {
-                  setCafePayLoading(false);
-                }
-              }}
-              disabled={cafePayLoading || !cafePayAmount || Number(cafePayAmount) <= 0 || !rechargeUtr || rechargeUtr.length < 6}
+              onClick={handlePayToCafeCheckout}
+              disabled={cafePayLoading || !cafePayAmount || Number(cafePayAmount) <= 0}
               className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black font-orbitron text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer shadow-[0_0_15px_rgba(16,185,129,0.4)] disabled:opacity-50"
             >
-              {cafePayLoading ? 'SUBMITTING...' : `Submit Payment for Verification`}
+              {cafePayLoading ? 'PROCESSING...' : `PAY ₹${cafePayAmount || 0} VIA RAZORPAY`}
             </button>
           </div>
         </div>

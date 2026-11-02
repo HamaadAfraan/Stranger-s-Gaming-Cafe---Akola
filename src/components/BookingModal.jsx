@@ -12,8 +12,6 @@ import {
   serverTimestamp 
 } from 'firebase/firestore';
 
-const UPI_ID = 'hamaad.afraan@ybl';
-const PAYEE_NAME = 'Strangers Gaming Cafe';
 
 const getTodayDateString = () => {
   const d = new Date();
@@ -181,10 +179,8 @@ export const BookingModal = ({
 
   const currentUser = auth.currentUser;
 
-  // AGAR LOGGED IN NAHI HAI TOH KUCH RENDER MAT KARO (NO BLINK)
   if (isOpen && !currentUser) {
     onClose();
-    // Apka login modal open karne ka custom event ya state trigger:
     window.dispatchEvent(new CustomEvent('open-login-modal'));
     return null;
   }
@@ -221,22 +217,18 @@ export const BookingModal = ({
     return now.getHours() * 60 + now.getMinutes();
   });
 
-useEffect(() => {
+  useEffect(() => {
     const checkAuthAndFetchData = async () => {
       if (isOpen) {
         try {
           const currentUser = auth.currentUser;
           
-          // GUARD CHECK: Agar user logged in nahi hai, toh modal band karo aur login trigger karo
           if (!currentUser) {
-            onClose(); // Modal close kar do
-            // Agar aapke paas global login modal kholne ka event ya function hai, 
-            // toh yahan dispatch kar sakte hain:
+            onClose();
             window.dispatchEvent(new CustomEvent('open-login-modal'));
             return;
           }
 
-          // Agar logged in hai, tabhi profile details fetch hongi
           const userId = currentUser.uid;
           try {
             const docRef = doc(db, 'profiles', userId);
@@ -304,36 +296,6 @@ useEffect(() => {
     endTime,
   });
 
-  const getStandardUpiUri = (amount) => {
-    return (
-      `upi://pay?pa=${encodeURIComponent(UPI_ID)}` +
-      `&pn=${encodeURIComponent(PAYEE_NAME)}` +
-      `&am=${amount}` +
-      `&cu=INR` +
-      `&tn=${encodeURIComponent('Cafe Booking')}`
-    );
-  };
-
-  const getAppUri = (appType, customAmount) => {
-    const payAmount = customAmount || rawTotalAmount;
-    switch (appType) {
-      case 'phonepe':
-        return `phonepe://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${payAmount}&cu=INR`;
-      case 'gpay':
-        return `tez://upi/pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${payAmount}&cu=INR`;
-      case 'paytm':
-        return `paytmmp://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${payAmount}&cu=INR`;
-      default:
-        return getStandardUpiUri(payAmount);
-    }
-  };
-
-  const getDynamicUpiQrUrl = (customAmount) => {
-    const payAmount = customAmount || rawTotalAmount;
-    const uri = getStandardUpiUri(payAmount);
-    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(uri)}`;
-  };
-
   const handleNameChange = (e) => {
     const rawValue = e.target.value.replace(/[^a-zA-Z\s]/g, '');
     setFormData((prev) => ({ ...prev, name: rawValue }));
@@ -346,26 +308,14 @@ useEffect(() => {
     }
   }; 
 
-  const handleUtrChange = (e) => {
-    const rawValue = e.target.value.replace(/[^a-zA-Z0-9\-_]/g, '');
-    if (rawValue.length <= 35) {
-      setFormData((prev) => ({ ...prev, utr: rawValue }));
-    }
-  };
-
   const isNameValid = formData.name.trim().length >= 2;
   const isPhoneValid = formData.phone.trim().replace(/[\s+\-]/g, '').length >= 7;
 
-const handleConfirmBooking = async ({ paymentMethod, finalPayAmount, utrValue }) => {
+  const handleConfirmBooking = async ({ paymentMethod, finalPayAmount }) => {
     setErrorMessage('');
 
     if (!isNameValid || !isPhoneValid) {
       setErrorMessage('Kripya apna naam aur valid mobile number bharein.');
-      return;
-    }
-
-    if (paymentMethod === 'upi' && (!utrValue || utrValue.trim().length < 6)) {
-      setErrorMessage('Kripya valid 6+ digit UTR/Transaction Ref Number darj karein.');
       return;
     }
 
@@ -374,7 +324,6 @@ const handleConfirmBooking = async ({ paymentMethod, finalPayAmount, utrValue })
       return;
     }
 
-    setIsSubmitting(true);
     const bookingId = `STR-${Math.floor(1000 + Math.random() * 9000)}`;
     const timeSlotString = `${minutesToTimeString(startTime)}\n${minutesToTimeString(endTime)}`;
     const now = new Date();
@@ -395,79 +344,111 @@ const handleConfirmBooking = async ({ paymentMethod, finalPayAmount, utrValue })
     }
 
     const bookingPrice = typeof finalPayAmount === 'number' ? finalPayAmount : rawTotalAmount;
-    
-    // Fix: Agar UPI se pay kiya toh 10% cashback diamonds milenge, Diamonds se pay kiya toh 0 cashback (cafe loss bachane ke liye!)
-    const earnedDiamonds = paymentMethod === 'upi' ? Math.floor(Number(bookingPrice) * 0.1) : 0;
 
-    let finalUtRDisplay = '';
-    if (paymentMethod === 'diamonds') {
-      finalUtRDisplay = `DIAMOND_SPEND_${bookingPrice}`;
-    } else {
-      finalUtRDisplay = utrValue.trim();
-    }
+    const executeBookingSave = async (transactionId) => {
+      setIsSubmitting(true);
+      const bookingDetails = {
+        id: bookingId,
+        user_id: currentUserId,
+        name: formData.name.trim(),
+        customer_name: formData.name.trim(),
+        phone: formData.phone.trim(),
+        email: userEmail,
+        utr: transactionId,
+        payment_method: paymentMethod,
+        bookingDate,
+        category: selectedCategory,
+        station_id: selectedCategory,
+        screen: currentStation?.hasScreens ? selectedScreen : '',
+        team: currentStation?.multiplayer ? selectedTeam : '1 Player',
+        selectedGame: selectedCategory === 'PS5' ? selectedGame : '',
+        duration: formatDurationText(endTime - startTime),
+        slot: timeSlotString,
+        slot_time: timeSlotString,
+        price: bookingPrice,
+        created_time: createdTimeString,
+        status: 'CONFIRMED',
+        createdAt: serverTimestamp(),
+      };
 
-    const bookingDetails = {
-      id: bookingId,
-      user_id: currentUserId,
-      name: formData.name.trim(),
-      customer_name: formData.name.trim(),
-      phone: formData.phone.trim(),
-      email: userEmail,
-      utr: finalUtRDisplay,
-      payment_method: paymentMethod, // Added explicit payment method flag for ledger sync
-      bookingDate,
-      category: selectedCategory,
-      station_id: selectedCategory,
-      screen: currentStation?.hasScreens ? selectedScreen : '',
-      team: currentStation?.multiplayer ? selectedTeam : '1 Player',
-      selectedGame: selectedCategory === 'PS5' ? selectedGame : '',
-      duration: formatDurationText(endTime - startTime),
-      slot: timeSlotString,
-      slot_time: timeSlotString,
-      price: bookingPrice,
-      created_time: createdTimeString,
-      status: paymentMethod === 'diamonds' ? 'CONFIRMED' : 'PENDING',
-      createdAt: serverTimestamp(),
-    };
+      try {
+        await addDoc(collection(db, 'bookings'), bookingDetails);
 
-    try {
-      await addDoc(collection(db, 'bookings'), bookingDetails);
+        if (currentUserId) {
+          let newGamerPoints = userGamerPoints;
+          let newRedeemableDiamonds = userRedeemableDiamonds;
 
-      if (currentUserId) {
-        let newGamerPoints = userGamerPoints;
-        let newRedeemableDiamonds = userRedeemableDiamonds;
+          if (paymentMethod === 'diamonds') {
+            newRedeemableDiamonds = Math.max(0, userRedeemableDiamonds - bookingPrice);
+            newGamerPoints = userGamerPoints + Math.floor(bookingPrice / 10);
+          } else {
+            const upiEarned = Math.floor(bookingPrice * 0.1);
+            newGamerPoints = userGamerPoints + Math.floor(bookingPrice / 10);
+            newRedeemableDiamonds = userRedeemableDiamonds + upiEarned;
+          }
 
-        if (paymentMethod === 'diamonds') {
-          // Fix: Diamonds se pay karne par balance me se strictly minus hoga aur koi free cashback add nahi hoga!
-          newRedeemableDiamonds = Math.max(0, userRedeemableDiamonds - bookingPrice);
-          // League points booking activity ke liye milte rahenge (+ 10 pts per 100 rs value)
-          newGamerPoints = userGamerPoints + Math.floor(bookingPrice / 10);
-        } else {
-          // UPI payment par league points aur 10% redeemable diamonds dono milenge
-          const upiEarned = Math.floor(bookingPrice * 0.1);
-          newGamerPoints = userGamerPoints + Math.floor(bookingPrice / 10);
-          newRedeemableDiamonds = userRedeemableDiamonds + upiEarned;
+          const userDocRef = doc(db, 'profiles', currentUserId);
+          await updateDoc(userDocRef, {
+            gamer_points: newGamerPoints,
+            redeemable_diamonds: newRedeemableDiamonds,
+            updated_at: new Date().toISOString()
+          });
+
+          setUserGamerPoints(newGamerPoints);
+          setUserRedeemableDiamonds(newRedeemableDiamonds);
         }
 
-        const userDocRef = doc(db, 'profiles', currentUserId);
-        await updateDoc(userDocRef, {
-          gamer_points: newGamerPoints,
-          redeemable_diamonds: newRedeemableDiamonds,
-          updated_at: new Date().toISOString()
-        });
+        if (typeof onBookingCreated === 'function') onBookingCreated(bookingDetails);
+        setConfirmedBookingDetails(bookingDetails);
+        setPaymentStep(3);
+      } catch (error) {
+        console.error('Firestore Booking error:', error);
+        setErrorMessage('Connection failed. Kripya apna internet check karke dobara koshish karein.');
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
 
-        setUserGamerPoints(newGamerPoints);
-        setUserRedeemableDiamonds(newRedeemableDiamonds);
+    if (paymentMethod === 'razorpay' || paymentMethod === 'upi') {
+      // Dynamic Key Reader from Environment Variables
+      const razorpayKeyId = import.meta.env.VITE_RAZORPAY_KEY_ID;
+      
+      if (!razorpayKeyId) {
+        setErrorMessage('Razorpay Key ID missing in environment configuration.');
+        return;
       }
 
-      if (typeof onBookingCreated === 'function') onBookingCreated(bookingDetails);
-      setConfirmedBookingDetails(bookingDetails);
-      setPaymentStep(3);
-    } catch (error) {
-      console.error('Firestore Booking error:', error);
-      setErrorMessage('Connection failed. Kripya apna internet check karke dobara koshish karein.');
-    } finally {
-      setIsSubmitting(false);
+      const options = {
+        key: razorpayKeyId,
+        amount: bookingPrice * 100,
+        currency: "INR",
+        name: "Stranger's Gaming Cafe",
+        description: `Booking - ${selectedCategory} (${formatDurationText(endTime - startTime)})`,
+        image: "/favicon.ico",
+        handler: async function (response) {
+          await executeBookingSave(response.razorpay_payment_id);
+        },
+        prefill: {
+          name: formData.name.trim(),
+          email: userEmail,
+          contact: formData.phone.trim(),
+        },
+        theme: { color: "#ccff00" },
+      };
+
+      if (window.Razorpay) {
+        try {
+          const rzp = new window.Razorpay(options);
+          rzp.open();
+        } catch (err) {
+          console.error("Razorpay open error:", err);
+          setErrorMessage('Razorpay failed to initialize. Please check your key.');
+        }
+      } else {
+        setErrorMessage('Razorpay SDK failed to load. Kripya page refresh karein.');
+      }
+    } else {
+      await executeBookingSave(`DIAMOND_SPEND_${bookingPrice}`);
     }
   };
 
@@ -560,15 +541,10 @@ const handleConfirmBooking = async ({ paymentMethod, finalPayAmount, utrValue })
               formData={formData}
               handleNameChange={handleNameChange}
               handlePhoneChange={handlePhoneChange}
-              handleUtrChange={handleUtrChange}
               isNameValid={isNameValid}
               isPhoneValid={isPhoneValid}
               errorMessage={errorMessage}
               isSubmitting={isSubmitting}
-              getAppUri={getAppUri}
-              standardUpiUri={getStandardUpiUri}
-              getDynamicUpiQrUrl={getDynamicUpiQrUrl}
-              UPI_ID={UPI_ID}
               onBack={() => setPaymentStep(1)}
               onConfirm={handleConfirmBooking}
             />
@@ -657,4 +633,3 @@ const handleConfirmBooking = async ({ paymentMethod, finalPayAmount, utrValue })
 };
 
 export default BookingModal;
-
