@@ -26,8 +26,8 @@ const BookingPayment = ({
   const [showPlatformChargeHelp, setShowPlatformChargeHelp] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('upi');
 
-  // PLATFORM CHARGE REMOVED (Set to 0 as requested)
-  const PLATFORM_FEE = 0;
+  // PLATFORM / CONVENIENCE FEE SET TO ₹10
+  const PLATFORM_FEE = 10;
   const baseAmount = Number(rawTotalAmount) || 0;
   const finalTotalAmount = baseAmount + PLATFORM_FEE;
   const finalPayAmount = finalTotalAmount;
@@ -86,20 +86,37 @@ const BookingPayment = ({
             </span>
           </div>
 
-          <div className="border-t border-white/10 pt-2 flex justify-between items-center text-sm font-bold font-orbitron text-[#ccff00]">
+          {/* BASE AMOUNT */}
+          <div className="border-t border-white/10 pt-2 flex justify-between items-center text-xs font-mono text-zinc-300">
+            <span className="text-zinc-400">Base Amount:</span>
+            <span className="text-white font-bold">₹{baseAmount}</span>
+          </div>
+
+          {/* PLATFORM / CONVENIENCE FEE */}
+          <div className="flex justify-between items-center text-xs font-mono text-zinc-300">
             <div className="flex items-center gap-1.5">
-              <span>Total Amount:</span>
-              {PLATFORM_FEE > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setShowPlatformChargeHelp(true)}
-                  title="Platform Charge Info"
-                  className="inline-flex items-center justify-center p-0.5 rounded-full text-zinc-400 hover:text-[#ccff00] hover:bg-white/10 transition-all cursor-pointer"
-                >
-                  <HelpCircle className="w-3.5 h-3.5 text-[#ccff00]" />
-                </button>
-              )}
+              <span className="text-zinc-400">Platform / Convenience Fee:</span>
+              <button
+                type="button"
+                onClick={() => setShowPlatformChargeHelp(!showPlatformChargeHelp)}
+                title="Platform Charge Info"
+                className="inline-flex items-center justify-center p-0.5 rounded-full text-zinc-400 hover:text-[#ccff00] hover:bg-white/10 transition-all cursor-pointer"
+              >
+                <HelpCircle className="w-3.5 h-3.5 text-[#ccff00]" />
+              </button>
             </div>
+            <span className="text-white font-bold">₹{PLATFORM_FEE}</span>
+          </div>
+
+          {showPlatformChargeHelp && (
+            <div className="text-[10px] text-zinc-400 bg-[#0a0a0c] p-2 rounded-lg border border-white/10 mt-1 font-mono">
+              Platform Charges !
+            </div>
+          )}
+
+          {/* TOTAL AMOUNT */}
+          <div className="border-t border-white/10 pt-2 flex justify-between items-center text-sm font-bold font-orbitron text-[#ccff00]">
+            <span>Total Amount:</span>
             <span>₹{finalTotalAmount}</span>
           </div>
         </div>
@@ -206,7 +223,7 @@ const BookingPayment = ({
           </div>
         )}
 
-        {/* RAZORPAY / DIAMONDS SUBMIT BUTTON */}
+        {/* SUBMIT BUTTON */}
         <div className="mt-5">
           <button
             type="button"
@@ -230,7 +247,7 @@ const BookingPayment = ({
               ? 'PROCESSING...'
               : paymentMethod === 'diamonds'
               ? 'REDEEM & CONFIRM'
-              : `PAY ₹${finalPayAmount} VIA RAZORPAY`}
+              : `PAY ₹{finalPayAmount} VIA RAZORPAY`}
           </button>
         </div>
       </div>

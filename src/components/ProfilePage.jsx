@@ -1521,7 +1521,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
         </div>
       )}
 
-      {/* DIAMOND RECHARGE MODAL (RAZORPAY) */}
+{/* DIAMOND RECHARGE MODAL (RAZORPAY) */}
       {showRechargeModal && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 z-[9999] overflow-y-auto" onClick={() => setShowRechargeModal(false)}>
           <div className="bg-[#12131a] border border-[#ccff00]/40 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl relative text-white my-auto max-h-[90vh] overflow-y-auto font-sans" onClick={(e) => e.stopPropagation()}>
@@ -1547,14 +1547,104 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
               </div>
             </div>
 
-            <button onClick={handleRazorpayRecharge} disabled={rechargeLoading} className="w-full py-3.5 bg-[#ccff00] hover:bg-[#b8e600] text-black font-black font-orbitron text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer shadow-[0_0_15px_rgba(204,255,0,0.3)] disabled:opacity-50">
-              {rechargeLoading ? 'PROCESSING...' : `PAY ₹${selectedPack.price} VIA RAZORPAY`}
+            {/* BREAKDOWN BOX (BASE + ₹10 PLATFORM FEE) */}
+            <div className="p-3 rounded-xl bg-[#181922] border border-white/10 space-y-2 text-xs font-mono shadow-md">
+              <div className="flex justify-between items-center text-zinc-300">
+                <span className="text-zinc-400">Pack Base Amount:</span>
+                <span className="text-white font-bold">₹{selectedPack.price}</span>
+              </div>
+
+              <div className="flex justify-between items-center text-zinc-300">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-zinc-400">Platform / Convenience Fee:</span>
+                  <span className="text-[10px] text-[#ccff00] bg-[#ccff00]/10 px-1.5 py-0.5 rounded font-bold">₹10</span>
+                </div>
+                <span className="text-white font-bold">₹10</span>
+              </div>
+
+              <div className="border-t border-white/10 pt-2 flex justify-between items-center text-sm font-bold font-orbitron text-[#ccff00]">
+                <span>Total Amount:</span>
+                <span>₹{selectedPack.price + 10}</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                const finalTotal = selectedPack.price + 10; // Including ₹10 Convenience Fee
+                setRechargeLoading(true);
+
+                const options = {
+                  key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+                  amount: finalTotal * 100, // Razorpay takes amount in paise including fee
+                  currency: "INR",
+                  name: "Stranger's Gaming Cafe",
+                  description: `Diamond Recharge - ${selectedPack.diamonds} Diamonds`,
+                  image: "/favicon.ico",
+                  handler: async function (response) {
+                    try {
+                      await addDoc(collection(db, 'diamond_recharges'), {
+                        user_id: userId,
+                        email: userEmail,
+                        customer_name: name || 'Gamer',
+                        phone: phone || '',
+                        amount: finalTotal,
+                        base_amount: selectedPack.price,
+                        platform_fee: 10,
+                        diamonds: selectedPack.diamonds,
+                        utr: response.razorpay_payment_id,
+                        status: 'APPROVED',
+                        createdAt: new Date(),
+                        created_at: new Date().toISOString()
+                      });
+
+                      const newDiamondsTotal = redeemableDiamonds + selectedPack.diamonds;
+                      if (userId) {
+                        const userRef = doc(db, 'profiles', userId);
+                        await updateDoc(userRef, {
+                          redeemable_diamonds: newDiamondsTotal,
+                          updated_at: new Date().toISOString()
+                        });
+                      }
+
+                      setRedeemableDiamonds(newDiamondsTotal);
+                      setSafeStorage('cached_redeemable_diamonds', newDiamondsTotal);
+
+                      showToast(`🎉 Success! ${selectedPack.diamonds} Diamonds added to your account!`, 'success', 'Recharge Successful');
+                      setShowRechargeModal(false);
+                      fetchUserData(userEmail, userId, phone);
+                    } catch (err) {
+                      console.error('Recharge save error:', err);
+                      showToast('Payment successful but failed to update balance. Contact cafe support.', 'error', 'Error');
+                    } finally {
+                      setRechargeLoading(false);
+                    }
+                  },
+                  prefill: {
+                    name: name || '',
+                    email: userEmail || '',
+                    contact: phone || '',
+                  },
+                  theme: { color: "#ccff00" },
+                };
+
+                if (window.Razorpay) {
+                  const rzp = new window.Razorpay(options);
+                  rzp.open();
+                } else {
+                  showToast('Razorpay SDK failed to load.', 'error', 'Error');
+                  setRechargeLoading(false);
+                }
+              }}
+              disabled={rechargeLoading}
+              className="w-full py-3.5 bg-[#ccff00] hover:bg-[#b8e600] text-black font-black font-orbitron text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer shadow-[0_0_15px_rgba(204,255,0,0.3)] disabled:opacity-50"
+            >
+              {rechargeLoading ? 'PROCESSING...' : `PAY ₹{selectedPack.price + 10} VIA RAZORPAY`}
             </button>
           </div>
         </div>
       )}
 
-      {/* PAY TO CAFE MODAL (RAZORPAY) */}
+{/* PAY TO CAFE MODAL (RAZORPAY) */}
       {showCafePayModal && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 z-[9999] overflow-y-auto" onClick={() => setShowCafePayModal(false)}>
           <div className="bg-[#12131a] border border-emerald-500/50 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl relative text-white my-auto max-h-[90vh] overflow-y-auto font-sans" onClick={(e) => e.stopPropagation()}>
@@ -1581,12 +1671,116 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
               />
             </div>
 
+            {/* BREAKDOWN BOX (BASE + ₹10 PLATFORM FEE) */}
+            {cafePayAmount && Number(cafePayAmount) > 0 && (
+              <div className="p-3 rounded-xl bg-[#181922] border border-white/10 space-y-2 text-xs font-mono shadow-md">
+                <div className="flex justify-between items-center text-zinc-300">
+                  <span className="text-zinc-400">Base Amount:</span>
+                  <span className="text-white font-bold">₹{Number(cafePayAmount)}</span>
+                </div>
+
+                <div className="flex justify-between items-center text-zinc-300">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-zinc-400">Platform / Convenience Fee:</span>
+                    <span className="text-[10px] text-[#ccff00] bg-[#ccff00]/10 px-1.5 py-0.5 rounded font-bold">₹10</span>
+                  </div>
+                  <span className="text-white font-bold">₹10</span>
+                </div>
+
+                <div className="border-t border-white/10 pt-2 flex justify-between items-center text-sm font-bold font-orbitron text-[#ccff00]">
+                  <span>Total Amount:</span>
+                  <span>₹{Number(cafePayAmount) + 10}</span>
+                </div>
+              </div>
+            )}
+
             <button
-              onClick={handlePayToCafeCheckout}
+              onClick={() => {
+                const base = Number(cafePayAmount) || 0;
+                const finalTotal = base + 10; // Adding ₹10 Convenience Fee
+                if (base <= 0) {
+                  showToast('Please enter a valid payment amount.', 'error', 'Invalid Amount');
+                  return;
+                }
+
+                setCafePayLoading(true);
+                const cashbackDiamonds = Math.floor(base * 0.10);
+                const earnedLeaguePoints = Math.floor(base / 10);
+
+                const options = {
+                  key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+                  amount: finalTotal * 100, // Razorpay takes amount in paise including fee
+                  currency: "INR",
+                  name: "Stranger's Gaming Cafe",
+                  description: `Direct Cafe Payment (Earn ${cashbackDiamonds} Diamonds)`,
+                  image: "/favicon.ico",
+                  handler: async function (response) {
+                    try {
+                      await addDoc(collection(db, 'cafe_direct_payments'), {
+                        user_id: userId,
+                        email: userEmail,
+                        customer_name: name || 'Gamer',
+                        phone: phone || '',
+                        amount: finalTotal,
+                        base_amount: base,
+                        platform_fee: 10,
+                        cashback_diamonds: cashbackDiamonds,
+                        league_points: earnedLeaguePoints,
+                        payment_id: response.razorpay_payment_id,
+                        utr: response.razorpay_payment_id,
+                        status: 'SUCCESS',
+                        createdAt: new Date(),
+                        created_at: new Date().toISOString()
+                      });
+
+                      const newDiamondsTotal = redeemableDiamonds + cashbackDiamonds;
+                      const newGamerPoints = gamerPoints + earnedLeaguePoints;
+
+                      if (userId) {
+                        const userRef = doc(db, 'profiles', userId);
+                        await updateDoc(userRef, {
+                          redeemable_diamonds: newDiamondsTotal,
+                          gamer_points: newGamerPoints,
+                          updated_at: new Date().toISOString()
+                        });
+                      }
+
+                      setRedeemableDiamonds(newDiamondsTotal);
+                      setGamerPoints(newGamerPoints);
+                      setSafeStorage('cached_redeemable_diamonds', newDiamondsTotal);
+                      setSafeStorage('cached_gamer_points', newGamerPoints);
+
+                      showToast(`🎉 Payment Successful! Earned 💎 ${cashbackDiamonds} Diamonds & 🪙 ${earnedLeaguePoints} League Pts!`, 'success', 'Cafe Payment Success');
+                      setShowCafePayModal(false);
+                      setCafePayAmount('');
+                      fetchUserData(userEmail, userId, phone);
+                    } catch (err) {
+                      console.error('Cafe payment record error:', err);
+                      showToast('Payment successful but failed to credit cashback. Contact support.', 'error', 'Error');
+                    } finally {
+                      setCafePayLoading(false);
+                    }
+                  },
+                  prefill: {
+                    name: name || '',
+                    email: userEmail || '',
+                    contact: phone || '',
+                  },
+                  theme: { color: "#ccff00" },
+                };
+
+                if (window.Razorpay) {
+                  const rzp = new window.Razorpay(options);
+                  rzp.open();
+                } else {
+                  showToast('Razorpay SDK failed to load.', 'error', 'Error');
+                  setCafePayLoading(false);
+                }
+              }}
               disabled={cafePayLoading || !cafePayAmount || Number(cafePayAmount) <= 0}
               className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black font-orbitron text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer shadow-[0_0_15px_rgba(16,185,129,0.4)] disabled:opacity-50"
             >
-              {cafePayLoading ? 'PROCESSING...' : `PAY ₹${cafePayAmount || 0} VIA RAZORPAY`}
+              {cafePayLoading ? 'PROCESSING...' : `PAY ₹${(Number(cafePayAmount) || 0) + 10} VIA RAZORPAY`}
             </button>
           </div>
         </div>
