@@ -146,13 +146,22 @@ const BookingAvailability = ({
     const durationMins = endTime - startTime;
 
     if (selectedCategory === 'PS5' && selectedGame === 'GTA 6') {
-      const hours = durationMins / 60;
+      if (durationMins === 180) {
+        if (selectedScreen?.includes('55"')) return 650;
+        return 500;
+      }
+
+      const fullHours = Math.floor(durationMins / 60);
+      const remainingMins = durationMins % 60;
+
       if (selectedScreen?.includes('55"')) {
-        if (durationMins === 30) return 150;
-        return Math.round(hours * 250);
+        let price = fullHours * 250;
+        if (remainingMins === 30) price += 150;
+        return price;
       } else {
-        if (durationMins === 30) return 120;
-        return Math.round(hours * 200);
+        let price = fullHours * 200;
+        if (remainingMins === 30) price += 120;
+        return price;
       }
     }
 
@@ -360,8 +369,8 @@ const BookingAvailability = ({
                   if (setSelectedGame) setSelectedGame('Standard');
                 }}
                 className={`py-2.5 px-3 rounded-xl font-orbitron text-xs font-bold transition-all border cursor-pointer text-left flex items-center justify-between ${isSelected
-                    ? 'bg-[#ccff00] text-black border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.45)]'
-                    : 'bg-[#181922] text-zinc-300 border-white/10 hover:border-white/30'
+                  ? 'bg-[#ccff00] text-black border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.45)]'
+                  : 'bg-[#181922] text-zinc-300 border-white/10 hover:border-white/30'
                   }`}
               >
                 <div>
@@ -402,8 +411,8 @@ const BookingAvailability = ({
                     }
                   }}
                   className={`py-2.5 px-3 rounded-xl border text-xs font-bold font-orbitron text-left cursor-pointer transition-all flex items-center gap-2.5 ${isSelected
-                      ? 'border-[#ccff00] bg-[#ccff00]/15 text-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.35)] font-black'
-                      : 'border-white/10 bg-[#181922] text-zinc-400 hover:border-white/20'
+                    ? 'border-[#ccff00] bg-[#ccff00]/15 text-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.35)] font-black'
+                    : 'border-white/10 bg-[#181922] text-zinc-400 hover:border-white/20'
                     }`}
                 >
                   {selectedCategory === 'Simulator' ? (
@@ -430,19 +439,32 @@ const BookingAvailability = ({
               type="button"
               onClick={() => setSelectedGame('Standard')}
               className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition-all cursor-pointer font-orbitron ${selectedGame === 'Standard'
-                  ? 'bg-[#ccff00] text-black border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.45)]'
-                  : 'bg-[#181922] text-zinc-300 border-white/10 hover:border-white/30'
+                ? 'bg-[#ccff00] text-black border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.45)]'
+                : 'bg-[#181922] text-zinc-300 border-white/10 hover:border-white/30'
                 }`}
             >
               Standard Games
             </button>
-            <button
+<button
               type="button"
               disabled={true}
               className="py-2.5 px-3 rounded-xl border text-xs font-bold bg-zinc-900 border-amber-500/30 text-amber-400/50 cursor-not-allowed font-orbitron flex items-center justify-center gap-1.5"
             >
               🔒 GTA 6
             </button>
+
+            {/* baadme on
+            <button
+              type="button"
+              onClick={() => setSelectedGame('GTA 6')}
+              className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition-all cursor-pointer font-orbitron ${selectedGame === 'GTA 6'
+                  ? 'bg-[#ccff00] text-black border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.45)]'
+                  : 'bg-[#181922] text-zinc-300 border-white/10 hover:border-white/30 '
+                }`}
+            >
+              🔥 GTA 6 Launch Zone
+            </button>
+            */}
           </div>
         </div>
       )}
@@ -461,8 +483,8 @@ const BookingAvailability = ({
                   key={playerOption}
                   onClick={() => setSelectedTeam(playerOption)}
                   className={`py-2.5 px-3 rounded-xl border text-center cursor-pointer transition-all font-mono text-xs ${isSelected
-                      ? 'border-[#ccff00] bg-[#ccff00]/20 text-[#ccff00] font-bold shadow-md'
-                      : 'border-white/10 bg-[#181922] text-zinc-400 hover:border-white/20'
+                    ? 'border-[#ccff00] bg-[#ccff00]/20 text-[#ccff00] font-bold shadow-md'
+                    : 'border-white/10 bg-[#181922] text-zinc-400 hover:border-white/20'
                     }`}
                 >
                   {playerOption}
@@ -507,14 +529,14 @@ const BookingAvailability = ({
                   <div
                     key={block}
                     className={`flex-1 h-full border-r border-black/30 transition-all ${isSelected
-                        ? 'bg-[#ccff00] shadow-[0_0_10px_rgba(204,255,0,0.9)]'
-                        : blockStatus === 'EXPIRED'
-                          ? 'bg-zinc-900 opacity-40'
-                          : blockStatus === 'APPROVED'
-                            ? 'bg-red-500/90'
-                            : blockStatus === 'PENDING'
-                              ? 'bg-amber-400/90'
-                              : 'bg-transparent'
+                      ? 'bg-[#ccff00] shadow-[0_0_10px_rgba(204,255,0,0.9)]'
+                      : blockStatus === 'EXPIRED'
+                        ? 'bg-zinc-900 opacity-40'
+                        : blockStatus === 'APPROVED'
+                          ? 'bg-red-500/90'
+                          : blockStatus === 'PENDING'
+                            ? 'bg-amber-400/90'
+                            : 'bg-transparent'
                       }`}
                   />
                 );
@@ -524,7 +546,7 @@ const BookingAvailability = ({
         </div>
       </div>
 
-{/* Start Slots */}
+      {/* Start Slots */}
       <div className="mb-6">
         <label className="text-xs font-mono uppercase tracking-widest text-zinc-400 font-bold block mb-2.5">
           Available Start Slots
@@ -540,15 +562,14 @@ const BookingAvailability = ({
                 key={block}
                 disabled={isOccupied}
                 onClick={() => handleStartSelect(block)}
-                className={`py-2 px-2 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-center ${
-                  isSelected
+                className={`py-2 px-2 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-center ${isSelected
                     ? 'bg-[#ccff00] text-black border-[#ccff00] font-black shadow-[0_0_15px_rgba(204,255,0,0.45)]'
                     : blockStatus === 'EXPIRED'
-                    ? 'bg-zinc-900 border-zinc-800 text-zinc-600 cursor-not-allowed line-through opacity-40'
-                    : blockStatus === 'APPROVED' || blockStatus === 'PENDING'
-                    ? 'bg-red-950/20 border-red-900/40 text-red-400/50 cursor-not-allowed line-through'
-                    : 'bg-[#181922] border-white/10 text-zinc-300 hover:border-[#ccff00] cursor-pointer'
-                }`}
+                      ? 'bg-zinc-900 border-zinc-800 text-zinc-600 cursor-not-allowed line-through opacity-40'
+                      : blockStatus === 'APPROVED' || blockStatus === 'PENDING'
+                        ? 'bg-red-950/20 border-red-900/40 text-red-400/50 cursor-not-allowed line-through'
+                        : 'bg-[#181922] border-white/10 text-zinc-300 hover:border-[#ccff00] cursor-pointer'
+                  }`}
               >
                 {minutesToTimeString(block)}
               </button>
@@ -557,7 +578,7 @@ const BookingAvailability = ({
         </div>
       </div>
 
-{/* Duration */}
+      {/* Duration */}
       {showEndPicker && startTime !== null && (
         <div className="mb-4 p-2.5 rounded-xl bg-[#181922] border border-[#ccff00]/40 shadow-[0_0_15px_rgba(204,255,0,0.12)]">
           <div className="flex items-center justify-between mb-2">
@@ -576,11 +597,10 @@ const BookingAvailability = ({
                 <button
                   key={endMins}
                   onClick={() => setEndTime(endMins)}
-                  className={`py-1.5 px-2 rounded-lg border text-xs font-bold font-mono transition-all text-center ${
-                    isSelected
+                  className={`py-1.5 px-2 rounded-lg border text-xs font-bold font-mono transition-all text-center ${isSelected
                       ? 'bg-[#ccff00] text-black border-[#ccff00] font-black shadow-[0_0_12px_rgba(204,255,0,0.45)]'
                       : 'bg-white/5 border-white/10 text-zinc-300 hover:border-[#ccff00] cursor-pointer'
-                  }`}
+                    }`}
                 >
                   <div>{formatDurationText(durationMins)}</div>
                   <span className="block text-[8px] opacity-70 font-normal mt-0.2">
@@ -593,7 +613,7 @@ const BookingAvailability = ({
         </div>
       )}
 
-{/* Bottom Sticky / Floating Action Bar */}
+      {/* Bottom Sticky / Floating Action Bar */}
       {startTime !== null && endTime !== null && (
         <div className="sticky bottom-3 mt-6 bg-[#181922]/95 backdrop-blur-md border border-white/15 p-3 rounded-2xl z-40 flex items-center justify-between shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
           <div>

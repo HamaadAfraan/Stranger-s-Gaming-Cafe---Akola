@@ -125,6 +125,12 @@ const calculateBookingPrice = ({
   const totalMinutes = endTime - startTime;
 
   if (selectedCategory === 'PS5' && selectedGame === 'GTA 6') {
+    // Exact 3 Hour (180 mins) Fixed Package Rates
+    if (totalMinutes === 180) {
+      if (selectedScreen === '55" VIP') return 650; // Ultimate Edition
+      return 500; // Standard Edition (43")
+    }
+
     const fullHours = Math.floor(totalMinutes / 60);
     const remainingMins = totalMinutes % 60;
 
