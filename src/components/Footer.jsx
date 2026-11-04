@@ -7,7 +7,7 @@ export const Footer = () => {
         
         {/* Cafe Title & Branding */}
         <p className="font-black font-orbitron text-white text-sm sm:text-base md:text-lg tracking-wider uppercase">
-          STRANGER'S <span className="text-[#ccff00] drop-shadow-[0_0_12px_rgba(204,255,0,0.4)]">GAMING CAFE</span>
+          STRANGER'S <span className="text-[#ccff00] drop-shadow-[0_0_12px_rgba(204,255,0,0.4)]">GAMING CAFE</span> AKOLA
         </p>
         
         <p className="text-[10px] sm:text-[11px] text-zinc-500 tracking-wide">

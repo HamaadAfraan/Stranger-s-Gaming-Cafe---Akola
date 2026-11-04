@@ -29,13 +29,13 @@ export const Location = () => {
       {/* Header */}
       <div className="mb-6 sm:mb-10 text-center">
         <span className="text-[#ccff00] text-[10px] sm:text-xs font-bold uppercase tracking-widest block mb-1 font-mono">
-          BILL MART MALL AKOLA • GAMING LOUNGE LOCATION
+          GAMING ZONE • BILL MART AKOLA 
         </span>
         <h2 className="text-2xl sm:text-5xl font-black uppercase tracking-tight font-orbitron text-white">
           VISIT <span className="text-[#ccff00] drop-shadow-[0_0_15px_rgba(204,255,0,0.3)]">STRANGER'S GAMING CAFE</span>
         </h2>
         <p className="text-gray-400 text-xs sm:text-sm mt-1.5 max-w-lg mx-auto leading-relaxed font-mono">
-          Located at Bill Mart Mall, Akola. Drop in for high-speed esports sessions, PS5 gaming, and racing simulators.
+          Located at Bill Mart Mall, Akola. Drop in For High-Speed Esports Sessions, PS5 Gaming, and Racing Simulators.
         </p>
       </div>
 
@@ -51,7 +51,7 @@ export const Location = () => {
               </div>
               <div className="min-w-0">
                 <h4 className="font-bold text-sm sm:text-lg text-white font-orbitron">Address</h4>
-                <p className="text-red-200 italic uppercase text-xs leading-relaxed mt-0.5">
+                <p className="text-gray-300 uppercase text-xs leading-relaxed mt-0.5 font-mono">
                   Stranger's Gaming Cafe, 3rd Floor, Bill Mart Mall, Washim Bypass Road, Akola, Maharashtra.
                 </p>
               </div>
@@ -62,11 +62,40 @@ export const Location = () => {
               <div className="p-2 sm:p-3 bg-[#ccff00]/10 border border-[#ccff00]/30 rounded-xl sm:rounded-2xl shrink-0 mt-0.5">
                 <Navigation className="w-4 h-4 sm:w-6 sm:h-6 text-[#ccff00]" />
               </div>
-              <div className="min-w-0">
-                <h4 className="font-bold text-sm sm:text-lg text-white font-orbitron">Timings</h4>
-                <p className="text-[#ccff00] text-xs sm:text-sm mt-0.5 font-mono font-bold whitespace-nowrap overflow-x-auto">
-                  Daily 12PM - 10PM <span className="text-gray-300 font-normal">(Fri 3PM - 10PM)</span>
-                </p>
+              <div className="min-w-0 w-full">
+                <h4 className="font-bold text-sm sm:text-lg text-white font-orbitron mb-2">
+                  Timings
+                </h4>
+                <div className="space-y-1 text-xs sm:text-sm font-mono">
+                  <div className="flex justify-between border-b border-white/10 pb-1">
+                    <span className="text-gray-400">Monday</span>
+                    <span className="text-[#ccff00] font-bold">4:00 PM - 10:00 PM</span>
+                  </div>
+                  <div className="flex justify-between border-b border-white/10 pb-1">
+                    <span className="text-gray-400">Tuesday</span>
+                    <span className="text-[#ccff00] font-bold">12:00 PM - 10:00 PM</span>
+                  </div>
+                  <div className="flex justify-between border-b border-white/10 pb-1">
+                    <span className="text-gray-400">Wednesday</span>
+                    <span className="text-[#ccff00] font-bold">12:00 PM - 10:00 PM</span>
+                  </div>
+                  <div className="flex justify-between border-b border-white/10 pb-1">
+                    <span className="text-gray-400">Thursday</span>
+                    <span className="text-[#ccff00] font-bold">12:00 PM - 10:00 PM</span>
+                  </div>
+                  <div className="flex justify-between border-b border-white/10 pb-1">
+                    <span className="text-gray-400">Friday</span>
+                    <span className="text-[#ccff00] font-bold">2:00 PM - 10:00 PM</span>
+                  </div>
+                  <div className="flex justify-between border-b border-white/10 pb-1">
+                    <span className="text-gray-400">Saturday</span>
+                    <span className="text-[#ccff00] font-bold">12:00 PM - 10:00 PM</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Sunday</span>
+                    <span className="text-[#ccff00] font-bold">12:00 PM - 10:00 PM</span>
+                  </div>
+                </div>
               </div>
             </div>
 

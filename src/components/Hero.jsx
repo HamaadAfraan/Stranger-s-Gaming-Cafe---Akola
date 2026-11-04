@@ -28,7 +28,7 @@ export const Hero = ({ onOpenBooking }) => {
 
       {/* Hero Subtitle with Local Keywords */}
       <p className="text-gray-400 text-xs sm:text-base md:text-lg max-w-2xl sm:max-w-3xl mx-auto mb-6 sm:mb-10 font-medium leading-relaxed px-1 sm:px-2 font-mono">
-        Play More. Rank Higher. Experience Akola's premier <span className="text-white font-bold">gaming cafe in Bill Mart Mall</span> featuring <span className="text-white font-bold">PS5 VIP gaming lounge</span>, <span className="text-white font-bold">200Hz PC esports arena</span>, <span className="text-white font-bold">pro racing simulator</span> & <span className="text-white font-bold">PS4 co-op zone</span>.
+        Play More. Rank Higher. Experience Akola's Premier <span className="text-white font-bold">Gaming Cafe in Bill Mart Mall</span> Featuring <span className="text-white font-bold">PS5 VIP Gaming Lounge</span>, <span className="text-white font-bold">200Hz PC Esports Arena</span>, <span className="text-white font-bold">Pro Racing Simulator</span> & <span className="text-white font-bold">PS4 Co-Op Zone</span>.
       </p>
 
       {/* Call to Action Buttons */}

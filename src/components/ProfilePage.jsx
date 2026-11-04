@@ -1656,7 +1656,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
             </div>
 
             <div className="bg-[#181922] p-4 rounded-xl border border-emerald-500/30 text-center space-y-2">
-              <p className="text-xs text-zinc-300 font-mono">Cafe par visit karke pay karne par milega:</p>
+              <p className="text-xs text-zinc-300 font-mono">Pay Your Bill Directly at the Cafe Counter</p>
               <div className="text-sm font-black font-orbitron text-[#ccff00]">💎 10% Redeemable Diamond Cashback</div>
             </div>
 

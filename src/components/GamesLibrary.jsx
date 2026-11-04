@@ -26,7 +26,7 @@ const PLAYER_COUNTS = ['All', '1P', '2P', '3P-4P'];
 const GAMES_DATA = [
   /*
   {
-    id: 2,
+    id: 1,
     name: "GTA 6",
     genre: "Action/Adventure",
     players: "1P",

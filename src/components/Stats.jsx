@@ -2,7 +2,7 @@ import React from 'react';
 
 export const Stats = () => {
   const stats = [
-    { num: "#1", label: "FLAGSHIP LOCATION" },
+    { num: "#1", label: "Game Zone In Akola" },
     { num: "2K 200Hz", label: "COMPETITIVE PANELS FOR PCS" },
     { num: "4K 120Hz", label: "PREMIUM tvS FOR PS5 & PS4" },
     { num: "G29", label: "SIMULATOR SETUP" },
