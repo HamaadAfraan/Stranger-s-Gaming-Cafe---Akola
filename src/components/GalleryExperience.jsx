@@ -1,36 +1,60 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Sparkles, ShieldCheck, Wifi, Wind, Coffee, Volume2 } from 'lucide-react';
+import ps5VipImage from '../assets/library/ps5-vip.jpg';
+import esportsImage from '../assets/library/pro-pc.jpg';
+import pxnImage from '../assets/library/pxn-g29.jpg';
+import teaCoffeeImage from '../assets/library/tea-coffe.jpg';
 
 export const GalleryExperience = () => {
   const [activeTab, setActiveTab] = useState('all'); // 'all', 'photos', 'videos', 'amenities'
+  const videoRef = useRef(null);
+
+  // Handle video click: Enter Fullscreen and set volume to 50% (0.5)
+  const handleVideoClick = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    // Unmute and set volume to 50% on click
+    video.muted = false;
+    video.volume = 0.5;
+
+    // Request Fullscreen
+    if (video.requestFullscreen) {
+      video.requestFullscreen();
+    } else if (video.webkitRequestFullscreen) { /* Safari */
+      video.webkitRequestFullscreen();
+    } else if (video.msRequestFullscreen) { /* IE/Edge */
+      video.msRequestFullscreen();
+    }
+  };
 
   const mediaItems = [
     {
       type: 'image',
       title: 'PS5 VIP Lounge (4K QLED Displays)',
       category: 'photos',
-      url: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=1000&auto=format&fit=crop',
+      url: ps5VipImage,
       badge: 'PS5 VIP BAY'
     },
     {
       type: 'image',
       title: 'Pro Esports PC Arena (200Hz)',
       category: 'photos',
-      url: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1000&auto=format&fit=crop',
+      url: esportsImage,
       badge: 'HIGH-END RIGS'
     },
     {
       type: 'image',
       title: 'Pro Racing Simulators (PXN & Logitech)',
       category: 'photos',
-      url: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=1000&auto=format&fit=crop',
+      url: pxnImage,
       badge: 'SIMULATOR BAY'
     },
     {
       type: 'video',
       title: 'Stranger\'s Gaming Cafe Cinematic Walkthrough',
       category: 'videos',
-      url: 'https://www.youtube.com/embed/Om7k2z9Q5Ks', 
+      url: 'https://res.cloudinary.com/fxg5jmee/video/upload/v1793888690/Cafe_Walking.mp4', 
       badge: 'CAFE TOUR'
     },
     {
@@ -44,53 +68,53 @@ export const GalleryExperience = () => {
       type: 'image',
       title: 'Cafe Desire Instant Beverage Bar',
       category: 'photos',
-      url: 'https://images.unsplash.com/photo-1509785307050-d4066910ec1e?q=80&w=1000&auto=format&fit=crop',
+      url: teaCoffeeImage,
       badge: 'REFRESHMENTS'
     }
   ];
 
   const amenities = [
-    { 
-      icon: <Wind className="w-6 h-6 text-[#ccff00]" />, 
-      title: 'Dual Daikin 4-Star ACs', 
-      desc: 'Powered by twin 1.5-ton Daikin air conditioners maintained at a crisp 24°C–25°C to handle Akola heat during marathon sessions.' 
+    {
+      icon: <Wind className="w-6 h-6 text-[#ccff00]" />,
+      title: 'Dual Daikin 4-Star ACs',
+      desc: 'Powered by twin 1.5-ton Daikin air conditioners maintained at a crisp 24°C–25°C to handle Akola heat during marathon sessions.'
     },
-    { 
-      icon: <Wifi className="w-6 h-6 text-[#ccff00]" />, 
-      title: 'Ultra-Low Ping Fiber Network', 
-      desc: 'Dedicated high-speed broadband configured with ASTER multi-seat architecture for zero packet loss in competitive BGMI & Valorant.' 
+    {
+      icon: <Wifi className="w-6 h-6 text-[#ccff00]" />,
+      title: 'Ultra-Low Ping Fiber Network',
+      desc: 'Dedicated high-speed broadband configured with ASTER multi-seat architecture for zero packet loss in competitive BGMI & Valorant.'
     },
-    { 
-      icon: <Coffee className="w-6 h-6 text-[#ccff00]" />, 
-      title: 'Cafe Desire VM20 Vending Bar', 
-      desc: 'Instant Cardamom tea and Nescafé coffee served fresh in half (65ml) & full (130ml) cups to keep your energy levels peaked.' 
+    {
+      icon: <Coffee className="w-6 h-6 text-[#ccff00]" />,
+      title: 'Cafe Desire VM20 Vending Bar',
+      desc: 'Instant Cardamom tea and Nescafé coffee served fresh in half (65ml) & full (130ml) cups to keep your energy levels peaked.'
     },
-    { 
-      icon: <ShieldCheck className="w-6 h-6 text-[#ccff00]" />, 
-      title: 'Ergonomic Gaming Stations', 
-      desc: 'Equipped with premium 4-finger full-gyro iPhone setups, mechanical keyboards, and cushioned gaming armchairs.' 
+    {
+      icon: <ShieldCheck className="w-6 h-6 text-[#ccff00]" />,
+      title: 'Ergonomic Gaming Stations',
+      desc: 'Equipped with premium 4-finger full-gyro iPhone setups, mechanical keyboards, and cushioned gaming armchairs.'
     },
-    { 
-      icon: <Volume2 className="w-6 h-6 text-[#ccff00]" />, 
-      title: 'Spatial Surround Audio', 
-      desc: 'High-fidelity gaming headsets and immersive acoustic setups for pinpoint footsteps and crystal-clear voice comms.' 
+    {
+      icon: <Volume2 className="w-6 h-6 text-[#ccff00]" />,
+      title: 'Spatial Surround Audio',
+      desc: 'High-fidelity gaming headsets and immersive acoustic setups for pinpoint footsteps and crystal-clear voice comms.'
     },
-    { 
-      icon: <Sparkles className="w-6 h-6 text-[#ccff00]" />, 
-      title: 'Custom Neon Heartbeat Wall', 
-      desc: 'Handcrafted 5-meter neon light installation across an 8ft gaming wall delivering an unmatched esports aesthetic.' 
+    {
+      icon: <Sparkles className="w-6 h-6 text-[#ccff00]" />,
+      title: 'Custom Neon Heartbeat Wall',
+      desc: 'Handcrafted 5-meter neon light installation across an 8ft gaming wall delivering an unmatched esports aesthetic.'
     }
   ];
 
-  const filteredMedia = activeTab === 'amenities' 
-    ? [] 
-    : activeTab === 'all' 
-    ? mediaItems 
-    : mediaItems.filter(item => item.category === activeTab);
+  const filteredMedia = activeTab === 'amenities'
+    ? []
+    : activeTab === 'all'
+      ? mediaItems
+      : mediaItems.filter(item => item.category === activeTab);
 
   return (
     <section id="gallery" className="py-16 sm:py-24 px-3.5 sm:px-6 max-w-7xl mx-auto font-sans border-t border-white/15 bg-[#0a0a0c] text-white">
-      
+
       {/* Header */}
       <div className="text-center mb-10 sm:mb-14">
         <span className="bg-[#ccff00]/10 text-[#ccff00] border border-[#ccff00]/30 text-[10px] sm:text-xs font-black px-3.5 py-1.5 rounded-full uppercase tracking-widest mb-3 inline-block font-mono shadow-[0_0_12px_rgba(204,255,0,0.15)]">
@@ -143,7 +167,7 @@ export const GalleryExperience = () => {
         /* Media Photos & Videos Grid */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 animate-fadeIn">
           {filteredMedia.map((item, idx) => (
-            <div 
+            <div
               key={idx}
               className="bg-[#101014] border border-white/10 hover:border-[#ccff00]/40 rounded-2xl sm:rounded-3xl overflow-hidden group shadow-xl flex flex-col justify-between transition-all"
             >
@@ -153,13 +177,18 @@ export const GalleryExperience = () => {
                 </span>
 
                 {item.type === 'video' ? (
-                  <iframe
+                  <video
+                    ref={videoRef}
                     src={item.url}
                     title={item.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  ></iframe>
+                    className="w-full h-full object-cover group-hover:scale-105 transition duration-500 cursor-pointer"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    controls={false}
+                    onClick={handleVideoClick}
+                  ></video>
                 ) : (
                   <img
                     src={item.url}
