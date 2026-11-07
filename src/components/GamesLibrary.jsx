@@ -33,7 +33,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['ps5-vip-55', 'ps5-reg-43'],
     description: "Experience the open-world action and adventure of the next installment in the Grand Theft Auto series.",
-    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419701/gta_v.mov",
+    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1793976885/gta-6.mov",
     coverImage: getCoverImage("gta-6.avif")
   },
   */

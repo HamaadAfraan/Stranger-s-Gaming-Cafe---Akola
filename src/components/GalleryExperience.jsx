@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Sparkles, ShieldCheck, Wifi, Wind, Coffee, Volume2 } from 'lucide-react';
+import { Sparkles, ShieldCheck, Wifi, Wind, Coffee, Volume2, Loader2 } from 'lucide-react';
 import ps5VipImage from '../assets/library/ps5-vip.jpg';
 import esportsImage from '../assets/library/pro-pc.jpg';
 import pxnImage from '../assets/library/pxn-g29.jpg';
@@ -7,6 +7,7 @@ import teaCoffeeImage from '../assets/library/tea-coffe.jpg';
 
 export const GalleryExperience = () => {
   const [activeTab, setActiveTab] = useState('all'); // 'all', 'photos', 'videos', 'amenities'
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const videoRef = useRef(null);
 
   // Handle video click: Enter Fullscreen and set volume to 50% (0.5)
@@ -171,24 +172,39 @@ export const GalleryExperience = () => {
               key={idx}
               className="bg-[#101014] border border-white/10 hover:border-[#ccff00]/40 rounded-2xl sm:rounded-3xl overflow-hidden group shadow-xl flex flex-col justify-between transition-all"
             >
-              <div className="relative aspect-video overflow-hidden bg-zinc-900">
+              <div className="relative aspect-video overflow-hidden bg-zinc-900 flex items-center justify-center">
                 <span className="absolute top-3 left-3 z-10 bg-black/85 backdrop-blur-md border border-[#ccff00]/30 text-[#ccff00] text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider font-mono shadow-md">
                   {item.badge}
                 </span>
 
                 {item.type === 'video' ? (
-                  <video
-                    ref={videoRef}
-                    src={item.url}
-                    title={item.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition duration-500 cursor-pointer"
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    controls={false}
-                    onClick={handleVideoClick}
-                  ></video>
+                  <>
+                    {/* Glowing Cyberpunk Gradient Background + Loader jab tak video load na ho */}
+                    {!isVideoLoaded && (
+                      <div className="absolute inset-0 bg-gradient-to-br from-[#121216] via-[#1a1a24] to-[#0e0e12] flex flex-col items-center justify-center z-0 gap-3">
+                        {/* Subtle Glow Aura behind loader */}
+                        <div className="absolute w-20 h-20 bg-[#ccff00]/10 rounded-full blur-xl animate-pulse"></div>
+                        <Loader2 className="w-7 h-7 text-[#ccff00] animate-spin relative z-10" />
+                        <span className="text-[10px] text-[#ccff00]/80 font-mono tracking-widest uppercase relative z-10 font-bold">
+                          Loading Cafe Tour...
+                        </span>
+                      </div>
+                    )}
+                    <video
+                      ref={videoRef}
+                      src={item.url}
+                      title={item.title}
+                      className={`w-full h-full object-cover group-hover:scale-105 transition duration-500 cursor-pointer ${isVideoLoaded ? 'opacity-100' : 'opacity-0'}`}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="auto"
+                      controls={false}
+                      onLoadedData={() => setIsVideoLoaded(true)}
+                      onClick={handleVideoClick}
+                    ></video>
+                  </>
                 ) : (
                   <img
                     src={item.url}
