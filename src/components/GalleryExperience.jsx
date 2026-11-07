@@ -19,12 +19,20 @@ export const GalleryExperience = () => {
     video.muted = false;
     video.volume = 0.5;
 
-    // Request Fullscreen
+    // Mobile Play safety trigger
+    video.play().catch(() => { });
+
+    // Fullscreen Cross-Browser Handling
     if (video.requestFullscreen) {
       video.requestFullscreen();
-    } else if (video.webkitRequestFullscreen) { /* Safari */
+    } else if (video.webkitEnterFullscreen) {
+      /* iPhones / iOS Safari require this specific method */
+      video.webkitEnterFullscreen();
+    } else if (video.webkitRequestFullscreen) {
+      /* Chrome / Safari desktop & older Android */
       video.webkitRequestFullscreen();
-    } else if (video.msRequestFullscreen) { /* IE/Edge */
+    } else if (video.msRequestFullscreen) {
+      /* IE/Edge */
       video.msRequestFullscreen();
     }
   };
@@ -55,7 +63,7 @@ export const GalleryExperience = () => {
       type: 'video',
       title: 'Stranger\'s Gaming Cafe Cinematic Walkthrough',
       category: 'videos',
-      url: 'https://res.cloudinary.com/fxg5jmee/video/upload/v1793888690/Cafe_Walking.mp4', 
+      url: 'https://res.cloudinary.com/fxg5jmee/video/upload/v1793888690/Cafe_Walking.mp4',
       badge: 'CAFE TOUR'
     },
     {
@@ -139,11 +147,10 @@ export const GalleryExperience = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition cursor-pointer font-orbitron ${
-                activeTab === tab.id
+              className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition cursor-pointer font-orbitron ${activeTab === tab.id
                   ? 'bg-[#ccff00] text-black shadow-lg shadow-[#ccff00]/25 scale-105 font-black'
                   : 'bg-[#101014] border border-white/10 text-zinc-400 hover:bg-white/10 hover:text-white font-mono'
-              }`}
+                }`}
             >
               {tab.label}
             </button>
