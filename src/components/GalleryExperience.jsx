@@ -1,41 +1,113 @@
 import React, { useState, useRef } from 'react';
-import { Sparkles, ShieldCheck, Wifi, Wind, Coffee, Volume2, Loader2, Play } from 'lucide-react';
+import { Sparkles, ShieldCheck, Wifi, Wind, Coffee, Volume2 } from 'lucide-react';
 import ps5VipImage from '../assets/library/ps5-vip.jpg';
 import esportsImage from '../assets/library/pro-pc.jpg';
 import pxnImage from '../assets/library/pxn-g29.jpg';
 import teaCoffeeImage from '../assets/library/tea-coffe.jpg';
 
+const isVideoUrl = (url) => {
+  if (!url) return false;
+  const str = String(url).toLowerCase();
+  return str.includes('.mp4') || str.includes('.mov') || str.includes('cloudinary');
+};
+
+// Modal Video Player Component with Loading Spinner
+const ModalVideoPlayer = ({ mediaUrl, title }) => {
+  const [isLoading, setIsLoading] = useState(true);
+
+  return (
+    <div className="relative h-52 sm:h-72 w-full shrink-0 bg-black">
+      {isLoading && (
+        <div className="absolute inset-0 bg-gradient-to-br from-[#121216] via-[#1a1a24] to-[#0e0e12] flex flex-col items-center justify-center z-10 space-y-2">
+          <div className="w-8 h-8 border-3 border-[#ccff00] border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-[10px] text-[#ccff00] font-mono tracking-wider uppercase font-bold">
+            Loading Video...
+          </span>
+        </div>
+      )}
+      <video
+        src={mediaUrl}
+        autoPlay
+        loop
+        muted
+        playsInline
+        onLoadedData={() => setIsLoading(false)}
+        onPlaying={() => setIsLoading(false)}
+        className="w-full h-full object-cover pointer-events-none"
+      />
+    </div>
+  );
+};
+
+// Individual Media Card Component
+const MediaCard = ({ item, onOpenModal }) => {
+  const videoRef = useRef(null);
+  const [isVideoLoading, setIsVideoLoading] = useState(true);
+  const isVideo = item.type === 'video';
+
+  return (
+    <div
+      onClick={() => isVideo && onOpenModal(item)}
+      className={`bg-[#101014] border border-white/10 rounded-2xl sm:rounded-3xl overflow-hidden group shadow-lg flex flex-col justify-between transition-all duration-300 ${
+        isVideo ? 'hover:border-[#ccff00]/50 cursor-pointer' : ''
+      }`}
+    >
+      <div className="relative aspect-video overflow-hidden bg-zinc-900 flex items-center justify-center">
+        <span className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 z-20 bg-black/80 backdrop-blur-md text-[#ccff00] border border-[#ccff00]/30 text-[9px] sm:text-[10px] font-bold px-2.5 py-1 rounded-lg uppercase tracking-wider font-mono shadow-md">
+          {item.badge}
+        </span>
+
+        {isVideo ? (
+          <>
+            {isVideoLoading && (
+              <div className="absolute inset-0 bg-gradient-to-br from-[#121216] via-[#1a1a24] to-[#0e0e12] flex flex-col items-center justify-center z-10 space-y-2">
+                <div className="w-7 h-7 border-3 border-[#ccff00] border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-[9px] text-[#ccff00] font-mono tracking-wider uppercase font-bold">
+                  Loading Tour...
+                </span>
+              </div>
+            )}
+            <video
+              ref={videoRef}
+              src={item.url}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+              onLoadedData={() => setIsVideoLoading(false)}
+              onPlaying={() => setIsVideoLoading(false)}
+              className="w-full h-full object-cover group-hover:scale-105 transition duration-500 pointer-events-none"
+            />
+          </>
+        ) : (
+          <img
+            src={item.url}
+            alt={item.title}
+            className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
+          />
+        )}
+      </div>
+
+      <div className="p-3.5 sm:p-5 flex-1 flex flex-col justify-between">
+        <div>
+          <h3 className="text-sm sm:text-base font-black font-orbitron text-white group-hover:text-[#ccff00] transition line-clamp-1">
+            {item.title}
+          </h3>
+          <p className="text-[11px] text-zinc-400 mt-1 font-mono line-clamp-2">
+            Engineered for hardcore gamers and casual squads at Stranger's Gaming Cafe, Bill Mart Mall.
+          </p>
+        </div>
+
+        {/* Extra button hata diya hai, photos aur videos dono clean lagenge */}
+      </div>
+    </div>
+  );
+};
+
 export const GalleryExperience = () => {
   const [activeTab, setActiveTab] = useState('all'); // 'all', 'photos', 'videos', 'amenities'
-  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
-  const videoRef = useRef(null);
-
-  // Handle video click: Enter Fullscreen and set volume to 50% (0.5)
-  const handleVideoClick = () => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    // Unmute and set volume to 50% on click
-    video.muted = false;
-    video.volume = 0.5;
-
-    // Mobile Play safety trigger
-    video.play().catch(() => { });
-
-    // Fullscreen Cross-Browser Handling
-    if (video.requestFullscreen) {
-      video.requestFullscreen();
-    } else if (video.webkitEnterFullscreen) {
-      /* iPhones / iOS Safari require this specific method */
-      video.webkitEnterFullscreen();
-    } else if (video.webkitRequestFullscreen) {
-      /* Chrome / Safari desktop & older Android */
-      video.webkitRequestFullscreen();
-    } else if (video.msRequestFullscreen) {
-      /* IE/Edge */
-      video.msRequestFullscreen();
-    }
-  };
+  const [activeModalItem, setActiveModalItem] = useState(null);
 
   const mediaItems = [
     {
@@ -63,7 +135,7 @@ export const GalleryExperience = () => {
       type: 'video',
       title: 'Stranger\'s Gaming Cafe Cinematic Walkthrough',
       category: 'videos',
-      url: 'https://res.cloudinary.com/fxg5jmee/video/upload/v1793888690/Cafe_Walking.mp4',
+      url: 'https://res.cloudinary.com/fxg5jmee/video/upload/v1793888690/Cafe_Walking.mp4', 
       badge: 'CAFE TOUR'
     },
     {
@@ -147,10 +219,11 @@ export const GalleryExperience = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition cursor-pointer font-orbitron ${activeTab === tab.id
+              className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition cursor-pointer font-orbitron ${
+                activeTab === tab.id
                   ? 'bg-[#ccff00] text-black shadow-lg shadow-[#ccff00]/25 scale-105 font-black'
                   : 'bg-[#101014] border border-white/10 text-zinc-400 hover:bg-white/10 hover:text-white font-mono'
-                }`}
+              }`}
             >
               {tab.label}
             </button>
@@ -175,71 +248,54 @@ export const GalleryExperience = () => {
         /* Media Photos & Videos Grid */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 animate-fadeIn">
           {filteredMedia.map((item, idx) => (
-            <div
-              key={idx}
-              className="bg-[#101014] border border-white/10 hover:border-[#ccff00]/40 rounded-2xl sm:rounded-3xl overflow-hidden group shadow-xl flex flex-col justify-between transition-all"
+            <MediaCard key={idx} item={item} onOpenModal={setActiveModalItem} />
+          ))}
+        </div>
+      )}
+
+      {/* Modal Popup Details */}
+      {activeModalItem && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 font-sans animate-fadeIn">
+          <div className="bg-[#101014] border border-[#ccff00]/40 rounded-2xl max-w-lg w-full overflow-hidden shadow-[0_0_30px_rgba(204,255,0,0.2)] max-h-[90vh] flex flex-col relative">
+            
+            {/* Round Close Button */}
+            <button
+              onClick={() => setActiveModalItem(null)}
+              className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 w-11 h-11 flex items-center justify-center bg-black/90 backdrop-blur-md text-white border-2 border-white/30 rounded-full hover:bg-[#ccff00] hover:text-black hover:border-[#ccff00] transition-all cursor-pointer z-50 shadow-2xl text-lg font-black"
+              aria-label="Close modal"
             >
-              <div className="relative aspect-video overflow-hidden bg-zinc-900 flex items-center justify-center">
-                <span className="absolute top-3 left-3 z-10 bg-black/85 backdrop-blur-md border border-[#ccff00]/30 text-[#ccff00] text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider font-mono shadow-md">
-                  {item.badge}
+              ✕
+            </button>
+
+            <div className="relative w-full">
+              <ModalVideoPlayer mediaUrl={activeModalItem.url} title={activeModalItem.title} />
+            </div>
+
+            <div className="p-4 sm:p-5 space-y-3.5 sm:space-y-4 overflow-y-auto">
+              <div>
+                <span className="bg-[#ccff00]/10 border border-[#ccff00]/30 text-[#ccff00] text-[10px] font-bold px-2.5 py-0.5 rounded font-mono uppercase">
+                  {activeModalItem.badge}
                 </span>
-
-                {item.type === 'video' ? (
-                  <>
-                    {/* Glowing Cyberpunk Gradient Background + Loader jab tak video load na ho */}
-                    {!isVideoLoaded && (
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#121216] via-[#1a1a24] to-[#0e0e12] flex flex-col items-center justify-center z-0 gap-3">
-                        <div className="absolute w-20 h-20 bg-[#ccff00]/10 rounded-full blur-xl animate-pulse"></div>
-                        <Loader2 className="w-7 h-7 text-[#ccff00] animate-spin relative z-10" />
-                        <span className="text-[10px] text-[#ccff00]/80 font-mono tracking-widest uppercase relative z-10 font-bold">
-                          Loading Cafe Tour...
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Interactive Tap/Click Overlay for Mobile Fullscreen Trigger */}
-                    <div 
-                      onClick={handleVideoClick}
-                      className="absolute inset-0 z-20 cursor-pointer flex items-center justify-center bg-black/20 hover:bg-black/10 transition group/play"
-                    >
-                      <div className="w-12 h-12 rounded-full bg-[#ccff00]/90 text-black flex items-center justify-center shadow-[0_0_20px_rgba(204,255,0,0.5)] transform group-hover/play:scale-110 transition">
-                        <Play className="w-6 h-6 fill-black ml-0.5" />
-                      </div>
-                    </div>
-
-                    <video
-                      ref={videoRef}
-                      src={item.url}
-                      title={item.title}
-                      className={`w-full h-full object-cover group-hover:scale-105 transition duration-500 ${isVideoLoaded ? 'opacity-100' : 'opacity-0'}`}
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      preload="auto"
-                      controls={false}
-                      onLoadedData={() => setIsVideoLoaded(true)}
-                    ></video>
-                  </>
-                ) : (
-                  <img
-                    src={item.url}
-                    alt={item.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
-                  />
-                )}
+                <h3 className="text-lg sm:text-xl font-black text-white font-orbitron mt-2">
+                  {activeModalItem.title}
+                </h3>
               </div>
 
-              <div className="p-4 sm:p-5">
-                <h3 className="text-sm sm:text-base font-black font-orbitron text-white group-hover:text-[#ccff00] transition">
-                  {item.title}
-                </h3>
-                <p className="text-[11px] text-zinc-400 mt-1 font-mono">
-                  Engineered for hardcore gamers and casual squads at Stranger's Gaming Cafe, Bill Mart Mall.
+              <div className="bg-[#0a0a0c] p-3 rounded-xl border border-white/5">
+                <h4 className="text-[10px] sm:text-[11px] font-mono uppercase text-gray-400 mb-1">Highlight Info:</h4>
+                <p className="text-xs text-gray-300 leading-relaxed font-mono">
+                  Engineered for hardcore gamers and casual squads at Stranger's Gaming Cafe, Bill Mart Mall, Akola. Experience ultra-low ping networking and 4K visuals.
                 </p>
               </div>
+
+              <button
+                onClick={() => setActiveModalItem(null)}
+                className="w-full py-3 bg-[#ccff00] hover:bg-[#b8e600] text-black font-black text-xs uppercase tracking-widest rounded-xl transition cursor-pointer font-orbitron shadow-lg shadow-[#ccff00]/20"
+              >
+                Close Showcase
+              </button>
             </div>
-          ))}
+          </div>
         </div>
       )}
 
