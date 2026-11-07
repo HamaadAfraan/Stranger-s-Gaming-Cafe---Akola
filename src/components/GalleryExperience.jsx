@@ -11,35 +11,44 @@ const isVideoUrl = (url) => {
   return str.includes('.mp4') || str.includes('.mov') || str.includes('cloudinary');
 };
 
-// Modal Video Player Component with Loading Spinner
+// Modal Video Player Component with GamesLibrary Loading Spinner
 const ModalVideoPlayer = ({ mediaUrl, title }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   return (
-    <div className="relative h-52 sm:h-72 w-full shrink-0 bg-black">
+    <div className="relative h-52 sm:h-72 w-full shrink-0 bg-black flex items-center justify-center">
       {isLoading && (
-        <div className="absolute inset-0 bg-gradient-to-br from-[#121216] via-[#1a1a24] to-[#0e0e12] flex flex-col items-center justify-center z-10 space-y-2">
+        <div className="absolute inset-0 bg-[#0a0a0c] flex flex-col items-center justify-center z-10 space-y-2">
           <div className="w-8 h-8 border-3 border-[#ccff00] border-t-transparent rounded-full animate-spin"></div>
           <span className="text-[10px] text-[#ccff00] font-mono tracking-wider uppercase font-bold">
             Loading Video...
           </span>
         </div>
       )}
-      <video
-        src={mediaUrl}
-        autoPlay
-        loop
-        muted
-        playsInline
-        onLoadedData={() => setIsLoading(false)}
-        onPlaying={() => setIsLoading(false)}
-        className="w-full h-full object-cover pointer-events-none"
-      />
+      {isVideoUrl(mediaUrl) ? (
+        <video
+          src={mediaUrl}
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          onLoadedData={() => setIsLoading(false)}
+          onPlaying={() => setIsLoading(false)}
+          className="w-full h-full object-cover pointer-events-none"
+        />
+      ) : (
+        <img
+          src={mediaUrl}
+          alt={title}
+          className="w-full h-full object-cover"
+        />
+      )}
     </div>
   );
 };
 
-// Individual Media Card Component
+// Individual Media Card Component with Loading Spinner
 const MediaCard = ({ item, onOpenModal }) => {
   const videoRef = useRef(null);
   const [isVideoLoading, setIsVideoLoading] = useState(true);
@@ -60,7 +69,7 @@ const MediaCard = ({ item, onOpenModal }) => {
         {isVideo ? (
           <>
             {isVideoLoading && (
-              <div className="absolute inset-0 bg-gradient-to-br from-[#121216] via-[#1a1a24] to-[#0e0e12] flex flex-col items-center justify-center z-10 space-y-2">
+              <div className="absolute inset-0 bg-[#0a0a0c] flex flex-col items-center justify-center z-10 space-y-2">
                 <div className="w-7 h-7 border-3 border-[#ccff00] border-t-transparent rounded-full animate-spin"></div>
                 <span className="text-[9px] text-[#ccff00] font-mono tracking-wider uppercase font-bold">
                   Loading Tour...
@@ -77,7 +86,9 @@ const MediaCard = ({ item, onOpenModal }) => {
               preload="auto"
               onLoadedData={() => setIsVideoLoading(false)}
               onPlaying={() => setIsVideoLoading(false)}
-              className="w-full h-full object-cover group-hover:scale-105 transition duration-500 pointer-events-none"
+              className={`w-full h-full object-cover group-hover:scale-105 transition duration-500 pointer-events-none ${
+                isVideoLoading ? 'opacity-0' : 'opacity-100'
+              }`}
             />
           </>
         ) : (
@@ -98,8 +109,6 @@ const MediaCard = ({ item, onOpenModal }) => {
             Engineered for hardcore gamers and casual squads at Stranger's Gaming Cafe, Bill Mart Mall.
           </p>
         </div>
-
-        {/* Extra button hata diya hai, photos aur videos dono clean lagenge */}
       </div>
     </div>
   );
