@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Sparkles, ShieldCheck, Wifi, Wind, Coffee, Volume2, Loader2 } from 'lucide-react';
+import { Sparkles, ShieldCheck, Wifi, Wind, Coffee, Volume2, Loader2, Play } from 'lucide-react';
 import ps5VipImage from '../assets/library/ps5-vip.jpg';
 import esportsImage from '../assets/library/pro-pc.jpg';
 import pxnImage from '../assets/library/pxn-g29.jpg';
@@ -189,7 +189,6 @@ export const GalleryExperience = () => {
                     {/* Glowing Cyberpunk Gradient Background + Loader jab tak video load na ho */}
                     {!isVideoLoaded && (
                       <div className="absolute inset-0 bg-gradient-to-br from-[#121216] via-[#1a1a24] to-[#0e0e12] flex flex-col items-center justify-center z-0 gap-3">
-                        {/* Subtle Glow Aura behind loader */}
                         <div className="absolute w-20 h-20 bg-[#ccff00]/10 rounded-full blur-xl animate-pulse"></div>
                         <Loader2 className="w-7 h-7 text-[#ccff00] animate-spin relative z-10" />
                         <span className="text-[10px] text-[#ccff00]/80 font-mono tracking-widest uppercase relative z-10 font-bold">
@@ -197,11 +196,22 @@ export const GalleryExperience = () => {
                         </span>
                       </div>
                     )}
+
+                    {/* Interactive Tap/Click Overlay for Mobile Fullscreen Trigger */}
+                    <div 
+                      onClick={handleVideoClick}
+                      className="absolute inset-0 z-20 cursor-pointer flex items-center justify-center bg-black/20 hover:bg-black/10 transition group/play"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-[#ccff00]/90 text-black flex items-center justify-center shadow-[0_0_20px_rgba(204,255,0,0.5)] transform group-hover/play:scale-110 transition">
+                        <Play className="w-6 h-6 fill-black ml-0.5" />
+                      </div>
+                    </div>
+
                     <video
                       ref={videoRef}
                       src={item.url}
                       title={item.title}
-                      className={`w-full h-full object-cover group-hover:scale-105 transition duration-500 cursor-pointer ${isVideoLoaded ? 'opacity-100' : 'opacity-0'}`}
+                      className={`w-full h-full object-cover group-hover:scale-105 transition duration-500 ${isVideoLoaded ? 'opacity-100' : 'opacity-0'}`}
                       autoPlay
                       muted
                       loop
@@ -209,7 +219,6 @@ export const GalleryExperience = () => {
                       preload="auto"
                       controls={false}
                       onLoadedData={() => setIsVideoLoaded(true)}
-                      onClick={handleVideoClick}
                     ></video>
                   </>
                 ) : (
