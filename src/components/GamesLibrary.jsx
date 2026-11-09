@@ -24,7 +24,6 @@ const PLAYER_COUNTS = ['All', '1P', '2P', '3P-4P'];
 
 // --- GAMES DATA WITH DIRECT CLOUDINARY .MOV LINKS ---
 const GAMES_DATA = [
-  /*
   {
     id: 1,
     name: "GTA 6",
@@ -36,7 +35,6 @@ const GAMES_DATA = [
     mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1793976885/gta-6.mov",
     coverImage: getCoverImage("gta-6.avif")
   },
-  */
   {
     id: 2,
     name: "GTA V",

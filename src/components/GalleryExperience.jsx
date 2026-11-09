@@ -144,7 +144,7 @@ export const GalleryExperience = () => {
       type: 'video',
       title: 'Stranger\'s Gaming Cafe Cinematic Walkthrough',
       category: 'videos',
-      url: 'https://res.cloudinary.com/fxg5jmee/video/upload/v1793888690/Cafe_Walking.mp4', 
+      url: 'https://res.cloudinary.com/fxg5jmee/video/upload/v1794078661/Walking-cafe.mp4', 
       badge: 'CAFE TOUR'
     },
     {
