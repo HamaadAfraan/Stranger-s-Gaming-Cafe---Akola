@@ -130,9 +130,10 @@ const BookingAvailability = ({
     }
   }, [selectedCategory, selectedGame, setSelectedTeam]);
 
-  const getDates = () => {
+const getDates = () => {
     const chronoDates = [];
-    for (let i = 0; i < 8; i++) {
+    // Aaj (12 Nov) se lekar 18 Nov tak total 7 din (12, 13, 14, 15, 16, 17, 18) dikhane ke liye
+    for (let i = 0; i < 7; i++) {
       const d = new Date();
       d.setDate(d.getDate() + i);
       const year = d.getFullYear();
