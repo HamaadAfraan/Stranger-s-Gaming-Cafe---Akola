@@ -258,8 +258,6 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                 const matchEmail = userEmail && r.email && r.email.toLowerCase() === userEmail.toLowerCase();
                 const matchUserId = userId && r.user_id && String(r.user_id) === String(userId);
                 const matchPhone = userPhone && r.phone && String(r.phone) === String(userPhone);
-                
-                // Agar inme se ek bhi match ho gaya, toh user ko recharge dikh jayega!
                 return matchEmail || matchUserId || matchPhone;
               });
               setUserRecharges(filtered);
@@ -520,150 +518,6 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
     }
 
     setPwdLoading(false);
-  };
-
-  const handleRazorpayRecharge = () => {
-    setRechargeLoading(true);
-
-    const options = {
-      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-      amount: selectedPack.price * 100,
-      currency: "INR",
-      name: "Stranger's Gaming Cafe",
-      description: `Diamond Recharge - ${selectedPack.diamonds} Diamonds`,
-      image: "/favicon.ico",
-      handler: async function (response) {
-        try {
-          await addDoc(collection(db, 'diamond_recharges'), {
-            user_id: userId,
-            email: userEmail,
-            customer_name: name || 'Gamer',
-            phone: phone || '',
-            amount: selectedPack.price,
-            diamonds: selectedPack.diamonds,
-            utr: response.razorpay_payment_id,
-            status: 'APPROVED',
-            createdAt: new Date(),
-            created_at: new Date().toISOString()
-          });
-
-          const newDiamondsTotal = redeemableDiamonds + selectedPack.diamonds;
-          if (userId) {
-            const userRef = doc(db, 'profiles', userId);
-            await updateDoc(userRef, {
-              redeemable_diamonds: newDiamondsTotal,
-              updated_at: new Date().toISOString()
-            });
-          }
-
-          setRedeemableDiamonds(newDiamondsTotal);
-          setSafeStorage('cached_redeemable_diamonds', newDiamondsTotal);
-
-          showToast(`🎉 Success! ${selectedPack.diamonds} Diamonds added to your account!`, 'success', 'Recharge Successful');
-          setShowRechargeModal(false);
-          fetchUserData(userEmail, userId, phone);
-        } catch (err) {
-          console.error('Recharge save error:', err);
-          showToast('Payment successful but failed to update balance. Contact cafe support.', 'error', 'Error');
-        } finally {
-          setRechargeLoading(false);
-        }
-      },
-      prefill: {
-        name: name || '',
-        email: userEmail || '',
-        contact: phone || '',
-      },
-      theme: { color: "#ccff00" },
-    };
-
-    if (window.Razorpay) {
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-    } else {
-      showToast('Razorpay SDK failed to load.', 'error', 'Error');
-      setRechargeLoading(false);
-    }
-  };
-
-  const handlePayToCafeCheckout = () => {
-    const cleanAmount = Number(cafePayAmount);
-    if (!cleanAmount || cleanAmount <= 0) {
-      showToast('Please enter a valid payment amount.', 'error', 'Invalid Amount');
-      return;
-    }
-
-    setCafePayLoading(true);
-    const cashbackDiamonds = Math.floor(cleanAmount * 0.10);
-    const earnedLeaguePoints = Math.floor(cleanAmount / 10);
-
-    const options = {
-      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-      amount: cleanAmount * 100,
-      currency: "INR",
-      name: "Stranger's Gaming Cafe",
-      description: `Direct Cafe Payment (Earn ${cashbackDiamonds} Diamonds & ${earnedLeaguePoints} League Pts)`,
-      image: "/favicon.ico",
-      handler: async function (response) {
-        try {
-          await addDoc(collection(db, 'cafe_direct_payments'), {
-            user_id: userId,
-            email: userEmail,
-            customer_name: name || 'Gamer',
-            phone: phone || '',
-            amount: cleanAmount,
-            cashback_diamonds: cashbackDiamonds,
-            league_points: earnedLeaguePoints,
-            payment_id: response.razorpay_payment_id,
-            utr: response.razorpay_payment_id,
-            status: 'SUCCESS',
-            createdAt: new Date(),
-            created_at: new Date().toISOString()
-          });
-
-          const newDiamondsTotal = redeemableDiamonds + cashbackDiamonds;
-          const newGamerPoints = gamerPoints + earnedLeaguePoints;
-
-          if (userId) {
-            const userRef = doc(db, 'profiles', userId);
-            await updateDoc(userRef, {
-              redeemable_diamonds: newDiamondsTotal,
-              gamer_points: newGamerPoints,
-              updated_at: new Date().toISOString()
-            });
-          }
-
-          setRedeemableDiamonds(newDiamondsTotal);
-          setGamerPoints(newGamerPoints);
-          setSafeStorage('cached_redeemable_diamonds', newDiamondsTotal);
-          setSafeStorage('cached_gamer_points', newGamerPoints);
-
-          showToast(`🎉 Payment Successful! Earned 💎 ${cashbackDiamonds} Diamonds & 🪙 ${earnedLeaguePoints} League Pts!`, 'success', 'Cafe Payment Success');
-          setShowCafePayModal(false);
-          setCafePayAmount('');
-          fetchUserData(userEmail, userId, phone);
-        } catch (err) {
-          console.error('Cafe payment record error:', err);
-          showToast('Payment successful but failed to credit cashback. Contact support.', 'error', 'Error');
-        } finally {
-          setCafePayLoading(false);
-        }
-      },
-      prefill: {
-        name: name || '',
-        email: userEmail || '',
-        contact: phone || '',
-      },
-      theme: { color: "#ccff00" },
-    };
-
-    if (window.Razorpay) {
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-    } else {
-      showToast('Razorpay SDK failed to load.', 'error', 'Error');
-      setCafePayLoading(false);
-    }
   };
 
   const handleLogoutClick = async () => {
@@ -1002,7 +856,9 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                     <div className="flex justify-between items-start">
                       <div>
                         <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">ID: {b.id || 'STR-1454'}</span>
-                        <span className="text-xs font-black font-orbitron text-[#ccff00] block mt-0.5">{b.screen || b.category || 'Gaming Station'}</span>
+                        <span className="text-xs font-black font-orbitron text-[#ccff00] block mt-0.5">
+                          {b.category || b.station_id} {b.screen ? `(${b.screen})` : ''} {b.selectedGame ? `- ${b.selectedGame}` : ''}
+                        </span>
                       </div>
                       <span className="px-2.5 py-1 bg-emerald-950/85 border border-emerald-500/40 text-emerald-300 text-[10px] font-bold rounded-full uppercase font-orbitron">{b.status || 'CONFIRMED'}</span>
                     </div>
@@ -1040,7 +896,9 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                     <div className="flex justify-between items-start">
                       <div>
                         <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider block">ID: {b.id}</span>
-                        <span className="text-xs font-black font-orbitron text-zinc-300 block mt-0.5">{b.screen || b.category || 'Gaming Station'}</span>
+                        <span className="text-xs font-black font-orbitron text-zinc-300 block mt-0.5">
+                          {b.category || b.station_id} {b.screen ? `(${b.screen})` : ''} {b.selectedGame ? `- ${b.selectedGame}` : ''}
+                        </span>
                       </div>
                       <span className="px-2.5 py-1 bg-zinc-800 text-zinc-300 text-[10px] font-bold rounded-full uppercase font-orbitron">COMPLETED</span>
                     </div>
@@ -1078,7 +936,9 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                     <div className="flex justify-between items-start">
                       <div>
                         <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider block">ID: {b.id}</span>
-                        <span className="text-xs font-black font-orbitron text-red-400 block mt-0.5">{b.screen || b.category || 'Gaming Station'}</span>
+                        <span className="text-xs font-black font-orbitron text-red-400 block mt-0.5">
+                          {b.category || b.station_id} {b.screen ? `(${b.screen})` : ''} {b.selectedGame ? `- ${b.selectedGame}` : ''}
+                        </span>
                       </div>
                       <span className="px-2.5 py-1 bg-red-950/80 border border-red-500/40 text-red-300 text-[10px] font-bold rounded-full uppercase font-orbitron">CANCELLED</span>
                     </div>
@@ -1380,7 +1240,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                       return {
                         id: b.id,
                         type: 'booking',
-                        title: `🎮 ${b.screen || b.category || 'Gaming Session'}`,
+                        title: `🎮 ${b.category || b.station_id} ${b.screen ? `(${b.screen})` : ''} ${b.selectedGame ? `- ${b.selectedGame}` : ''}`,
                         subText: `ID: ${b.id} • Slot: ${b.slot_time || b.slot || 'N/A'}`,
                         date: b.bookingDate || b.date || b.created_at || '',
                         createdAt: b.createdAt || b.created_at || b.bookingDate || b.date || '',
@@ -1521,7 +1381,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
         </div>
       )}
 
-{/* DIAMOND RECHARGE MODAL (RAZORPAY) */}
+      {/* DIAMOND RECHARGE MODAL (RAZORPAY) */}
       {showRechargeModal && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 z-[9999] overflow-y-auto" onClick={() => setShowRechargeModal(false)}>
           <div className="bg-[#12131a] border border-[#ccff00]/40 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl relative text-white my-auto max-h-[90vh] overflow-y-auto font-sans" onClick={(e) => e.stopPropagation()}>
@@ -1547,7 +1407,6 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
               </div>
             </div>
 
-            {/* BREAKDOWN BOX (BASE + ₹10 PLATFORM FEE) */}
             <div className="p-3 rounded-xl bg-[#181922] border border-white/10 space-y-2 text-xs font-mono shadow-md">
               <div className="flex justify-between items-center text-zinc-300">
                 <span className="text-zinc-400">Pack Base Amount:</span>
@@ -1570,12 +1429,12 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
 
             <button
               onClick={() => {
-                const finalTotal = selectedPack.price + 10; // Including ₹10 Convenience Fee
+                const finalTotal = selectedPack.price + 10;
                 setRechargeLoading(true);
 
                 const options = {
                   key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-                  amount: finalTotal * 100, // Razorpay takes amount in paise including fee
+                  amount: finalTotal * 100,
                   currency: "INR",
                   name: "Stranger's Gaming Cafe",
                   description: `Diamond Recharge - ${selectedPack.diamonds} Diamonds`,
@@ -1644,7 +1503,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
         </div>
       )}
 
-{/* PAY TO CAFE MODAL (RAZORPAY) */}
+      {/* PAY TO CAFE MODAL (RAZORPAY) */}
       {showCafePayModal && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 z-[9999] overflow-y-auto" onClick={() => setShowCafePayModal(false)}>
           <div className="bg-[#12131a] border border-emerald-500/50 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl relative text-white my-auto max-h-[90vh] overflow-y-auto font-sans" onClick={(e) => e.stopPropagation()}>
@@ -1671,7 +1530,6 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
               />
             </div>
 
-            {/* BREAKDOWN BOX (BASE + ₹10 PLATFORM FEE) */}
             {cafePayAmount && Number(cafePayAmount) > 0 && (
               <div className="p-3 rounded-xl bg-[#181922] border border-white/10 space-y-2 text-xs font-mono shadow-md">
                 <div className="flex justify-between items-center text-zinc-300">
@@ -1697,7 +1555,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
             <button
               onClick={() => {
                 const base = Number(cafePayAmount) || 0;
-                const finalTotal = base + 10; // Adding ₹10 Convenience Fee
+                const finalTotal = base + 10;
                 if (base <= 0) {
                   showToast('Please enter a valid payment amount.', 'error', 'Invalid Amount');
                   return;
@@ -1709,7 +1567,7 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
 
                 const options = {
                   key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-                  amount: finalTotal * 100, // Razorpay takes amount in paise including fee
+                  amount: finalTotal * 100,
                   currency: "INR",
                   name: "Stranger's Gaming Cafe",
                   description: `Direct Cafe Payment (Earn ${cashbackDiamonds} Diamonds)`,
@@ -1844,8 +1702,17 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
 
                 <div className="flex justify-between border-b border-white/5 pb-2">
                   <span className="text-zinc-400 uppercase">Station / Platform:</span>
-                  <span className="text-amber-300 font-bold">{selectedRecord.data.screen || selectedRecord.data.category || 'Gaming Station'}</span>
+                  <span className="text-amber-300 font-bold">
+                    {selectedRecord.data.category || selectedRecord.data.station_id} {selectedRecord.data.screen ? `(${selectedRecord.data.screen})` : ''}
+                  </span>
                 </div>
+
+                {selectedRecord.data.selectedGame && (
+                  <div className="flex justify-between border-b border-white/5 pb-2">
+                    <span className="text-zinc-400 uppercase">Game / Edition:</span>
+                    <span className="text-[#ccff00] font-bold font-orbitron">{selectedRecord.data.selectedGame}</span>
+                  </div>
+                )}
 
                 <div className="flex justify-between border-b border-white/5 pb-2">
                   <span className="text-zinc-400 uppercase">Reserved Slot Time:</span>

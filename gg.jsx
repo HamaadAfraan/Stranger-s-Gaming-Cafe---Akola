@@ -1,0 +1,1314 @@
+import { useMemo, useState, useEffect } from "react";
+import { LiveSessionsModal } from "@/components/LiveSessionsModal";
+import { createFileRoute } from "@tanstack/react-router";
+import {
+  Activity,
+  CircleDot,
+  MonitorSmartphone,
+  FileText,
+  Search,
+  X,
+  IndianRupee,
+  CalendarClock,
+  Gamepad2,
+  History,
+  Download,
+  Clock,
+  Save,
+  Users,
+  Calendar,
+  CreditCard
+} from "lucide-react";
+import { StationCard } from "@/components/StationCard";
+import { SettingsDialog } from "@/components/SettingsDialog";
+import { BookingsModal } from "@/components/BookingsModal";
+import { ConsoleScheduleModal } from "@/components/ConsoleScheduleModal";
+import { UserProfilesModal } from "@/components/UserProfilesModal";
+import { useStationManager, type SessionRecord } from "@/hooks/useStationManager";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import type { Station, StationKind } from "@/lib/stations";
+import { db } from "@/lib/firebase";
+import { doc, getDoc, setDoc, updateDoc, collection, onSnapshot } from "firebase/firestore";
+import viteConfig from "../../vite.config";
+
+export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "STRANGER'S GAMING CAFE" },
+      {
+        name: "description",
+        content:
+          "Live admin dashboard to start, extend and lock gaming stations — PS5 consoles, PS4, gaming PCs and racing simulators.",
+      },
+      { property: "og:title", content: "Stranger's Gaming Cafe — Control Dashboard" },
+      {
+        property: "og:description",
+        content: "Real-time session timers and network lock automation for your gaming cafe.",
+      },
+    ],
+  }),
+  component: Dashboard,
+});
+
+const getApiBaseUrl = () => {
+  if (typeof window !== "undefined") {
+    const envUrl = (import.meta as any).env?.VITE_API_BASE_URL;
+    if (envUrl) return envUrl.replace(/\/+$/, "");
+    return `${window.location.protocol}//${window.location.hostname}:5000`;
+  }
+  return 'https://strangers-gaming-backend.onrender.com';
+};
+
+const STATION_NAMES: Record<string, string> = {
+  "SIM-01": "Car-Sim-1",
+  "SIM-02": "Car-Sim-2",
+  "PS5-01": "PS5-01",
+  "PS5-02": "PS5-02",
+  "PS5-03": "PS5-03",
+  "PS5-04": "PS5-04",
+  "PS4-01": "PS4-01",
+  "SIM-03": "Truck-Sim-1",
+  "PC-01": "PC-01",
+  "PC-02": "PC-02",
+};
+
+function formatExactDate(record: SessionRecord): string {
+  if (record.timestamp) {
+    const d = new Date(record.timestamp);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = d.toLocaleString('en-IN', { month: 'short' });
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  }
+
+  if (record.date) {
+    return record.date;
+  }
+
+  const d = new Date();
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = d.toLocaleString('en-IN', { month: 'short' });
+  const year = d.getFullYear();
+  return `${day}-${month}-${year}`;
+}
+
+const CAFE_STATIONS: Station[] = [
+  { id: "SIM-01", name: "Car-Sim-1", kind: "sim", ip: "192.168.1.150" },
+  { id: "SIM-02", name: "Car-Sim-2", kind: "sim", ip: "192.168.1.151" },
+  { id: "PS5-01", name: "PS5-01", kind: "ps5", ip: "192.168.1.153" },
+  { id: "PS5-02", name: "PS5-02", kind: "ps5", ip: "192.168.1.154" },
+  { id: "PS5-03", name: "PS5-03", kind: "ps5", ip: "192.168.1.155" },
+  { id: "PS5-04", name: "PS5-04", kind: "ps5", ip: "192.168.1.156" },
+  { id: "PS4-01", name: "PS4-01", kind: "ps4", ip: "192.168.1.157" },
+  { id: "SIM-03", name: "Truck-Sim-1", kind: "pc", ip: "192.168.1.52", hostname: "stranger-pc-3" },
+  { id: "PC-01", name: "PC-01", kind: "pc", ip: "192.168.1.50", hostname: "stranger-pc-1" },
+  { id: "PC-02", name: "PC-02", kind: "pc", ip: "192.168.1.51", hostname: "stranger-pc-2" },
+];
+
+const FILTERS: { key: "all" | StationKind; label: string }[] = [
+  { key: "all", label: "All Stations" },
+  { key: "sim", label: "Simulators" },
+  { key: "ps5", label: "PS5s" },
+  { key: "ps4", label: "PS4s" },
+  { key: "pc", label: "PCs" },
+];
+
+function Dashboard() {
+  const mgr = useStationManager();
+  const [isMounted, setIsMounted] = useState(false);
+
+  const [showLiveSessionsModal, setShowLiveSessionsModal] = useState(false);
+
+  const [filter, setFilter] = useState<"all" | StationKind>("all");
+  const [showRecords, setShowRecords] = useState(false);
+  const [recordSearch, setRecordSearch] = useState("");
+  const [recordCategory, setRecordCategory] = useState("all");
+
+  const [dateFilterMode, setDateFilterMode] = useState<"all" | "today" | "yesterday" | "custom">("all");
+  const [customDate, setCustomDate] = useState("");
+
+  const [showBookings, setShowBookings] = useState(false);
+  const [showUserProfiles, setShowUserProfiles] = useState(false);
+  const [showCafePaymentsModal, setShowCafePaymentsModal] = useState(false);
+  const [cafePaymentsList, setCafePaymentsList] = useState<any[]>([]);
+  const [cafePaymentSearch, setCafePaymentSearch] = useState("");
+  const [cafePaymentDateMode, setCafePaymentDateMode] = useState<"all" | "today" | "yesterday" | "custom">("all");
+  const [cafePaymentCustomDate, setCafePaymentCustomDate] = useState("");
+
+  const [showTimingModal, setShowTimingModal] = useState(false);
+  
+  // 7 Days Timing States ("1" to "7" where 1=Mon ... 7=Sun)
+  const [dayOpenTimes, setDayOpenTimes] = useState<Record<string, string>>({
+    "1": "16:00", // Mon
+    "2": "12:30", // Tue
+    "3": "12:30", // Wed
+    "4": "12:30", // Thu
+    "5": "15:00", // Fri
+    "6": "14:30", // Sat
+    "7": "14:30", // Sun
+  });
+  const [dayCloseTimes, setDayCloseTimes] = useState<Record<string, string>>({
+    "1": "22:00",
+    "2": "22:00",
+    "3": "22:00",
+    "4": "22:00",
+    "5": "22:00",
+    "6": "22:00",
+    "7": "22:00",
+  });
+
+  const [showAdminPasswordModal, setShowAdminPasswordModal] = useState(false);
+  const [adminPasswordInput, setAdminPasswordInput] = useState("");
+  const [passwordError, setPasswordError] = useState(false);
+
+
+  useEffect(() => {
+    setIsMounted(true);
+
+    const fetchAllCafeTimings = async () => {
+      try {
+        const newOpenTimes = { ...dayOpenTimes };
+        const newCloseTimes = { ...dayCloseTimes };
+
+        for (let i = 1; i <= 7; i++) {
+          const docSnap = await getDoc(doc(db, "cafe_settings", String(i)));
+          if (docSnap.exists()) {
+            const data = docSnap.data() as any;
+            if (data?.["open_time"]) newOpenTimes[String(i)] = data["open_time"];
+            if (data?.["close_time"]) newCloseTimes[String(i)] = data["close_time"];
+          }
+        }
+
+        setDayOpenTimes(newOpenTimes);
+        setDayCloseTimes(newCloseTimes);
+      } catch (e) {
+        console.log("Error fetching 7-day settings from Firebase:", e);
+      }
+    };
+    fetchAllCafeTimings();
+  }, []);
+
+  // Realtime listener for Cafe Direct Payments
+  useEffect(() => {
+    if (!isMounted) return;
+    const unsub = onSnapshot(collection(db, "cafe_direct_payments"), (snapshot) => {
+      const list = snapshot.docs.map((docItem) => ({ id: docItem.id, ...docItem.data() }));
+      list.sort((a: any, b: any) => {
+        const timeA = new Date(a.created_at || 0).getTime();
+        const timeB = new Date(b.created_at || 0).getTime();
+        return timeB - timeA;
+      });
+      setCafePaymentsList(list);
+    });
+    return () => unsub();
+  }, [isMounted]);
+
+  const handleSaveAllTimings = async () => {
+    try {
+      for (let i = 1; i <= 7; i++) {
+        const dayKey = String(i);
+        await setDoc(doc(db, "cafe_settings", dayKey), {
+          open_time: dayOpenTimes[dayKey] || "12:30",
+          close_time: dayCloseTimes[dayKey] || "22:00"
+        }, { merge: true });
+      }
+      setShowTimingModal(false);
+    } catch (e) {
+      console.error("Error saving all timings to Firebase:", e);
+    }
+  };
+
+  const stations = CAFE_STATIONS;
+
+  const visible = useMemo(() => {
+    if (filter === "all") return stations;
+    if (filter === "sim") {
+      return stations.filter((s) => s.kind === "sim" || s.id.startsWith("SIM-"));
+    }
+    if (filter === "pc") {
+      return stations.filter((s) => s.kind === "pc" && !s.id.startsWith("SIM-"));
+    }
+    return stations.filter((s) => s.kind === filter);
+  }, [stations, filter]);
+
+  const active = isMounted ? Object.keys(mgr.sessions || {}).length : 0;
+
+  const pendingBookingsCount = useMemo(() => {
+    if (!isMounted) return 0;
+    const list = Array.isArray(mgr.bookings) ? mgr.bookings : [];
+    return list.filter((b) => {
+      const statusStr = String(b?.status || "").trim().toUpperCase();
+      const custName = String(b?.customer_name || "").toLowerCase();
+      const bId = String(b?.id || "").toUpperCase();
+
+      const isPending = statusStr === "PENDING";
+      const isNotAdminBlock = !custName.includes("walk-in") && !custName.includes("reserved") && !custName.includes("admin block");
+      const isNotSettings = bId !== "CAFE_OPERATING_HOURS" && !custName.includes("cafe_operating_hours");
+
+      return isPending && isNotAdminBlock && isNotSettings;
+    }).length;
+  }, [mgr.bookings, isMounted]);
+
+  const pendingCafePaymentsCount = useMemo(() => {
+    if (!isMounted) return 0;
+    return cafePaymentsList.filter((p: any) => {
+      const status = String(p?.status || "").trim().toUpperCase();
+      return status === "PENDING" || !p.status;
+    }).length;
+  }, [cafePaymentsList, isMounted]);
+
+  const stats = [
+    { label: "Total", value: String(stations.length), icon: MonitorSmartphone },
+    { label: "Idle", value: String(stations.length - active), icon: CircleDot },
+  ] as const;
+
+  const historyLogs: SessionRecord[] = isMounted
+    ? (mgr.history || (mgr as any).sessionHistory || [])
+    : [];
+
+  const filteredRecords = historyLogs.filter((log) => {
+    const searchLower = recordSearch.toLowerCase();
+    const stId = (log.stationId || "").toUpperCase();
+    const stDisplayName = (STATION_NAMES[log.stationId] || log.stationId).toLowerCase();
+    const custName = (log.customer || "").toLowerCase();
+    const logDate = (log.date || "").toLowerCase();
+    const displayDateStr = formatExactDate(log).toLowerCase();
+
+    const matchesSearch =
+      custName.includes(searchLower) ||
+      stId.toLowerCase().includes(searchLower) ||
+      stDisplayName.includes(searchLower) ||
+      logDate.includes(searchLower) ||
+      displayDateStr.includes(searchLower) ||
+      (stId.startsWith("SIM") && "simulator".includes(searchLower));
+
+    if (!matchesSearch) return false;
+
+    if (dateFilterMode !== "all") {
+      const logTime = log.timestamp ? new Date(log.timestamp) : new Date();
+      const today = new Date();
+      const yesterday = new Date();
+      yesterday.setDate(today.getDate() - 1);
+
+      const isSameDate = (d1: Date, d2: Date) =>
+        d1.getDate() === d2.getDate() &&
+        d1.getMonth() === d2.getMonth() &&
+        d1.getFullYear() === d2.getFullYear();
+
+      if (dateFilterMode === "today" && !isSameDate(logTime, today)) {
+        return false;
+      }
+      if (dateFilterMode === "yesterday" && !isSameDate(logTime, yesterday)) {
+        return false;
+      }
+      if (dateFilterMode === "custom" && customDate) {
+        const customD = new Date(customDate);
+        if (!isSameDate(logTime, customD)) {
+          return false;
+        }
+      }
+    }
+
+    const cat = recordCategory;
+    const logKind = log.kind || (stId.startsWith("PS5") ? "ps5" : stId.startsWith("PS4") ? "ps4" : stId.startsWith("PC") ? "pc" : "sim");
+
+    if (cat === "all") return true;
+    if (cat === "vip") return stId === "PS5-01" || stId === "PS5-02";
+    if (cat === "ps5") return logKind === "ps5" && stId !== "PS5-01" && stId !== "PS5-02";
+    if (cat === "ps4") return logKind === "ps4";
+    if (cat === "pc") return logKind === "pc" && !stId.startsWith("SIM-");
+    if (cat === "sim") return logKind === "sim" || stId.startsWith("SIM-");
+
+    return true;
+  });
+
+  const totalFilteredEarnings = filteredRecords.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+  const totalCompletedSessions = filteredRecords.length;
+
+  const handleDownloadPDF = () => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+
+    const rows = filteredRecords
+      .map(
+        (log, idx) => {
+          const exactDate = formatExactDate(log);
+          const displayName = STATION_NAMES[log.stationId] || log.stationId;
+          const timeDetails = log.startTime ? `${log.startTime}${log.endTime ? ' - ' + log.endTime : ''}` : 'N/A';
+          return `
+      <tr>
+        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: center;">${idx + 1}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; font-weight: bold;">${log.customer || "Walk-In"}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: center; font-family: monospace;">${displayName}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: center;">${timeDetails}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: center;">${log.minutes} Mins</td>
+        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: center; font-weight: 600;">${exactDate}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: bold; color: #047857;">₹${log.amount || 0}</td>
+      </tr>
+    `;
+        }
+      )
+      .join("");
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Session_Records_Report</title>
+          <style>
+            body { font-family: 'Helvetica Neue', Arial, sans-serif; padding: 25px; color: #0f172a; }
+            .header-title { font-size: 20px; font-weight: 800; color: #dc2626; text-transform: uppercase; margin: 0; }
+            .header-sub { font-size: 12px; color: #64748b; margin-top: 4px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
+            th { background: #0f172a; color: #fff; padding: 12px 10px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+            .summary-box { margin-top: 25px; padding: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; display: flex; justify-between: space-between; font-size: 14px; font-weight: 600; }
+          </style>
+        </head>
+        <body>
+          <div style="border-bottom: 2px solid #dc2626; pb-3; padding-bottom: 10px;">
+            <div class="header-title">STRANGER'S GAMING CAFE — SESSION RECORDS</div>
+            <div class="header-sub">Report Generated: ${new Date().toLocaleString("en-IN")}</div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th style="text-align: center;">#</th>
+                <th>Player / Customer</th>
+                <th style="text-align: center;">Station</th>
+                <th style="text-align: center;">Start - End Time</th>
+                <th style="text-align: center;">Duration</th>
+                <th style="text-align: center;">Date Played</th>
+                <th style="text-align: right;">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows || '<tr><td colspan="7" style="text-align:center; padding:20px; color:#94a3b8;">No Records Found</td></tr>'}
+            </tbody>
+          </table>
+          <div class="summary-box">
+            <div>Total Sessions Played: <span style="color:#0f172a;">${totalCompletedSessions}</span></div>
+            <div>Total Revenue Generated: <span style="color:#047857; font-size:16px;">₹${totalFilteredEarnings}</span></div>
+          </div>
+          <script>
+            window.onload = function() {
+              window.print();
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
+  const handleControl = async (stationId: string, action: string, ip: string) => {
+    if (!mgr.bridgeUrl || mgr.bridgeUrl.includes("localhost:5000")) {
+      return;
+    }
+
+    const baseUrl = mgr.bridgeUrl.startsWith("http")
+      ? mgr.bridgeUrl
+      : `http://${mgr.bridgeUrl}`;
+
+    try {
+      await fetch(`${baseUrl.replace(/\/+$/, "")}/api/control`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          station_id: stationId,
+          action: action,
+          ip: ip,
+        }),
+      });
+    } catch (err) {
+      // Silent catch
+    }
+  };
+
+  return (
+    <main className="h-screen w-screen bg-slate-950 text-slate-100 font-sans flex flex-col overflow-hidden">
+      {/* Top Header */}
+      <header className="bg-gradient-to-r from-red-700 via-red-600 to-red-800 px-6 py-4 min-h-[76px] flex items-center justify-between border-b border-red-900 shadow-xl shrink-0">
+        <div className="flex items-center gap-4">
+          <div className="flex size-11 items-center justify-center rounded-lg bg-slate-950 text-red-500 font-black shadow-inner border border-red-500/30">
+            <Gamepad2 className="size-6" />
+          </div>
+          <div className="flex flex-col justify-center">
+            <h1 className="font-display text-lg font-black tracking-widest text-white uppercase leading-tight">
+              STRANGER'S GAMING CAFE — ADMIN PANEL
+            </h1>
+            <p className="text-xs font-semibold tracking-wider text-red-100 uppercase mt-1">
+              Live Station Control & Billing System
+            </p>
+          </div>
+        </div>
+
+        {/* Quick Stats & Live Sessions Button */}
+        <div className="flex items-center gap-3">
+          {stats.map((s) => (
+            <div
+              key={s.label}
+              className="flex items-center gap-2.5 rounded-lg bg-slate-950/90 px-3.5 py-1.5 border border-red-800/80 shadow-inner"
+            >
+              <s.icon className="size-4 text-slate-400" />
+              <span className="text-xs font-bold text-slate-300 uppercase">{s.label}:</span>
+              <span className="font-mono text-sm font-bold text-white tabular-nums">{s.value}</span>
+            </div>
+          ))}
+
+          {/* Live Sessions Button with ml-auto style badge */}
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "relative border-amber-500/40 bg-amber-950/40 text-amber-200 hover:bg-amber-600 hover:text-white font-bold h-9 text-xs justify-start px-3 shadow-sm transition-all cursor-pointer",
+              active > 0 && "border-amber-400 bg-amber-600 text-white ring-2 ring-amber-400"
+            )}
+            onClick={() => setShowLiveSessionsModal(true)}
+          >
+            <Activity className="size-4 mr-2 text-amber-400 animate-pulse" />
+            Live Sessions
+            {active > 0 && (
+              <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-black text-white shadow-md">
+                {active}
+              </span>
+            )}
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-gray-800 bg-black text-gray-300 hover:bg-gray-900 hover:text-gray-100 font-bold h-9 text-xs justify-start px-3 shadow-sm transition-all cursor-pointer"
+            onClick={() => setShowTimingModal(true)}
+          >
+            <Clock className="size-4 mr-1 text-amber-400" /> 7-Day Hours
+          </Button>
+        </div>
+      </header>
+
+      {/* Main Container Layout */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* CENTER COLUMN: Stations Cards */}
+        <section className="flex-1 bg-slate-950 p-5 overflow-y-auto flex flex-col gap-4">
+          <div className="flex flex-wrap items-center gap-1.5 bg-slate-900 p-1.5 rounded-lg border border-slate-800 shrink-0">
+            {FILTERS.map((f) => (
+              <button
+                key={f.key}
+                onClick={() => setFilter(f.key)}
+                className={cn(
+                  "cursor-pointer rounded px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all",
+                  filter === f.key
+                    ? "bg-red-600 text-white shadow-sm"
+                    : "text-slate-400 hover:text-white hover:bg-slate-800"
+                )}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="m-2 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-fr pb-4">
+            {visible.map((station) => {
+              const pendingForStation = isMounted ? (mgr.bookings || []).find((b) => {
+                if (b.station_id !== station.id) return false;
+
+                const statusStr = String(b?.status || "").trim().toUpperCase();
+                const custName = String(b?.customer_name || "").toLowerCase();
+
+                const isPending = statusStr === "PENDING";
+                const isNotAdminBlock = !custName.includes("walk-in") && !custName.includes("reserved") && !custName.includes("admin block");
+
+                return isPending && isNotAdminBlock;
+              }) : undefined;
+
+              return (
+                <StationCard
+                  key={station.id}
+                  station={station}
+                  session={isMounted ? mgr.sessions[station.id] : undefined}
+                  pendingBooking={pendingForStation}
+                  onApproveBooking={(b) => mgr.approveBooking(b)}
+                  onRejectBooking={(bId) => mgr.rejectBooking(bId)}
+                  onStart={(minutes, customer, playerCount) => {
+                    mgr.start(station.id, minutes, customer, playerCount);
+                  }}
+                  onExtend={(minutes) => mgr.extend(station.id, minutes)}
+                  onTogglePause={() => mgr.togglePause(station.id)}
+                  onForceLock={() => {
+                    mgr.forceLock(station.id);
+                    if (station.ip) {
+                      handleControl(station.id, "LOCK", station.ip);
+                    }
+                  }}
+                  onControl={(stId, action, ip) => handleControl(stId, action, ip)}
+                />
+              );
+            })}
+          </div>
+        </section>
+
+        {/* SIDEBAR */}
+        <aside className="w-64 bg-slate-900 border-r border-slate-800 p-4 flex flex-col gap-3 shrink-0 overflow-y-auto">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-1">
+            Admin Control
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "relative border-purple-400/40 bg-purple-900/40 text-purple-200 hover:bg-purple-600 hover:text-white font-bold h-11 text-xs justify-start px-3 shadow-sm transition-all cursor-pointer",
+              pendingBookingsCount > 0 && "border-purple-300 bg-purple-600 text-white ring-2 ring-purple-300"
+            )}
+            onClick={() => setShowBookings(true)}
+          >
+            <CalendarClock className="size-4 mr-2.5 text-purple-300" />
+            Online Bookings
+            {pendingBookingsCount > 0 && (
+              <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-black text-white shadow-md animate-pulse">
+                {pendingBookingsCount}
+              </span>
+            )}
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "relative border-emerald-500/40 bg-emerald-950/40 text-emerald-200 hover:bg-emerald-600 hover:text-white font-bold h-11 text-xs justify-start px-3 shadow-sm transition-all cursor-pointer",
+              pendingCafePaymentsCount > 0 && "border-emerald-300 bg-emerald-600 text-white ring-2 ring-emerald-300"
+            )}
+            onClick={() => setShowCafePaymentsModal(true)}
+          >
+            <CreditCard className="size-4 mr-2.5 text-emerald-400" /> Cafe Direct Payments
+            {pendingCafePaymentsCount > 0 && (
+              <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-black text-white shadow-md animate-pulse">
+                {pendingCafePaymentsCount}
+              </span>
+            )}
+          </Button>
+
+          <ConsoleScheduleModal
+            stations={stations}
+            sessions={isMounted ? mgr.sessions || {} : {}}
+            cafeHours={{
+              openTime: dayOpenTimes["6"] || "14:30",
+              closeTime: dayCloseTimes["6"] || "22:00",
+            }}
+          />
+
+          {/* Admin Password Verification Modal */}
+          {showAdminPasswordModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+              <div className="relative w-full max-w-sm flex flex-col rounded-xl border border-slate-800 bg-slate-900 p-5 shadow-2xl space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="grid size-8 place-items-center rounded-lg border border-purple-500/30 bg-purple-500/10 text-purple-400">
+                      <Users className="size-4" />
+                    </div>
+                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                      Admin Verification
+                    </h3>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 w-7 p-0 text-slate-400 hover:text-white cursor-pointer"
+                    onClick={() => setShowAdminPasswordModal(false)}
+                  >
+                    <X className="size-4" />
+                  </Button>
+                </div>
+
+                <div className="space-y-3">
+                  <p className="text-xs text-slate-300">
+                    Enter admin password to access User Profiles & Diamond Recharges:
+                  </p>
+                  <Input
+                    type="password"
+                    placeholder="Enter password..."
+                    value={adminPasswordInput}
+                    onChange={(e) => {
+                      setAdminPasswordInput(e.target.value);
+                      setPasswordError(false);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        if (adminPasswordInput === "Stranger@4ever") {
+                          setShowAdminPasswordModal(false);
+                          setShowUserProfiles(true);
+                        } else {
+                          setPasswordError(true);
+                        }
+                      }
+                    }}
+                    className="bg-slate-950 border-slate-800 text-white text-xs h-10"
+                  />
+                  {passwordError && (
+                    <p className="text-xs font-bold text-red-500 animate-shake">
+                      ❌ Wrong Password! Try again.
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-xs text-slate-400 hover:text-white cursor-pointer"
+                    onClick={() => setShowAdminPasswordModal(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs h-9 px-4 cursor-pointer"
+                    onClick={() => {
+                      if (adminPasswordInput === "Stranger@4ever") {
+                        setShowAdminPasswordModal(false);
+                        setShowUserProfiles(true);
+                      } else {
+                        setPasswordError(true);
+                      }
+                    }}
+                  >
+                    Verify & Open
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-slate-800 bg-slate-950/80 text-slate-200 hover:bg-red-600 hover:text-white font-bold h-11 text-xs justify-start px-3 shadow-sm transition-all cursor-pointer"
+            onClick={() => setShowRecords(true)}
+          >
+            <FileText className="size-4 mr-2.5 text-red-400" /> Detailed Records
+          </Button>
+
+          {/* Live Sessions Management Modal */}
+          <LiveSessionsModal
+            open={showLiveSessionsModal}
+            onOpenChange={setShowLiveSessionsModal}
+            sessions={mgr.sessions}
+            onLockSession={(stationId) => mgr.forceLock(stationId)}
+            onTogglePause={(stationId) => mgr.togglePause(stationId)}
+            onExtendSession={(stationId, mins) => mgr.extend(stationId, mins)}
+          />
+
+          <div className="border-t border-slate-800 my-1"></div>
+          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-1">
+            User Data
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-purple-500/40 bg-purple-950/40 text-purple-200 hover:bg-purple-600 hover:text-white font-bold h-11 text-xs justify-start px-3 shadow-sm transition-all cursor-pointer"
+            onClick={() => {
+              setAdminPasswordInput("");
+              setPasswordError(false);
+              setShowAdminPasswordModal(true);
+            }}
+          >
+            <Users className="size-4 mr-2.5 text-purple-400" /> User Profiles Management
+          </Button>
+        </aside>
+      </div>
+
+      {/* Bookings Modal */}
+      <BookingsModal
+        open={showBookings}
+        onOpenChange={setShowBookings}
+        bookings={isMounted ? mgr.bookings || [] : []}
+        onApprove={(b: any) => mgr.approveBooking(b)}
+        onReject={(bId) => mgr.rejectBooking(bId)}
+      />
+
+      {/* Cafe Direct Payments History Modal */}
+      {showCafePaymentsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+          <div className="relative w-full max-w-3xl max-h-[85vh] flex flex-col rounded-xl border border-slate-800 bg-slate-900 p-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="grid size-9 place-items-center rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
+                  <CreditCard className="size-5" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-white tracking-wide">
+                    Cafe Direct Payments Verification
+                  </h2>
+                  <p className="text-[11px] text-slate-400">
+                    Verify UTR/Transaction IDs and accept or reject payments
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1 rounded border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-400">
+                  <IndianRupee className="size-3.5" /> Total: ₹
+                  {cafePaymentsList
+                    .filter((p) => {
+                      const search = cafePaymentSearch.toLowerCase();
+                      const name = (p.customer_name || p.name || "").toLowerCase();
+                      const phone = (p.phone || "").toLowerCase();
+                      const paymentId = (p.payment_id || p.utr || "").toLowerCase();
+                      const matchesSearch = name.includes(search) || phone.includes(search) || paymentId.includes(search);
+                      if (!matchesSearch) return false;
+
+                      if (cafePaymentDateMode !== "all") {
+                        const itemTime = p.created_at ? new Date(p.created_at) : new Date();
+                        const today = new Date();
+                        const yesterday = new Date();
+                        yesterday.setDate(today.getDate() - 1);
+
+                        const isSameDate = (d1: Date, d2: Date) =>
+                          d1.getDate() === d2.getDate() &&
+                          d1.getMonth() === d2.getMonth() &&
+                          d1.getFullYear() === d2.getFullYear();
+
+                        if (cafePaymentDateMode === "today" && !isSameDate(itemTime, today)) return false;
+                        if (cafePaymentDateMode === "yesterday" && !isSameDate(itemTime, yesterday)) return false;
+                        if (cafePaymentDateMode === "custom" && cafePaymentCustomDate) {
+                          const customD = new Date(cafePaymentCustomDate);
+                          if (!isSameDate(itemTime, customD)) return false;
+                        }
+                      }
+                      return true;
+                    })
+                    .reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0)}
+                </div>
+                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-slate-400 hover:text-white cursor-pointer" onClick={() => setShowCafePaymentsModal(false)}>
+                  <X className="size-5" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Search & Date Filter Controls */}
+            <div className="my-3 space-y-2.5">
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-2.5 size-4 text-slate-400" />
+                  <Input
+                    value={cafePaymentSearch}
+                    onChange={(e) => setCafePaymentSearch(e.target.value)}
+                    placeholder="Search by customer name, phone, or UTR..."
+                    className="pl-9 h-9 text-xs bg-slate-950 border-slate-800 text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
+
+                <div className="relative w-40">
+                  <Calendar className="absolute left-2.5 top-2.5 size-4 text-emerald-400 pointer-events-none" />
+                  <Input
+                    type="date"
+                    value={cafePaymentCustomDate}
+                    onChange={(e) => {
+                      setCafePaymentCustomDate(e.target.value);
+                      if (e.target.value) setCafePaymentDateMode("custom");
+                    }}
+                    className="pl-8 h-9 text-xs bg-slate-950 border-slate-800 text-white focus:border-emerald-500 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between bg-slate-950 p-1.5 rounded-lg border border-slate-800">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1 mr-1">Filter:</span>
+                  {[
+                    { id: "all", label: "All Time" },
+                    { id: "today", label: "Today" },
+                    { id: "yesterday", label: "Yesterday" },
+                  ].map((dt) => (
+                    <Button
+                      key={dt.id}
+                      size="sm"
+                      variant={cafePaymentDateMode === dt.id ? "default" : "outline"}
+                      className={
+                        cafePaymentDateMode === dt.id
+                          ? "bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-7 text-xs border-0 cursor-pointer"
+                          : "h-7 text-xs border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-800 cursor-pointer"
+                      }
+                      onClick={() => {
+                        setCafePaymentDateMode(dt.id as any);
+                        if (dt.id !== "custom") setCafePaymentCustomDate("");
+                      }}
+                    >
+                      {dt.label}
+                    </Button>
+                  ))}
+                </div>
+
+                {cafePaymentDateMode === "custom" && cafePaymentCustomDate && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 text-[10px] text-red-400 hover:text-red-300 hover:bg-red-950/40 cursor-pointer"
+                    onClick={() => {
+                      setCafePaymentDateMode("all");
+                      setCafePaymentCustomDate("");
+                    }}
+                  >
+                    Clear Date ({cafePaymentCustomDate})
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto pr-1 space-y-2 max-h-[50vh]">
+              {cafePaymentsList.filter((p) => {
+                const search = cafePaymentSearch.toLowerCase();
+                const name = (p.customer_name || p.name || "").toLowerCase();
+                const phone = (p.phone || "").toLowerCase();
+                const paymentId = (p.payment_id || p.utr || "").toLowerCase();
+                const matchesSearch = name.includes(search) || phone.includes(search) || paymentId.includes(search);
+                if (!matchesSearch) return false;
+
+                if (cafePaymentDateMode !== "all") {
+                  const itemTime = p.created_at ? new Date(p.created_at) : new Date();
+                  const today = new Date();
+                  const yesterday = new Date();
+                  yesterday.setDate(today.getDate() - 1);
+
+                  const isSameDate = (d1: Date, d2: Date) =>
+                    d1.getDate() === d2.getDate() &&
+                    d1.getMonth() === d2.getMonth() &&
+                    d1.getFullYear() === d2.getFullYear();
+
+                  if (cafePaymentDateMode === "today" && !isSameDate(itemTime, today)) return false;
+                  if (cafePaymentDateMode === "yesterday" && !isSameDate(itemTime, yesterday)) return false;
+                  if (cafePaymentDateMode === "custom" && cafePaymentCustomDate) {
+                    const customD = new Date(cafePaymentCustomDate);
+                    if (!isSameDate(itemTime, customD)) return false;
+                  }
+                }
+                return true;
+              }).length === 0 ? (
+                <div className="py-12 text-center text-xs text-slate-500">
+                  No direct cafe payments recorded for this selection.
+                </div>
+              ) : (
+                (() => {
+                  const filteredList = cafePaymentsList.filter((p) => {
+                    const search = cafePaymentSearch.toLowerCase();
+                    const name = (p.customer_name || p.name || "").toLowerCase();
+                    const phone = (p.phone || "").toLowerCase();
+                    const paymentId = (p.payment_id || p.utr || "").toLowerCase();
+                    const matchesSearch = name.includes(search) || phone.includes(search) || paymentId.includes(search);
+                    if (!matchesSearch) return false;
+
+                    if (cafePaymentDateMode !== "all") {
+                      const itemTime = p.created_at ? new Date(p.created_at) : new Date();
+                      const today = new Date();
+                      const yesterday = new Date();
+                      yesterday.setDate(today.getDate() - 1);
+
+                      const isSameDate = (d1: Date, d2: Date) =>
+                        d1.getDate() === d2.getDate() &&
+                        d1.getMonth() === d2.getMonth() &&
+                        d1.getFullYear() === d2.getFullYear();
+
+                      if (cafePaymentDateMode === "today" && !isSameDate(itemTime, today)) return false;
+                      if (cafePaymentDateMode === "yesterday" && !isSameDate(itemTime, yesterday)) return false;
+                      if (cafePaymentDateMode === "custom" && cafePaymentCustomDate) {
+                        const customD = new Date(cafePaymentCustomDate);
+                        if (!isSameDate(itemTime, customD)) return false;
+                      }
+                    }
+                    return true;
+                  });
+
+                  let lastDateGroup: string | null = null;
+
+                  return filteredList.map((p, idx) => {
+                    const dateObj = p.created_at ? new Date(p.created_at) : null;
+                    const dateStr = dateObj ? dateObj.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A';
+                    const timeStr = dateObj ? dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : 'N/A';
+
+                    const showDivider = cafePaymentDateMode === "all" && dateStr !== lastDateGroup;
+                    if (cafePaymentDateMode === "all") {
+                      lastDateGroup = dateStr;
+                    }
+
+                    const currentStatus = String(p.status || "PENDING").toUpperCase();
+
+                    return (
+                      <div key={p.id || idx} className="space-y-2">
+                        {showDivider && (
+                          <div className="relative flex py-2 items-center">
+                            <div className="flex-grow border-t border-slate-800"></div>
+                            <span className="flex-shrink mx-4 text-[10px] font-bold font-mono uppercase tracking-widest text-emerald-500 bg-slate-900 px-3 py-1 rounded-full border border-emerald-900/50">
+                              📅 Date: {dateStr}
+                            </span>
+                            <div className="flex-grow border-t border-slate-800"></div>
+                          </div>
+                        )}
+
+                        <div
+                          className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-lg border border-slate-800 bg-slate-950/70 hover:border-emerald-500/40 transition-all gap-3 text-xs"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="grid size-9 place-items-center rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-bold shrink-0">
+                              <CreditCard className="size-5 text-emerald-400" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-white text-sm">
+                                  {p.customer_name || p.name || "Walk-In Gamer"}
+                                </span>
+                                {p.phone && (
+                                  <span className="text-[11px] font-mono text-slate-400">
+                                    ({p.phone})
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-3 mt-1 text-[11px] text-slate-400 font-mono">
+                                <span>📅 {dateStr} at {timeStr}</span>
+                                <span>• UTR/ID: <strong className="text-purple-300">{p.payment_id || p.utr || 'N/A'}</strong></span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between sm:justify-end gap-4 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-800">
+                            {p.cashback_diamonds > 0 && (
+                              <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-emerald-950 border border-emerald-500/40 text-emerald-300">
+                                💎 +{p.cashback_diamonds} Diamonds
+                              </span>
+                            )}
+                            
+                            <span className="font-black text-emerald-400 text-sm font-orbitron">
+                              ₹{p.amount || 0}
+                            </span>
+
+                            {/* Status Badge & Admin Accept / Reject Actions */}
+                            <div className="flex items-center gap-2">
+                              <span className={`text-[10px] font-mono font-bold px-2 py-1 rounded-full uppercase ${
+                                currentStatus === "APPROVED" ? 'bg-emerald-950 border border-emerald-500/40 text-emerald-300' :
+                                currentStatus === "REJECTED" ? 'bg-red-950 border border-red-500/40 text-red-300' :
+                                'bg-amber-950 border border-amber-500/40 text-amber-300 animate-pulse'
+                              }`}>
+                                {currentStatus}
+                              </span>
+
+                              {currentStatus === "PENDING" && (
+                                <div className="flex items-center gap-1.5 ml-1">
+                                  <Button
+                                    size="sm"
+                                    className="h-7 px-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] cursor-pointer"
+                                    onClick={async () => {
+                                      try {
+                                        await updateDoc(doc(db, "cafe_direct_payments", p.id), {
+                                          status: "APPROVED"
+                                        });
+                                      } catch (err) {
+                                        console.error("Error approving payment:", err);
+                                      }
+                                    }}
+                                  >
+                                    Accept
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    className="h-7 px-2.5 bg-red-600 hover:bg-red-500 text-white font-bold text-[10px] cursor-pointer"
+                                    onClick={async () => {
+                                      try {
+                                        await updateDoc(doc(db, "cafe_direct_payments", p.id), {
+                                          status: "REJECTED"
+                                        });
+                                      } catch (err) {
+                                        console.error("Error rejecting payment:", err);
+                                      }
+                                    }}
+                                  >
+                                    Reject
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* User Profiles & Booking History Modal */}
+      <UserProfilesModal
+        open={showUserProfiles}
+        onOpenChange={setShowUserProfiles}
+      />
+
+      {/* All 7-Days Cafe Timings Modal */}
+      {showTimingModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+          <div className="relative w-full max-w-lg max-h-[85vh] flex flex-col rounded-xl border border-slate-800 bg-slate-900 p-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="grid size-9 place-items-center rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-400">
+                  <Clock className="size-5" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-white tracking-wide">
+                    7-Day Operating Hours Management
+                  </h2>
+                  <p className="text-[11px] text-slate-400">
+                    Set opening and closing times for all days and save at once
+                  </p>
+                </div>
+              </div>
+
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 w-8 p-0 text-slate-400 hover:text-white cursor-pointer"
+                onClick={() => setShowTimingModal(false)}
+              >
+                <X className="size-5" />
+              </Button>
+            </div>
+
+            {/* Scrollable list for Monday to Sunday */}
+            <div className="flex-1 overflow-y-auto pr-1 my-3 space-y-3">
+              {[
+                { id: "1", label: "Monday" },
+                { id: "2", label: "Tuesday" },
+                { id: "3", label: "Wednesday" },
+                { id: "4", label: "Thursday" },
+                { id: "5", label: "Friday" },
+                { id: "6", label: "Saturday" },
+                { id: "7", label: "Sunday" },
+              ].map((day) => (
+                <div key={day.id} className="bg-slate-950 p-3 rounded-xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <span className="text-xs font-bold font-mono text-amber-400 w-28 uppercase">
+                    {day.label}
+                  </span>
+                  
+                  <div className="flex items-center gap-2 flex-1">
+                    <div className="flex-1">
+                      <label className="text-[10px] text-slate-400 block mb-1">Open Time</label>
+                      <Input
+                        type="time"
+                        value={dayOpenTimes[day.id] || "12:30"}
+                        onChange={(e) => setDayOpenTimes({ ...dayOpenTimes, [day.id]: e.target.value })}
+                        className="bg-slate-900 border-slate-800 text-white focus:border-amber-500 h-9 text-xs font-mono"
+                      />
+                    </div>
+
+                    <div className="flex-1">
+                      <label className="text-[10px] text-slate-400 block mb-1">Close Time</label>
+                      <Input
+                        type="time"
+                        value={dayCloseTimes[day.id] || "22:00"}
+                        onChange={(e) => setDayCloseTimes({ ...dayCloseTimes, [day.id]: e.target.value })}
+                        className="bg-slate-900 border-slate-800 text-white focus:border-amber-500 h-9 text-xs font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800 shrink-0">
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-xs text-slate-400 hover:text-white cursor-pointer"
+                onClick={() => setShowTimingModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs h-9 px-5 shadow-md cursor-pointer"
+                onClick={handleSaveAllTimings}
+              >
+                <Save className="size-3.5 mr-1.5" /> Save All Operating Hours
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Detailed Session History Modal */}
+      {showRecords && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+          <div className="relative w-full max-w-3xl max-h-[85vh] flex flex-col rounded-xl border border-slate-800 bg-slate-900 p-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="grid size-9 place-items-center rounded-lg border border-red-500/30 bg-red-500/10 text-red-500">
+                  <FileText className="size-5" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-white tracking-wide">
+                    Customer Session History
+                  </h2>
+                  <p className="text-[11px] text-slate-400">
+                    Live session logs and billing summary
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 text-xs font-bold border-red-800 bg-red-950/50 text-red-300 hover:bg-red-600 hover:text-white cursor-pointer"
+                  onClick={handleDownloadPDF}
+                >
+                  <Download className="size-3.5 mr-1.5" /> PDF
+                </Button>
+                <div className="flex items-center gap-1 rounded border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-400">
+                  <IndianRupee className="size-3.5" /> Revenue: ₹{totalFilteredEarnings}
+                </div>
+                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-slate-400 hover:text-white cursor-pointer" onClick={() => setShowRecords(false)}>
+                  <X className="size-5" />
+                </Button>
+              </div>
+            </div>
+
+            {/* SEARCH, CATEGORY & DATE FILTER CONTROLS */}
+            <div className="my-3 space-y-2.5">
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-2.5 size-4 text-slate-400" />
+                  <Input
+                    value={recordSearch}
+                    onChange={(e) => setRecordSearch(e.target.value)}
+                    placeholder="Search Player Name, Date, or Station ID..."
+                    className="pl-9 h-9 text-xs bg-slate-950 border-slate-800 text-white focus:border-red-600 focus:ring-1 focus:ring-red-600"
+                  />
+                </div>
+
+                <div className="relative w-40">
+                  <Calendar className="absolute left-2.5 top-2.5 size-4 text-amber-400 pointer-events-none" />
+                  <Input
+                    type="date"
+                    value={customDate}
+                    onChange={(e) => {
+                      setCustomDate(e.target.value);
+                      if (e.target.value) setDateFilterMode("custom");
+                    }}
+                    className="pl-8 h-9 text-xs bg-slate-950 border-slate-800 text-white focus:border-amber-500 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between bg-slate-950 p-1.5 rounded-lg border border-slate-800">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1 mr-1">Date:</span>
+                  {[
+                    { id: "all", label: "All Time" },
+                    { id: "today", label: "Today" },
+                    { id: "yesterday", label: "Yesterday" },
+                  ].map((dt) => (
+                    <Button
+                      key={dt.id}
+                      size="sm"
+                      variant={dateFilterMode === dt.id ? "default" : "outline"}
+                      className={
+                        dateFilterMode === dt.id
+                          ? "bg-amber-600 hover:bg-amber-700 text-white font-bold h-7 text-xs border-0 cursor-pointer"
+                          : "h-7 text-xs border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-800 cursor-pointer"
+                      }
+                      onClick={() => {
+                        setDateFilterMode(dt.id as any);
+                        if (dt.id !== "custom") setCustomDate("");
+                      }}
+                    >
+                      {dt.label}
+                    </Button>
+                  ))}
+                </div>
+
+                {dateFilterMode === "custom" && customDate && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 text-[10px] text-red-400 hover:text-red-300 hover:bg-red-950/40 cursor-pointer"
+                    onClick={() => {
+                      setDateFilterMode("all");
+                      setCustomDate("");
+                    }}
+                  >
+                    Clear Date ({customDate})
+                  </Button>
+                )}
+              </div>
+
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { id: "all", label: "All Stations" },
+                  { id: "vip", label: "PS5 VIP (55″)" },
+                  { id: "ps5", label: "PS5 Standard" },
+                  { id: "ps4", label: "PS4 Zone" },
+                  { id: "pc", label: "PC Arena" },
+                  { id: "sim", label: "Simulators" },
+                ].map((cat) => (
+                  <Button
+                    key={cat.id}
+                    size="sm"
+                    variant={recordCategory === cat.id ? "default" : "outline"}
+                    className={
+                      recordCategory === cat.id
+                        ? "bg-red-600 hover:bg-red-700 text-white font-bold h-7 text-xs border-0 cursor-pointer"
+                        : "h-7 text-xs border-slate-800 bg-slate-950 text-slate-300 hover:bg-slate-800 cursor-pointer"
+                    }
+                    onClick={() => setRecordCategory(cat.id)}
+                  >
+                    {cat.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto pr-1 space-y-2 max-h-[40vh]">
+              {filteredRecords.length === 0 ? (
+                <div className="py-12 text-center text-xs text-slate-500">
+                  No records found matching your selection.
+                </div>
+              ) : (
+                filteredRecords.map((log) => {
+                  const displayDate = formatExactDate(log);
+                  const displayName = STATION_NAMES[log.stationId] || log.stationId;
+                  return (
+                    <div
+                      key={log.id}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded border border-slate-800 bg-slate-950/70 hover:border-slate-700 transition-all gap-2 text-xs"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded border border-slate-700 bg-slate-900 text-red-400">
+                          {displayName}
+                        </span>
+                        <div>
+                          <p className="font-bold text-white">
+                            {log.customer}
+                          </p>
+                          <p className="text-[11px] text-slate-400">
+                            Played: <strong className="text-slate-200">{log.minutes} mins</strong> {log.startTime ? `(${log.startTime}${log.endTime ? ' - ' + log.endTime : ''})` : ''}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between sm:justify-end gap-4">
+                        <span className="text-[11px] text-slate-400 font-mono">
+                          {displayDate}
+                        </span>
+                        <span className="font-bold text-emerald-400 text-sm">
+                          ₹{log.amount}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </main>
+  );
+}

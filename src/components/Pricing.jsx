@@ -57,11 +57,11 @@ export const Pricing = ({ onOpenBooking }) => {
             <div className="grid grid-cols-3 gap-2 text-center font-mono text-xs">
               <div className="bg-[#181922] p-2.5 rounded-xl border border-white/5 flex flex-col justify-center">
                 <span className="text-gray-400 text-[9px] block font-bold uppercase">30 MIN</span>
-                <span className="text-[#ccff00] font-black text-sm">???</span>
+                <span className="text-[#ccff00] font-black text-sm">₹150</span>
               </div>
               <div className="bg-[#181922] p-2.5 rounded-xl border border-white/5 flex flex-col justify-center">
                 <span className="text-gray-400 text-[9px] block font-bold uppercase">1 HOUR</span>
-                <span className="text-[#ccff00] font-black text-sm">???</span>
+                <span className="text-[#ccff00] font-black text-sm">₹250</span>
               </div>
               
               {/* 🔥 HIGHLIGHTED 3 HOUR PACK */}
@@ -70,7 +70,7 @@ export const Pricing = ({ onOpenBooking }) => {
                   🔥 BEST VALUE
                 </span>
                 <span className="text-white text-[9px] block font-bold uppercase">3 HOUR</span>
-                <span className="text-[#ccff00] font-black text-base drop-shadow-[0_0_8px_rgba(204,255,0,0.8)]">???</span>
+                <span className="text-[#ccff00] font-black text-base drop-shadow-[0_0_8px_rgba(204,255,0,0.8)]">₹650</span>
               </div>
             </div>
           </div>
@@ -87,11 +87,11 @@ export const Pricing = ({ onOpenBooking }) => {
             <div className="grid grid-cols-3 gap-2 text-center font-mono text-xs">
               <div className="bg-[#181922] p-2.5 rounded-xl border border-white/5 flex flex-col justify-center">
                 <span className="text-gray-400 text-[9px] block font-bold uppercase">30 MIN</span>
-                <span className="text-[#ccff00] font-black text-sm">???</span>
+                <span className="text-[#ccff00] font-black text-sm">₹120</span>
               </div>
               <div className="bg-[#181922] p-2.5 rounded-xl border border-white/5 flex flex-col justify-center">
                 <span className="text-gray-400 text-[9px] block font-bold uppercase">1 HOUR</span>
-                <span className="text-[#ccff00] font-black text-sm">???</span>
+                <span className="text-[#ccff00] font-black text-sm">₹200</span>
               </div>
               
               {/* 🔥 HIGHLIGHTED 3 HOUR PACK */}
@@ -100,7 +100,7 @@ export const Pricing = ({ onOpenBooking }) => {
                   🔥 POPULAR
                 </span>
                 <span className="text-white text-[9px] block font-bold uppercase">3 HOUR</span>
-                <span className="text-[#ccff00] font-black text-base drop-shadow-[0_0_8px_rgba(204,255,0,0.8)]">???</span>
+                <span className="text-[#ccff00] font-black text-base drop-shadow-[0_0_8px_rgba(204,255,0,0.8)]">₹500</span>
               </div>
             </div>
           </div>
@@ -209,8 +209,8 @@ export const Pricing = ({ onOpenBooking }) => {
             </h3>
             <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm font-bold font-mono">
               <div className="flex justify-between border-b border-gray-800/60 py-2"><span>10 MINUTES</span><span className="text-[#ccff00]">₹50</span></div>
-              <div className="flex justify-between border-b border-gray-800/60 py-2"><span>30 MINUTES</span><span className="text-[#ccff00]">₹150</span></div>
-              <div className="flex justify-between border-b border-gray-800/60 py-2"><span>1 HOUR</span><span className="text-[#ccff00]">₹250</span></div>
+              <div className="flex justify-between border-b border-gray-800/60 py-2"><span>30 MINUTES</span><span className="text-[#ccff00]">₹120</span></div>
+              <div className="flex justify-between border-b border-gray-800/60 py-2"><span>1 HOUR</span><span className="text-[#ccff00]">₹200</span></div>
             </div>
           </div>
         </div>

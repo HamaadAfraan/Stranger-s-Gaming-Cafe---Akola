@@ -3,13 +3,13 @@ import { X, CheckCircle2 } from 'lucide-react';
 import BookingAvailability from './Booking/BookingAvailability';
 import BookingPayment from './Booking/BookingPayment';
 import { auth, db } from '../firebase';
-import { 
-  collection, 
-  addDoc, 
-  doc, 
-  getDoc, 
-  updateDoc, 
-  serverTimestamp 
+import {
+  collection,
+  addDoc,
+  doc,
+  getDoc,
+  updateDoc,
+  serverTimestamp
 } from 'firebase/firestore';
 
 
@@ -125,24 +125,36 @@ const calculateBookingPrice = ({
   const totalMinutes = endTime - startTime;
 
   if (selectedCategory === 'PS5' && selectedGame === 'GTA 6') {
-    // Exact 3 Hour (180 mins) Fixed Package Rates
-    if (totalMinutes === 180) {
-      if (selectedScreen === '55" VIP') return 650; // Ultimate Edition
-      return 500; // Standard Edition (43")
+    const isVIP = selectedScreen === '55" VIP';
+    const base3HourPrice = isVIP ? 650 : 500;
+    const hourlyExtraRate = isVIP ? 250 : 200;
+    const halfHourExtraRate = isVIP ? 150 : 120;
+
+    if (totalMinutes > 0 && totalMinutes % 180 === 0) {
+      const blocksOf3Hours = totalMinutes / 180;
+      return blocksOf3Hours * base3HourPrice;
+    }
+
+    if (totalMinutes > 180) {
+      const remainderMins = totalMinutes % 180;
+      const baseBlocksPrice = Math.floor(totalMinutes / 180) * base3HourPrice;
+
+      const extraHours = Math.floor(remainderMins / 60);
+      const remainingMins = remainderMins % 60;
+
+      let extraCost = extraHours * hourlyExtraRate;
+      if (remainingMins === 30) {
+        extraCost += halfHourExtraRate;
+      }
+      return baseBlocksPrice + extraCost;
     }
 
     const fullHours = Math.floor(totalMinutes / 60);
     const remainingMins = totalMinutes % 60;
 
-    if (selectedScreen === '55" VIP') {
-      let price = fullHours * 250;
-      if (remainingMins === 30) price += 150;
-      return price;
-    } else {
-      let price = fullHours * 200;
-      if (remainingMins === 30) price += 120;
-      return price;
-    }
+    let price = fullHours * hourlyExtraRate;
+    if (remainingMins === 30) price += halfHourExtraRate;
+    return price;
   }
 
   const currentStation = stations.find((s) => s.id === selectedCategory);
@@ -228,7 +240,7 @@ export const BookingModal = ({
       if (isOpen) {
         try {
           const currentUser = auth.currentUser;
-          
+
           if (!currentUser) {
             onClose();
             window.dispatchEvent(new CustomEvent('open-login-modal'));
@@ -239,7 +251,7 @@ export const BookingModal = ({
           try {
             const docRef = doc(db, 'profiles', userId);
             const docSnap = await getDoc(docRef);
-            
+
             if (docSnap.exists()) {
               const data = docSnap.data();
               setFormData((prev) => ({
@@ -312,7 +324,7 @@ export const BookingModal = ({
     if (rawValue.length <= 20) {
       setFormData((prev) => ({ ...prev, phone: rawValue }));
     }
-  }; 
+  };
 
   const isNameValid = formData.name.trim().length >= 2;
   const isPhoneValid = formData.phone.trim().replace(/[\s+\-]/g, '').length >= 7;
@@ -367,7 +379,7 @@ export const BookingModal = ({
         station_id: selectedCategory,
         screen: currentStation?.hasScreens ? selectedScreen : '',
         team: currentStation?.multiplayer ? selectedTeam : '1 Player',
-        selectedGame: selectedCategory === 'PS5' ? selectedGame : '',
+        selectedGame: selectedGame || 'Standard', // <-- FIXED HERE: Proper game/edition save
         duration: formatDurationText(endTime - startTime),
         slot: timeSlotString,
         slot_time: timeSlotString,
@@ -416,9 +428,8 @@ export const BookingModal = ({
     };
 
     if (paymentMethod === 'razorpay' || paymentMethod === 'upi') {
-      // Dynamic Key Reader from Environment Variables
       const razorpayKeyId = import.meta.env.VITE_RAZORPAY_KEY_ID;
-      
+
       if (!razorpayKeyId) {
         setErrorMessage('Razorpay Key ID missing in environment configuration.');
         return;
@@ -429,7 +440,7 @@ export const BookingModal = ({
         amount: bookingPrice * 100,
         currency: "INR",
         name: "Stranger's Gaming Cafe",
-        description: `Booking - ${selectedCategory} (${formatDurationText(endTime - startTime)})`,
+        description: `Booking - ${selectedCategory} (${selectedGame === 'GTA 6' ? 'GTA VI Launch' : 'Standard'})`,
         image: "/favicon.ico",
         handler: async function (response) {
           await executeBookingSave(response.razorpay_payment_id);
@@ -476,7 +487,7 @@ export const BookingModal = ({
   return (
     <div className="fixed inset-0 z-[10000] bg-[#0a0a0c] overflow-y-auto w-full min-h-screen font-sans">
       <div className="w-full max-w-xl mx-auto px-4 py-6 sm:px-6 min-h-screen flex flex-col justify-start">
-        
+
         {/* Top Header Bar */}
         <div className="flex items-center justify-between pb-4 mb-5 border-b border-white/10 sticky top-0 bg-[#0a0a0c]/95 backdrop-blur-md z-40 pt-2">
           <div>
@@ -580,46 +591,60 @@ export const BookingModal = ({
 
             <div className="mt-5 p-4 rounded-2xl bg-[#12131a] border border-white/10 text-left space-y-3 font-mono text-xs shadow-inner">
               <div className="flex justify-between border-b border-white/10 pb-2">
-                <span className="text-zinc-400">Booking Date:</span>
-                <span className="text-[#ccff00] font-bold">{confirmedBookingDetails.bookingDate}</span>
+                <span className="text-zinc-400 uppercase">Status:</span>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase font-orbitron bg-emerald-950/80 border border-emerald-500/40 text-emerald-300">
+                  {confirmedBookingDetails.status || 'CONFIRMED'}
+                </span>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-2">
-                <span className="text-zinc-400">Booked At:</span>
-                <span className="text-white font-bold">{confirmedBookingDetails.created_time || 'Just now'}</span>
+                <span className="text-zinc-400 uppercase">Booking Date:</span>
+                <span className="text-white font-bold">{confirmedBookingDetails.bookingDate}</span>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-2">
-                <span className="text-zinc-400">Customer Name:</span>
+                <span className="text-zinc-400 uppercase">Booked At (Time):</span>
+                <span className="text-cyan-300 font-mono font-bold">
+                  {confirmedBookingDetails.created_time || 'Just now'}
+                </span>
+              </div>
+              <div className="flex justify-between border-b border-white/10 pb-2">
+                <span className="text-zinc-400 uppercase">Customer Name:</span>
                 <span className="text-white font-bold">{confirmedBookingDetails.name}</span>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-2">
-                <span className="text-zinc-400">Phone Number:</span>
-                <span className="text-white font-bold">{confirmedBookingDetails.phone}</span>
+                <span className="text-zinc-400 uppercase">Phone Number:</span>
+                <span className="text-zinc-200">{confirmedBookingDetails.phone}</span>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-2">
-                <span className="text-zinc-400">Platform & Game:</span>
-                <span className="text-[#ccff00] font-bold">
-                  {confirmedBookingDetails.category}{' '}
-                  {confirmedBookingDetails.screen ? `(${confirmedBookingDetails.screen})` : ''}
-                  {confirmedBookingDetails.selectedGame ? ` - ${confirmedBookingDetails.selectedGame}` : ''}
+                <span className="text-zinc-400 uppercase">Station / Platform:</span>
+                <span className="text-amber-300 font-bold">
+                  {confirmedBookingDetails.category} {confirmedBookingDetails.screen ? `(${confirmedBookingDetails.screen})` : ''}
                 </span>
               </div>
+              {confirmedBookingDetails.selectedGame && (
+                <div className="flex justify-between border-b border-white/10 pb-2">
+                  <span className="text-zinc-400 uppercase">Game / Edition:</span>
+                  <span className="text-[#ccff00] font-bold font-orbitron">{confirmedBookingDetails.selectedGame}</span>
+                </div>
+              )}
               <div className="flex justify-between border-b border-white/10 pb-2">
-                <span className="text-red-400 font-bold">Reserved Slot:</span>
+                <span className="text-zinc-400 uppercase">Reserved Slot Time:</span>
                 <span className="text-red-400 font-bold whitespace-pre-line text-right">{confirmedBookingDetails.slot}</span>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-2">
-                <span className="text-zinc-400">Duration & Perks:</span>
-                <span className="text-emerald-300 font-bold">{confirmedBookingDetails.duration}</span>
+                <span className="text-zinc-400 uppercase">Duration / Team:</span>
+                <span className="text-purple-300">
+                  {confirmedBookingDetails.duration} {confirmedBookingDetails.team ? `• ${confirmedBookingDetails.team}` : ''}
+                </span>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-2">
-                <span className="text-zinc-400">UTR / Mode:</span>
-                <span className="text-purple-300 font-bold font-mono tracking-wider break-all text-right max-w-[200px]">
+                <span className="text-zinc-400 uppercase">Transaction UTR / Ref:</span>
+                <span className="text-purple-300 font-mono font-bold tracking-wider break-all text-right max-w-[200px]">
                   {confirmedBookingDetails.utr}
                 </span>
               </div>
-              <div className="flex justify-between pt-1">
-                <span className="text-zinc-400 font-bold">Total Amount:</span>
-                <span className="text-[#ccff00] font-black text-sm font-orbitron">
+              <div className="flex justify-between pt-1 text-sm font-bold font-orbitron">
+                <span className="text-zinc-300 uppercase">Total Amount Paid:</span>
+                <span className="text-[#ccff00]">
                   ₹{confirmedBookingDetails.price}
                 </span>
               </div>

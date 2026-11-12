@@ -6,6 +6,7 @@ const BookingPayment = ({
   selectedCategory,
   selectedScreen,
   selectedTeam,
+  selectedGame,
   currentStation,
   startTime,
   endTime,
@@ -26,13 +27,30 @@ const BookingPayment = ({
   const [showPlatformChargeHelp, setShowPlatformChargeHelp] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('upi');
 
-  // PLATFORM / CONVENIENCE FEE SET TO ₹10
   const PLATFORM_FEE = 10;
   const baseAmount = Number(rawTotalAmount) || 0;
   const finalTotalAmount = baseAmount + PLATFORM_FEE;
   const finalPayAmount = finalTotalAmount;
 
   const hasEnoughDiamonds = userRedeemableDiamonds >= finalTotalAmount;
+
+  const getOriginalComparisonPrice = () => {
+    const durationMins = endTime - startTime;
+    if (selectedCategory === 'PS5' && selectedGame === 'GTA 6' && durationMins >= 180) {
+      const isVIP = selectedScreen?.includes('55"');
+      const hrRate = isVIP ? 250 : 200;
+      const min30Rate = isVIP ? 150 : 120;
+      
+      const fullHours = Math.floor(durationMins / 60);
+      const remainingMins = durationMins % 60;
+      let regularPrice = fullHours * hrRate;
+      if (remainingMins === 30) regularPrice += min30Rate;
+      return regularPrice;
+    }
+    return null;
+  };
+
+  const originalComparisonPrice = getOriginalComparisonPrice();
 
   return (
     <div className="w-full text-white pb-6 font-sans relative">
@@ -69,6 +87,7 @@ const BookingPayment = ({
             <span className="font-bold text-[#ccff00] font-orbitron truncate ml-2">
               {selectedCategory}{' '}
               {currentStation?.hasScreens ? `(${selectedScreen})` : ''}
+              {selectedGame ? ` - ${selectedGame}` : ''}
             </span>
           </div>
 
@@ -86,20 +105,29 @@ const BookingPayment = ({
             </span>
           </div>
 
-          {/* BASE AMOUNT */}
           <div className="border-t border-white/10 pt-2 flex justify-between items-center text-xs font-mono text-zinc-300">
             <span className="text-zinc-400">Base Amount:</span>
-            <span className="text-white font-bold">₹{baseAmount}</span>
+            <div className="flex items-center gap-2">
+              {originalComparisonPrice ? (
+                <>
+                  <span className="text-zinc-500 line-through text-xs font-mono">₹{originalComparisonPrice}</span>
+                  <span className="text-[#ccff00] font-bold text-sm">₹{baseAmount}</span>
+                  <span className="bg-red-500/20 text-red-400 border border-red-500/30 text-[8px] font-bold px-1.5 py-0.2 rounded uppercase font-mono">
+                    {endTime - startTime === 180 ? '3-HR OFF' : '3-HR + EXTRA'}
+                  </span>
+                </>
+              ) : (
+                <span className="text-white font-bold">₹{baseAmount}</span>
+              )}
+            </div>
           </div>
 
-          {/* PLATFORM / CONVENIENCE FEE */}
           <div className="flex justify-between items-center text-xs font-mono text-zinc-300">
             <div className="flex items-center gap-1.5">
               <span className="text-zinc-400">Platform / Convenience Fee:</span>
               <button
                 type="button"
                 onClick={() => setShowPlatformChargeHelp(!showPlatformChargeHelp)}
-                title="Platform Charge Info"
                 className="inline-flex items-center justify-center p-0.5 rounded-full text-zinc-400 hover:text-[#ccff00] hover:bg-white/10 transition-all cursor-pointer"
               >
                 <HelpCircle className="w-3.5 h-3.5 text-[#ccff00]" />
@@ -114,7 +142,6 @@ const BookingPayment = ({
             </div>
           )}
 
-          {/* TOTAL AMOUNT */}
           <div className="border-t border-white/10 pt-2 flex justify-between items-center text-sm font-bold font-orbitron text-[#ccff00]">
             <span>Total Amount:</span>
             <span>₹{finalTotalAmount}</span>
@@ -169,7 +196,7 @@ const BookingPayment = ({
           </div>
         </div>
 
-        {/* PAYMENT METHOD SELECTION TABS */}
+        {/* PAYMENT METHOD SELECTION */}
         <div className="mt-4">
           <label className="text-xs text-[#ccff00] font-mono font-bold block mb-2 uppercase tracking-wider">
             ⚡ Select Payment Method
@@ -201,7 +228,6 @@ const BookingPayment = ({
           </div>
         </div>
 
-        {/* CONDITIONAL DIAMONDS INFO VIEW */}
         {paymentMethod === 'diamonds' && (
           <div className="mt-3.5 bg-[#181922] p-3.5 rounded-xl border border-[#ccff00]/30 text-center space-y-2.5 shadow-md">
             <div className="text-xl animate-bounce">💎</div>
@@ -223,7 +249,6 @@ const BookingPayment = ({
           </div>
         )}
 
-        {/* SUBMIT BUTTON */}
         <div className="mt-5">
           <button
             type="button"

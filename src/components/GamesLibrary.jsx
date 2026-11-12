@@ -1,4 +1,6 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 // Helper function: Resolves local asset image path (Vite / React support)
 const getCoverImage = (filename) => {
@@ -329,110 +331,12 @@ const isVideoUrl = (url) => {
   return str.includes('.mp4') || str.includes('.mov') || str.includes('cloudinary');
 };
 
-const GameCard = ({ game, onOpenModal }) => {
-  const videoRef = useRef(null);
-  const [isVideoLoading, setIsVideoLoading] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-    if (videoRef.current) {
-      videoRef.current.currentTime = 0;
-      setIsVideoLoading(true);
-      videoRef.current.play()
-        .then(() => setIsVideoLoading(false))
-        .catch(() => setIsVideoLoading(false));
-    }
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-    setIsVideoLoading(false);
-    if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
-    }
-  };
-
-  return (
-    <div
-      className="bg-[#101014] border border-white/10 rounded-2xl overflow-hidden hover:border-[#ccff00]/50 transition duration-300 group flex flex-col justify-between shadow-lg"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
-      <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-black/50">
-        <img
-          src={game.coverImage}
-          alt={game.name}
-          className={`w-full h-full object-cover transition-opacity duration-300 ${isHovered && !isVideoLoading ? 'hidden' : 'block'}`}
-        />
-
-        {/* Loading Spinner Animation */}
-        {isHovered && isVideoLoading && (
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-xs flex flex-col items-center justify-center z-10 space-y-2">
-            <div className="w-8 h-8 border-3 border-[#ccff00] border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-[10px] text-[#ccff00] font-mono tracking-wider uppercase">Loading Trailer...</span>
-          </div>
-        )}
-
-        {isVideoUrl(game.mediaUrl) ? (
-          <video
-            ref={videoRef}
-            src={game.mediaUrl}
-            muted
-            loop
-            playsInline
-            preload="auto"
-            onWaiting={() => setIsVideoLoading(true)}
-            onPlaying={() => setIsVideoLoading(false)}
-            className={`w-full h-full object-cover transition-opacity duration-300 pointer-events-none ${isHovered ? 'block' : 'hidden'}`}
-          />
-        ) : (
-          <img
-            src={game.mediaUrl}
-            alt={`${game.name} Preview`}
-            className={`w-full h-full object-cover transition-opacity duration-300 ${isHovered ? 'block' : 'hidden'}`}
-          />
-        )}
-
-        {game.isPopular && (
-          <span className="absolute top-2.5 right-2.5 bg-red-600/90 text-white text-[9px] sm:text-[10px] font-bold uppercase px-2.5 py-0.5 rounded shadow z-20 font-mono">
-            Popular 🔥
-          </span>
-        )}
-
-        <span className="absolute bottom-2.5 left-2.5 bg-black/80 backdrop-blur-md text-[#ccff00] border border-[#ccff00]/30 text-[9px] sm:text-[10px] font-bold px-2.5 py-0.5 rounded z-20 font-mono">
-          {game.genre}
-        </span>
-      </div>
-
-      <div className="p-3.5 sm:p-4 flex-1 flex flex-col justify-between space-y-2.5 sm:space-y-3">
-        <div>
-          <h3 className="text-sm sm:text-lg font-bold text-white group-hover:text-[#ccff00] transition-colors line-clamp-1 font-orbitron">
-            {game.name}
-          </h3>
-          <div className="text-[11px] sm:text-xs text-gray-400 flex items-center gap-2 mt-0.5 sm:mt-1 font-mono">
-            <span>👥 {game.players}</span>
-          </div>
-        </div>
-
-        <button
-          onClick={() => onOpenModal(game)}
-          className="w-full py-2 bg-[#ccff00]/10 hover:bg-[#ccff00] text-[#ccff00] hover:text-black border border-[#ccff00]/30 font-bold text-xs rounded-xl transition duration-200 mt-1 cursor-pointer font-orbitron uppercase tracking-wider"
-        >
-          View Details & Consoles
-        </button>
-      </div>
-    </div>
-  );
-};
-
 // Modal Video Player Component with Loading Spinner
 const ModalVideoPlayer = ({ mediaUrl, gameName }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   return (
-    <div className="relative h-44 sm:h-56 w-full shrink-0 bg-black">
+    <div className="relative aspect-video w-full shrink-0 bg-black flex items-center justify-center">
       {isLoading && (
         <div className="absolute inset-0 bg-black/70 backdrop-blur-xs flex flex-col items-center justify-center z-10 space-y-2">
           <div className="w-8 h-8 border-3 border-[#ccff00] border-t-transparent rounded-full animate-spin"></div>
@@ -467,7 +371,11 @@ export const GamesLibrary = () => {
   const [selectedPlayers, setSelectedPlayers] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeModalGame, setActiveModalGame] = useState(null);
-  const [showAll, setShowAll] = useState(false);
+
+  // Carousel States
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [direction, setDirection] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
   const checkPlayerMatch = (gamePlayers, selectedFilter) => {
     if (selectedFilter === 'All') return true;
@@ -488,11 +396,42 @@ export const GamesLibrary = () => {
     });
   }, [selectedPlatform, selectedGenre, selectedPlayers, searchQuery]);
 
-  const isFilteringActive = selectedPlatform !== 'all' || selectedGenre !== 'All' || selectedPlayers !== 'All' || searchQuery.trim() !== '';
-  const displayedGames = showAll || isFilteringActive ? filteredGames : filteredGames.slice(0, 8);
+  const length = filteredGames.length;
+
+  // Reset index when filters change
+  useEffect(() => {
+    setCurrentIndex(0);
+  }, [selectedPlatform, selectedGenre, selectedPlayers, searchQuery]);
+
+  // Automatic Carousel Interval (Every 3.5 Seconds)
+  useEffect(() => {
+    if (isPaused || length <= 1) return;
+    const interval = setInterval(() => {
+      setDirection(1);
+      setCurrentIndex((prev) => (prev + 1) % length);
+    }, 3500);
+    return () => clearInterval(interval);
+  }, [isPaused, length]);
+
+  const handleNext = () => {
+    if (length <= 1) return;
+    setDirection(1);
+    setCurrentIndex((prev) => (prev + 1) % length);
+  };
+
+  const handlePrev = () => {
+    if (length <= 1) return;
+    setDirection(-1);
+    setCurrentIndex((prev) => (prev - 1 + length) % length);
+  };
+
+  const getCardIndex = (offset) => {
+    if (length === 0) return 0;
+    return (currentIndex + offset + length) % length;
+  };
 
   return (
-    <section id="games" className="py-10 sm:py-20 px-3 sm:px-6 max-w-7xl mx-auto border-t border-white/10 bg-[#0a0a0c] text-white font-sans">
+    <section id="games" className="py-10 sm:py-20 px-3 sm:px-6 max-w-7xl mx-auto border-t border-white/10 bg-[#0a0a0c] text-white font-sans overflow-hidden">
       
       {/* Header */}
       <div className="mb-6 sm:mb-8 text-center">
@@ -509,7 +448,7 @@ export const GamesLibrary = () => {
         {PLATFORMS.map((plat) => (
           <button
             key={plat.id}
-            onClick={() => { setSelectedPlatform(plat.id); setShowAll(false); }}
+            onClick={() => setSelectedPlatform(plat.id)}
             className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-lg whitespace-nowrap transition-all border cursor-pointer font-mono ${
               selectedPlatform === plat.id
                 ? 'bg-[#ccff00] text-black border-[#ccff00] font-bold shadow-[0_0_15px_rgba(204,255,0,0.3)]'
@@ -528,7 +467,7 @@ export const GamesLibrary = () => {
             type="text"
             placeholder="Search game title (e.g. Tekken, GTA)..."
             value={searchQuery}
-            onChange={(e) => { setSearchQuery(e.target.value); setShowAll(false); }}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-[#0a0a0c] border border-white/10 rounded-xl px-3.5 sm:px-4 py-2.5 sm:py-3 pl-9 sm:pl-10 text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#ccff00] transition font-mono"
           />
           <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 absolute left-3 top-3.5 sm:top-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -542,7 +481,7 @@ export const GamesLibrary = () => {
           {GENRES.map((genre) => (
             <button
               key={genre}
-              onClick={() => { setSelectedGenre(genre); setShowAll(false); }}
+              onClick={() => setSelectedGenre(genre)}
               className={`px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-medium transition whitespace-nowrap shrink-0 sm:shrink cursor-pointer font-mono ${
                 selectedGenre === genre
                   ? 'bg-[#ccff00]/15 text-[#ccff00] border border-[#ccff00]/40 font-bold'
@@ -560,7 +499,7 @@ export const GamesLibrary = () => {
           {PLAYER_COUNTS.map((p) => (
             <button
               key={p}
-              onClick={() => { setSelectedPlayers(p); setShowAll(false); }}
+              onClick={() => setSelectedPlayers(p)}
               className={`px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-medium transition whitespace-nowrap shrink-0 sm:shrink cursor-pointer font-mono ${
                 selectedPlayers === p
                   ? 'bg-[#ccff00]/15 text-[#ccff00] border border-[#ccff00]/40 font-bold'
@@ -573,43 +512,165 @@ export const GamesLibrary = () => {
         </div>
       </div>
 
-      <div className="text-[11px] sm:text-xs text-gray-400 mb-3 sm:mb-4 font-mono">
-        Showing <span className="text-[#ccff00] font-bold">{displayedGames.length}</span> of <span className="text-white font-bold">{filteredGames.length}</span> games
+      <div className="text-[11px] sm:text-xs text-gray-400 mb-3 sm:mb-4 font-mono text-center">
+        Showing Game <span className="text-[#ccff00] font-bold">{length > 0 ? currentIndex + 1 : 0}</span> of <span className="text-white font-bold">{length}</span> matching games
       </div>
 
-      {/* Game Cards Grid */}
-      {filteredGames.length === 0 ? (
-        <div className="text-center py-12 text-gray-500 font-mono text-xs sm:text-sm">
+      {/* GAMES WIDESCREEN 16:9 3D ELASTIC COVERFLOW CAROUSEL */}
+      {length === 0 ? (
+        <div className="text-center py-16 text-gray-500 font-mono text-xs sm:text-sm bg-[#101014] border border-white/10 rounded-3xl">
           No games found matching your filters.
         </div>
       ) : (
-        <>
-          <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5">
-            {displayedGames.map((game) => (
-              <GameCard key={game.id} game={game} onOpenModal={setActiveModalGame} />
-            ))}
+        <div 
+          className="relative max-w-6xl mx-auto py-6 px-2 flex flex-col items-center justify-center"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
+          {/* Left Arrow Button */}
+          <button
+            onClick={handlePrev}
+            className="absolute left-2 sm:left-6 top-[40%] -translate-y-1/2 z-40 w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center bg-black/90 backdrop-blur-md text-white border-2 border-white/20 rounded-full hover:bg-[#ccff00] hover:text-black hover:border-[#ccff00] transition-all cursor-pointer shadow-2xl"
+            aria-label="Previous Game"
+          >
+            <ChevronLeft className="w-7 h-7 sm:w-8 sm:h-8" />
+          </button>
+
+          {/* Right Arrow Button */}
+          <button
+            onClick={handleNext}
+            className="absolute right-2 sm:right-6 top-[40%] -translate-y-1/2 z-40 w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center bg-black/90 backdrop-blur-md text-white border-2 border-white/20 rounded-full hover:bg-[#ccff00] hover:text-black hover:border-[#ccff00] transition-all cursor-pointer shadow-2xl"
+            aria-label="Next Game"
+          >
+            <ChevronRight className="w-7 h-7 sm:w-8 sm:h-8" />
+          </button>
+
+          {/* Widescreen 3D Stage with Touch/Mouse Drag & Swipe */}
+          <div 
+            className="relative w-full h-[400px] sm:h-[480px] flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing touch-pan-y"
+            style={{ perspective: '1600px' }}
+          >
+            <motion.div 
+              className="relative w-full h-full flex items-center justify-center"
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.9}
+              onDragEnd={(_, info) => {
+                const swipePower = info.offset.x * info.velocity.x;
+                if (swipePower < -200 || info.offset.x < -40) {
+                  handleNext();
+                } else if (swipePower > 200 || info.offset.x > 40) {
+                  handlePrev();
+                }
+              }}
+            >
+              {[-1, 0, 1].map((offset) => {
+                const itemIndex = getCardIndex(offset);
+                const game = filteredGames[itemIndex];
+                if (!game) return null;
+
+                const isCenter = offset === 0;
+
+                return (
+                  <motion.div
+                    key={`${game.id}-${offset}`}
+                    initial={{ opacity: 0, x: direction > 0 ? 120 : -120, scale: 0.85 }}
+                    animate={{
+                      x: offset * (window.innerWidth < 640 ? 290 : 470),
+                      scale: isCenter ? 1 : 0.82,
+                      rotateY: offset * -28,
+                      opacity: isCenter ? 1 : 0.35,
+                      zIndex: isCenter ? 30 : 10,
+                    }}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 280,
+                      damping: 24,
+                    }}
+                    onClick={() => {
+                      if (!isCenter) {
+                        setDirection(offset > 0 ? 1 : -1);
+                        setCurrentIndex(itemIndex);
+                      } else {
+                        setActiveModalGame(game);
+                      }
+                    }}
+                    className={`absolute w-[320px] sm:w-[540px] bg-[#101014] border rounded-3xl sm:rounded-[2.5rem] overflow-hidden shadow-2xl select-none ${
+                      isCenter 
+                        ? 'border-[#ccff00]/90 shadow-[0_0_65px_rgba(204,255,0,0.35)] cursor-pointer' 
+                        : 'border-white/10 hover:opacity-60 cursor-pointer'
+                    }`}
+                  >
+                    {/* 16:9 Widescreen Image Container */}
+                    <div className="relative aspect-video w-full overflow-hidden bg-zinc-900">
+                      <img
+                        src={game.coverImage}
+                        alt={game.name}
+                        loading="lazy"
+                        className="w-full h-full object-cover pointer-events-none"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#101014] via-transparent to-transparent" />
+
+                      {game.isPopular && (
+                        <span className="absolute top-3 left-3 sm:top-4 sm:left-4 bg-red-600/90 text-white text-[10px] sm:text-xs font-bold uppercase px-3 py-1 rounded-xl shadow-lg z-20 font-mono">
+                          Popular 🔥
+                        </span>
+                      )}
+
+                      <span className="absolute top-3 right-3 sm:top-4 sm:right-4 px-3 py-1.5 rounded-xl bg-black/85 backdrop-blur-md text-[#ccff00] text-[10px] sm:text-xs font-mono font-bold border border-[#ccff00]/40 shadow-lg">
+                        {game.genre}
+                      </span>
+                    </div>
+
+                    {/* Widescreen Game Info Box */}
+                    <div className="p-4 sm:p-5 bg-[#101014] text-left flex flex-col justify-between space-y-2">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-base sm:text-xl font-black font-orbitron text-white line-clamp-1">
+                          {game.name}
+                        </h3>
+                        <span className="text-xs text-zinc-400 font-mono">👥 {game.players}</span>
+                      </div>
+                      
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveModalGame(game);
+                        }}
+                        className="w-full py-2.5 bg-[#ccff00]/10 hover:bg-[#ccff00] text-[#ccff00] hover:text-black border border-[#ccff00]/40 font-bold text-xs sm:text-sm rounded-xl transition duration-200 cursor-pointer font-orbitron uppercase tracking-wider mt-1"
+                      >
+                        View Details & Consoles
+                      </button>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
           </div>
 
-          {/* Show More / Show Less Button */}
-          {!isFilteringActive && filteredGames.length > 8 && (
-            <div className="mt-8 text-center">
+          {/* Dots Indicator */}
+          <div className="flex items-center justify-center gap-2.5 mt-4 flex-wrap max-w-xl">
+            {filteredGames.map((_, idx) => (
               <button
-                onClick={() => setShowAll(!showAll)}
-                className="px-6 py-3 bg-[#101014] hover:bg-[#ccff00] text-[#ccff00] hover:text-black border border-[#ccff00]/40 font-bold text-xs sm:text-sm rounded-xl transition duration-300 shadow-[0_0_15px_rgba(204,255,0,0.15)] cursor-pointer font-orbitron uppercase tracking-wider"
-              >
-                {showAll ? "Show Less ⬆️" : `Show More (${filteredGames.length - 8} More Games) ⬇️`}
-              </button>
-            </div>
-          )}
-        </>
+                key={idx}
+                onClick={() => {
+                  setDirection(idx > currentIndex ? 1 : -1);
+                  setCurrentIndex(idx);
+                }}
+                className={`h-2.5 rounded-full transition-all cursor-pointer ${
+                  currentIndex === idx ? 'w-10 bg-[#ccff00]' : 'w-2.5 bg-zinc-700 hover:bg-zinc-500'
+                }`}
+                aria-label={`Go to game ${idx + 1}`}
+              />
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Modal Details */}
       {activeModalGame && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 font-sans">
-          <div className="bg-[#101014] border border-[#ccff00]/40 rounded-2xl max-w-md w-full overflow-hidden shadow-[0_0_30px_rgba(204,255,0,0.2)] max-h-[90vh] flex flex-col relative">
+          <div className="bg-[#101014] border border-[#ccff00]/40 rounded-2xl max-w-xl w-full overflow-hidden shadow-[0_0_30px_rgba(204,255,0,0.2)] max-h-[90vh] flex flex-col relative">
             
-            {/* Enlarged & Perfectly Positioned Round Close Button */}
             <button
               onClick={() => setActiveModalGame(null)}
               className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 w-11 h-11 flex items-center justify-center bg-black/90 backdrop-blur-md text-white border-2 border-white/30 rounded-full hover:bg-[#ccff00] hover:text-black hover:border-[#ccff00] transition-all cursor-pointer z-50 shadow-2xl text-lg font-black"
@@ -622,9 +683,9 @@ export const GamesLibrary = () => {
               <ModalVideoPlayer mediaUrl={activeModalGame.mediaUrl} gameName={activeModalGame.name} />
             </div>
 
-            <div className="p-4 sm:p-5 space-y-3.5 sm:space-y-4 overflow-y-auto">
+            <div className="p-4 sm:p-6 space-y-3.5 sm:space-y-4 overflow-y-auto">
               <div>
-                <h3 className="text-lg sm:text-xl font-black text-white font-orbitron">{activeModalGame.name}</h3>
+                <h3 className="text-lg sm:text-2xl font-black text-white font-orbitron">{activeModalGame.name}</h3>
                 <div className="flex items-center gap-2.5 mt-1.5 text-[11px] sm:text-xs text-gray-400 font-mono">
                   <span className="bg-[#ccff00]/10 border border-[#ccff00]/20 text-[#ccff00] px-2 py-0.5 rounded font-bold">
                     {activeModalGame.genre}
@@ -634,9 +695,9 @@ export const GamesLibrary = () => {
               </div>
 
               {/* Game Description */}
-              <div className="bg-[#0a0a0c] p-3 rounded-xl border border-white/5">
+              <div className="bg-[#0a0a0c] p-3.5 rounded-xl border border-white/5">
                 <h4 className="text-[10px] sm:text-[11px] font-mono uppercase text-gray-400 mb-1">About Game:</h4>
-                <p className="text-xs text-gray-300 leading-relaxed font-mono">
+                <p className="text-xs sm:text-sm text-gray-300 leading-relaxed font-mono">
                   {activeModalGame.description}
                 </p>
               </div>

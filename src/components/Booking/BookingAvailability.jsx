@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Monitor, Calendar, Clock, Car } from "lucide-react";
+import { Monitor, Calendar, Clock, Car, Lock } from "lucide-react";
 import { db } from "../../firebase";
 import { doc, getDoc } from "firebase/firestore";
 
@@ -38,32 +38,16 @@ const BookingAvailability = ({
     return `${year}-${month}-${day}`;
   };
 
-  const getFutureMaxDateString = () => {
-    const d = new Date();
-    d.setDate(d.getDate() + 7);
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
-
   const todayStr = getTodayDateString();
-  const maxDateStr = getFutureMaxDateString();
 
-  const [openingMinutes, setOpeningMinutes] = useState(660);
-  const [closingMinutes, setClosingMinutes] = useState(1380);
+  const [openingMinutes, setOpeningMinutes] = useState(750);
+  const [closingMinutes, setClosingMinutes] = useState(1320);
 
   const timeStringToMinutes = (timeStr) => {
     if (!timeStr) return null;
     const [h, m] = timeStr.split(':').map(Number);
     return h * 60 + m;
   };
-
-  useEffect(() => {
-    if (selectedCategory === 'PS5' && selectedGame === 'GTA 6') {
-      setSelectedTeam('1 Player');
-    }
-  }, [selectedCategory, selectedGame, setSelectedTeam]);
 
   useEffect(() => {
     setStartTime(null);
@@ -73,47 +57,42 @@ const BookingAvailability = ({
     const fetchCafeTimingFromFirebase = async () => {
       try {
         const selectedD = new Date(bookingDate);
-        const isFriday = !isNaN(selectedD.getTime()) && selectedD.getDay() === 5;
-        const targetId = isFriday ? "2" : "1";
+        if (isNaN(selectedD.getTime())) return;
 
-        const DEFAULT_OPEN_MINS = 1020;
-        const DEFAULT_CLOSE_MINS = 1320;
+        const dayIndex = selectedD.getDay(); 
+        const targetId = dayIndex === 0 ? "7" : dayIndex.toString();
 
         const docRef = doc(db, 'cafe_settings', targetId);
         const docSnap = await getDoc(docRef);
 
+        const getDefaultDayTimings = (dIdx) => {
+          if (dIdx === 1) return { open: 960, close: 1320 };
+          if (dIdx >= 2 && dIdx <= 4) return { open: 750, close: 1320 };
+          if (dIdx === 5) return { open: 900, close: 1320 };
+          return { open: 870, close: 1320 };
+        };
+
         if (docSnap.exists()) {
           const data = docSnap.data();
-          const updatedAtStr = data.updated_at;
-
-          let isUpdatedForSelectedDate = false;
-
-          if (updatedAtStr) {
-            const updatedDatePart = updatedAtStr.split('T')[0];
-            if (updatedDatePart === bookingDate) {
-              isUpdatedForSelectedDate = true;
-            }
-          }
-
-          if (isUpdatedForSelectedDate && data.open_time && data.close_time) {
+          if (data.open_time && data.close_time) {
             const openMins = timeStringToMinutes(data.open_time);
             const closeMins = timeStringToMinutes(data.close_time);
 
             if (openMins !== null) setOpeningMinutes(openMins);
-            if (closeMins !== null) {
-              setClosingMinutes(closeMins <= (openMins || DEFAULT_OPEN_MINS) ? closeMins + 1440 : closeMins);
-            }
+            if (closeMins !== null) setClosingMinutes(closeMins);
           } else {
-            setOpeningMinutes(DEFAULT_OPEN_MINS);
-            setClosingMinutes(DEFAULT_CLOSE_MINS);
+            const defaults = getDefaultDayTimings(dayIndex);
+            setOpeningMinutes(defaults.open);
+            setClosingMinutes(defaults.close);
           }
         } else {
-          setOpeningMinutes(DEFAULT_OPEN_MINS);
-          setClosingMinutes(DEFAULT_CLOSE_MINS);
+          const defaults = getDefaultDayTimings(dayIndex);
+          setOpeningMinutes(defaults.open);
+          setClosingMinutes(defaults.close);
         }
       } catch (e) {
         console.error("Failed to load cafe timing from Firebase:", e);
-        setOpeningMinutes(1020);
+        setOpeningMinutes(750);
         setClosingMinutes(1320);
       }
     };
@@ -121,9 +100,39 @@ const BookingAvailability = ({
     fetchCafeTimingFromFirebase();
   }, [bookingDate]);
 
+  const isGta6Locked = () => {
+    if (bookingDate < "2026-11-19") return true;
+    if (bookingDate > "2026-11-19") return false;
+
+    if (bookingDate === "2026-11-19") {
+      const now = new Date();
+      const isToday19th = now.getFullYear() === 2026 && now.getMonth() === 10 && now.getDate() === 19;
+      
+      if (isToday19th) {
+        const currentMinsOfDay = now.getHours() * 60 + now.getMinutes();
+        if (currentMinsOfDay < 720) return true;
+      }
+    }
+    return false;
+  };
+
+  const gtaLocked = isGta6Locked();
+
+  useEffect(() => {
+    if (gtaLocked && selectedGame === 'GTA 6') {
+      setSelectedGame('Standard');
+    }
+  }, [gtaLocked, selectedGame, setSelectedGame]);
+
+  useEffect(() => {
+    if (selectedCategory === 'PS5' && selectedGame === 'GTA 6') {
+      setSelectedTeam('1 Player');
+    }
+  }, [selectedCategory, selectedGame, setSelectedTeam]);
+
   const getDates = () => {
     const chronoDates = [];
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 8; i++) {
       const d = new Date();
       d.setDate(d.getDate() + i);
       const year = d.getFullYear();
@@ -146,29 +155,61 @@ const BookingAvailability = ({
     const durationMins = endTime - startTime;
 
     if (selectedCategory === 'PS5' && selectedGame === 'GTA 6') {
-      if (durationMins === 180) {
-        if (selectedScreen?.includes('55"')) return 650;
-        return 500;
+      const isVIP = selectedScreen?.includes('55"');
+      const base3HourPrice = isVIP ? 650 : 500;
+      const hourlyExtraRate = isVIP ? 250 : 200;
+      const halfHourExtraRate = isVIP ? 150 : 120;
+
+      if (durationMins > 0 && durationMins % 180 === 0) {
+        const blocksOf3Hours = durationMins / 180;
+        return blocksOf3Hours * base3HourPrice;
+      }
+
+      if (durationMins > 180) {
+        const remainderMins = durationMins % 180;
+        const baseBlocksPrice = Math.floor(durationMins / 180) * base3HourPrice;
+
+        const extraHours = Math.floor(remainderMins / 60);
+        const remainingMins = remainderMins % 60;
+
+        let extraCost = extraHours * hourlyExtraRate;
+        if (remainingMins === 30) {
+          extraCost += halfHourExtraRate;
+        }
+        return baseBlocksPrice + extraCost;
       }
 
       const fullHours = Math.floor(durationMins / 60);
       const remainingMins = durationMins % 60;
 
-      if (selectedScreen?.includes('55"')) {
-        let price = fullHours * 250;
-        if (remainingMins === 30) price += 150;
-        return price;
-      } else {
-        let price = fullHours * 200;
-        if (remainingMins === 30) price += 120;
-        return price;
-      }
+      let price = fullHours * hourlyExtraRate;
+      if (remainingMins === 30) price += halfHourExtraRate;
+      return price;
     }
 
     return totalAmount;
   };
 
   const dynamicTotalAmount = calculateFinalPrice();
+
+  const getOriginalComparisonPrice = () => {
+    if (!startTime || !endTime) return null;
+    const durationMins = endTime - startTime;
+    if (selectedCategory === 'PS5' && selectedGame === 'GTA 6' && durationMins >= 180) {
+      const isVIP = selectedScreen?.includes('55"');
+      const hrRate = isVIP ? 250 : 200;
+      const min30Rate = isVIP ? 150 : 120;
+      
+      const fullHours = Math.floor(durationMins / 60);
+      const remainingMins = durationMins % 60;
+      let regularPrice = fullHours * hrRate;
+      if (remainingMins === 30) regularPrice += min30Rate;
+      return regularPrice;
+    }
+    return null;
+  };
+
+  const originalComparisonPrice = getOriginalComparisonPrice();
 
   const generate15MinSlots = () => {
     const slots = [];
@@ -196,10 +237,13 @@ const BookingAvailability = ({
   };
 
   const parseSlotRange = (slotString) => {
-    if (!slotString || !slotString.includes('-')) {
+    if (!slotString) {
       return { start: 0, end: 0 };
     }
-    const parts = slotString.split('-');
+    const parts = slotString.split(/[-–\n]/);
+    if (parts.length < 2) {
+      return { start: 0, end: 0 };
+    }
     return {
       start: parseTimeToMinutes(parts[0]),
       end: parseTimeToMinutes(parts[1]),
@@ -228,7 +272,7 @@ const BookingAvailability = ({
 
     bookedSlots.forEach((booking) => {
       const status = (booking.status || '').toString().toUpperCase();
-      if (status !== 'APPROVED' && status !== 'PENDING') return;
+      if (status !== 'APPROVED' && status !== 'PENDING' && status !== 'CONFIRMED') return;
 
       const bDay = (booking.bookingDate || booking.booking_date || booking.day || '')
         .toString().trim().toLowerCase();
@@ -248,7 +292,7 @@ const BookingAvailability = ({
       const overlaps = startMins < bRange.end && endMins > bRange.start;
 
       if (overlaps) {
-        if (status === 'APPROVED') approvedCount++;
+        if (status === 'APPROVED' || status === 'CONFIRMED') approvedCount++;
         else if (status === 'PENDING') pendingCount++;
       }
     });
@@ -315,13 +359,10 @@ const BookingAvailability = ({
           <label className="text-xs font-mono uppercase tracking-widest text-zinc-400 flex items-center gap-1.5 font-bold">
             <Calendar className="w-4 h-4 text-[#ccff00]" /> Select Date
           </label>
-
         </div>
 
-        {/* Overflow Container */}
         <div className="w-full overflow-x-auto no-scrollbar py-1">
-          {/* Inner Flex Container with 'w-fit mx-auto' (Magic Fix!) */}
-          <div className="flex gap-2 w-fit mx-auto min-w-full justify-center px-2">
+          <div className="flex gap-2 w-fit mx-auto min-w-full justify-start sm:justify-center px-2">
             {datesList.map((d) => {
               const isSelected = bookingDate === d.dateString;
               return (
@@ -388,7 +429,7 @@ const BookingAvailability = ({
         </div>
       </div>
 
-      {/* Screen / Subcategory */}
+      {/* Screen Selection */}
       {currentStation?.hasScreens && (
         <div className="mb-6">
           <label className="text-xs font-mono uppercase tracking-widest text-zinc-400 font-bold block mb-2.5">
@@ -445,27 +486,34 @@ const BookingAvailability = ({
             >
               Standard Games
             </button>
-<button
-              type="button"
-              disabled={true}
-              className="py-2.5 px-3 rounded-xl border text-xs font-bold bg-zinc-900 border-amber-500/30 text-amber-400/50 cursor-not-allowed font-orbitron flex items-center justify-center gap-1.5"
-            >
-              🔒 GTA 6
-            </button>
 
-            {/* baadme on
-            <button
-              type="button"
-              onClick={() => setSelectedGame('GTA 6')}
-              className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition-all cursor-pointer font-orbitron ${selectedGame === 'GTA 6'
+            {gtaLocked ? (
+              <button
+                type="button"
+                disabled={true}
+                className="py-2.5 px-3 rounded-xl border text-xs font-bold bg-zinc-900 border-amber-500/30 text-amber-400/50 cursor-not-allowed font-orbitron flex items-center justify-center gap-1.5"
+                title="Select 19 November (After 12 PM) to unlock"
+              >
+                <Lock className="w-3.5 h-3.5" /> GTA VI 🔥
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setSelectedGame('GTA 6')}
+                className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition-all cursor-pointer font-orbitron ${selectedGame === 'GTA 6'
                   ? 'bg-[#ccff00] text-black border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.45)]'
-                  : 'bg-[#181922] text-zinc-300 border-white/10 hover:border-white/30 '
-                }`}
-            >
-              🔥 GTA 6 Launch Zone
-            </button>
-            */}
+                  : 'bg-[#181922] text-zinc-300 border-white/10 hover:border-white/30'
+                  }`}
+              >
+                🔥 GTA 6 
+              </button>
+            )}
           </div>
+          {gtaLocked && (
+            <p className="text-[10px] text-amber-400/80 font-mono mt-1.5 text-center">
+              🔒 Select 19 November (12:00 PM onwards) from above to unlock GTA 6 bookings.
+            </p>
+          )}
         </div>
       )}
 
@@ -494,6 +542,7 @@ const BookingAvailability = ({
           </div>
         </div>
       )}
+
       {/* Timeline Bar */}
       <div className="mb-5 bg-[#181922] border border-white/10 p-2.5 rounded-xl shadow-inner">
         <label className="text-xs font-sans text-zinc-300 font-bold block mb-1.5">
@@ -519,7 +568,6 @@ const BookingAvailability = ({
               })}
             </div>
 
-            {/* Yahan bar ki height h-3.5 se karke h-2.5 kar di hai */}
             <div className="relative w-full h-2.5 bg-zinc-800 rounded-sm overflow-hidden flex shadow-inner">
               {allBlocks.map((block) => {
                 const blockStatus = get15MinBlockStatus(block);
@@ -563,12 +611,12 @@ const BookingAvailability = ({
                 disabled={isOccupied}
                 onClick={() => handleStartSelect(block)}
                 className={`py-2 px-2 rounded-xl border text-xs font-bold font-mono transition-all flex items-center justify-center ${isSelected
-                    ? 'bg-[#ccff00] text-black border-[#ccff00] font-black shadow-[0_0_15px_rgba(204,255,0,0.45)]'
-                    : blockStatus === 'EXPIRED'
-                      ? 'bg-zinc-900 border-zinc-800 text-zinc-600 cursor-not-allowed line-through opacity-40'
-                      : blockStatus === 'APPROVED' || blockStatus === 'PENDING'
-                        ? 'bg-red-950/20 border-red-900/40 text-red-400/50 cursor-not-allowed line-through'
-                        : 'bg-[#181922] border-white/10 text-zinc-300 hover:border-[#ccff00] cursor-pointer'
+                  ? 'bg-[#ccff00] text-black border-[#ccff00] font-black shadow-[0_0_15px_rgba(204,255,0,0.45)]'
+                  : blockStatus === 'EXPIRED'
+                    ? 'bg-zinc-900 border-zinc-800 text-zinc-600 cursor-not-allowed line-through opacity-40'
+                    : blockStatus === 'APPROVED' || blockStatus === 'PENDING'
+                      ? 'bg-red-950/20 border-red-900/40 text-red-400/50 cursor-not-allowed line-through'
+                      : 'bg-[#181922] border-white/10 text-zinc-300 hover:border-[#ccff00] cursor-pointer'
                   }`}
               >
                 {minutesToTimeString(block)}
@@ -598,8 +646,8 @@ const BookingAvailability = ({
                   key={endMins}
                   onClick={() => setEndTime(endMins)}
                   className={`py-1.5 px-2 rounded-lg border text-xs font-bold font-mono transition-all text-center ${isSelected
-                      ? 'bg-[#ccff00] text-black border-[#ccff00] font-black shadow-[0_0_12px_rgba(204,255,0,0.45)]'
-                      : 'bg-white/5 border-white/10 text-zinc-300 hover:border-[#ccff00] cursor-pointer'
+                    ? 'bg-[#ccff00] text-black border-[#ccff00] font-black shadow-[0_0_12px_rgba(204,255,0,0.45)]'
+                    : 'bg-white/5 border-white/10 text-zinc-300 hover:border-[#ccff00] cursor-pointer'
                     }`}
                 >
                   <div>{formatDurationText(durationMins)}</div>
@@ -613,7 +661,7 @@ const BookingAvailability = ({
         </div>
       )}
 
-      {/* Bottom Sticky / Floating Action Bar */}
+      {/* Bottom Sticky Action Bar */}
       {startTime !== null && endTime !== null && (
         <div className="sticky bottom-3 mt-6 bg-[#181922]/95 backdrop-blur-md border border-white/15 p-3 rounded-2xl z-40 flex items-center justify-between shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
           <div>
@@ -621,7 +669,20 @@ const BookingAvailability = ({
             <div className="text-[11px] font-bold font-orbitron text-[#ccff00] leading-tight">
               {minutesToTimeString(startTime)} - {minutesToTimeString(endTime)}
             </div>
-            <div className="text-sm font-black font-orbitron text-white mt-0.5">₹{dynamicTotalAmount}</div>
+            
+            <div className="flex items-center gap-2 mt-0.5">
+              {originalComparisonPrice ? (
+                <>
+                  <span className="text-zinc-500 line-through text-xs font-mono">₹{originalComparisonPrice}</span>
+                  <span className="text-sm font-black font-orbitron text-[#ccff00]">₹{dynamicTotalAmount}</span>
+                  <span className="bg-red-500/20 text-red-400 border border-red-500/30 text-[8px] font-bold px-1.5 py-0.2 rounded uppercase font-mono">
+                    {endTime - startTime === 180 ? '3-HR OFF' : '3-HR + EXTRA OFF'}
+                  </span>
+                </>
+              ) : (
+                <span className="text-sm font-black font-orbitron text-white">₹{dynamicTotalAmount}</span>
+              )}
+            </div>
           </div>
           <button
             onClick={onNext}
