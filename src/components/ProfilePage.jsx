@@ -1432,14 +1432,24 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                 const finalTotal = selectedPack.price + 10;
                 setRechargeLoading(true);
 
-                const options = {
+const options = {
                   key: import.meta.env.VITE_RAZORPAY_KEY_ID,
                   amount: finalTotal * 100,
                   currency: "INR",
                   name: "Stranger's Gaming Cafe",
                   description: `Diamond Recharge - ${selectedPack.diamonds} Diamonds`,
                   image: "/favicon.ico",
+                  // 👇 Yeh add karein backend/webhook tracking ke liye
+                  notes: {
+                    type: 'diamond_recharge',
+                    userId: String(userId || ''),
+                    customerName: String(name || 'Gamer'),
+                    phone: String(phone || ''),
+                    diamonds: String(selectedPack.diamonds),
+                    baseAmount: String(selectedPack.price),
+                  },
                   handler: async function (response) {
+                    // Aapka existing success handling code...
                     try {
                       await addDoc(collection(db, 'diamond_recharges'), {
                         user_id: userId,
@@ -1483,7 +1493,19 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                     email: userEmail || '',
                     contact: phone || '',
                   },
-                  theme: { color: "#ccff00" },
+                  theme: { 
+                    color: "#ccff00",
+                    backdrop_color: "rgba(10, 10, 12, 0.9)"
+                  },
+                  modal: {
+                    escape: true,
+                    backdropclose: false,
+                    animation: true,
+                    handleback: true,
+                    ondismiss: function() {
+                      setRechargeLoading(false);
+                    }
+                  }
                 };
 
                 if (window.Razorpay) {
@@ -1565,14 +1587,25 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                 const cashbackDiamonds = Math.floor(base * 0.10);
                 const earnedLeaguePoints = Math.floor(base / 10);
 
-                const options = {
+const options = {
                   key: import.meta.env.VITE_RAZORPAY_KEY_ID,
                   amount: finalTotal * 100,
                   currency: "INR",
                   name: "Stranger's Gaming Cafe",
                   description: `Direct Cafe Payment (Earn ${cashbackDiamonds} Diamonds)`,
                   image: "/favicon.ico",
+                  // 👇 Yeh add karein backend/webhook tracking ke liye
+                  notes: {
+                    type: 'cafe_direct_payment',
+                    userId: String(userId || ''),
+                    customerName: String(name || 'Gamer'),
+                    phone: String(phone || ''),
+                    baseAmount: String(base),
+                    cashbackDiamonds: String(cashbackDiamonds),
+                    leaguePoints: String(earnedLeaguePoints),
+                  },
                   handler: async function (response) {
+                    // Aapka existing success handling code...
                     try {
                       await addDoc(collection(db, 'cafe_direct_payments'), {
                         user_id: userId,
@@ -1624,7 +1657,19 @@ export default function ProfilePage({ session, onBack, onLogout, onOpenBooking }
                     email: userEmail || '',
                     contact: phone || '',
                   },
-                  theme: { color: "#ccff00" },
+                  theme: { 
+                    color: "#ccff00",
+                    backdrop_color: "rgba(10, 10, 12, 0.9)"
+                  },
+                  modal: {
+                    escape: true,
+                    backdropclose: false,
+                    animation: true,
+                    handleback: true,
+                    ondismiss: function() {
+                      setCafePayLoading(false);
+                    }
+                  }
                 };
 
                 if (window.Razorpay) {

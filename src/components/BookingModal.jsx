@@ -435,13 +435,27 @@ export const BookingModal = ({
         return;
       }
 
-      const options = {
+const options = {
         key: razorpayKeyId,
-        amount: bookingPrice * 100,
+        amount: Math.round(bookingPrice * 100),
         currency: "INR",
         name: "Stranger's Gaming Cafe",
         description: `Booking - ${selectedCategory} (${selectedGame === 'GTA 6' ? 'GTA VI Launch' : 'Standard'})`,
         image: "/favicon.ico",
+        // 👇 YEH WALA 'notes' OBJECT DELETE HO GAYA THA, ISE WAPAS ADD KAREIN:
+        notes: {
+          bookingId: String(bookingId),
+          userId: String(currentUserId || ''),
+          customerName: String(formData.name.trim()),
+          phone: String(formData.phone.trim()),
+          bookingDate: String(bookingDate),
+          category: String(selectedCategory),
+          screen: String(currentStation?.hasScreens ? selectedScreen : ''),
+          team: String(currentStation?.multiplayer ? selectedTeam : '1 Player'),
+          selectedGame: String(selectedGame || 'Standard'),
+          duration: String(formatDurationText(endTime - startTime)),
+          slot: String(timeSlotString),
+        },
         handler: async function (response) {
           await executeBookingSave(response.razorpay_payment_id);
         },
@@ -450,7 +464,20 @@ export const BookingModal = ({
           email: userEmail,
           contact: formData.phone.trim(),
         },
-        theme: { color: "#ccff00" },
+        theme: { 
+          color: "#ccff00",
+          backdrop_color: "rgba(10, 10, 12, 0.9)" // <-- Dark theme consistency
+        },
+        modal: {
+          escape: true,
+          backdropclose: false,
+          animation: true,
+          handleback: true,
+          // 👇 Low-end phone ke liye modal close / background dismiss handler
+          ondismiss: function() {
+            setIsSubmitting(false);
+          }
+        }
       };
 
       if (window.Razorpay) {
