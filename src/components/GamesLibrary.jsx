@@ -24,7 +24,7 @@ const PLATFORMS = [
 const GENRES = ['All', 'Action/Adventure', 'Fighting', 'Sports', 'Racing', 'FPS', 'Open World', 'Co-Op / Arcade', 'Simulation'];
 const PLAYER_COUNTS = ['All', '1P', '2P', '3P-4P'];
 
-// --- GAMES DATA WITH DIRECT CLOUDINARY .MOV LINKS ---
+// --- GAMES DATA WITH IMAGEKIT LINKS ---
 const GAMES_DATA = [
   {
     id: 1,
@@ -34,7 +34,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['ps5-vip-55', 'ps5-reg-43'],
     description: "Experience the open-world action and adventure of the next installment in the Grand Theft Auto series.",
-    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1793976885/gta-6.mov",
+    mediaUrl: "https://ik.imagekit.io/strangerCafeData/Stranger%20Cafe/gta-6.mov",
     coverImage: getCoverImage("gta-6.avif")
   },
   {
@@ -45,7 +45,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['pc-arena', 'ps5-vip-55', 'ps5-reg-43', 'ps4'],
     description: "Massive open-world action title filled with driving, shooting, bank heists, and vast exploration at Stranger's Gaming Cafe Akola.",
-    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419701/gta_v.mov",
+    mediaUrl: "https://ik.imagekit.io/strangerCafeData/Stranger%20Cafe/gta_v.mov",
     coverImage: getCoverImage("gta-v.jpg")
   },
   {
@@ -56,7 +56,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['ps5-vip-55', 'ps5-reg-43'],
     description: "Next-gen 3D fighting tournament with aggressive Heat System mechanics and legendary martial artists.",
-    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419702/tekken.mov",
+    mediaUrl: "https://ik.imagekit.io/strangerCafeData/Stranger%20Cafe/tekken.mov",
     coverImage: getCoverImage("tekken.webp")
   },
   {
@@ -67,7 +67,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['ps5-vip-55', 'ps5-reg-43'],
     description: "Swing through Marvel's New York as Peter Parker & Miles Morales to fight formidable villains like Venom.",
-    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419715/spiderman.mov",
+    mediaUrl: "https://ik.imagekit.io/strangerCafeData/Stranger%20Cafe/spiderman.mov",
     coverImage: getCoverImage("spiderman.jpeg")
   },
   {
@@ -78,7 +78,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['ps5-vip-55', 'ps5-reg-43'],
     description: "Epic Norse saga following Kratos and Atreus as they battle legendary gods and mythical monsters.",
-    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419639/god_of_war_ragnarok.mov",
+    mediaUrl: "https://ik.imagekit.io/strangerCafeData/Stranger%20Cafe/god_of_war_ragnarok.mov",
     coverImage: getCoverImage("god-of-war.webp")
   },
   {
@@ -89,7 +89,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['ps4'],
     description: "Epic tale of outlaw Arthur Morgan and the Van der Linde gang across the dying American frontier.",
-    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419708/red_dead.mov",
+    mediaUrl: "https://ik.imagekit.io/strangerCafeData/Stranger%20Cafe/red_dead.mov",
     coverImage: getCoverImage("rdr2.jpeg")
   },
   {
@@ -100,7 +100,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['pc-arena'],
     description: "5v5 character-based tactical shooter combining precise gunplay with tactical character abilities.",
-    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419705/valorant.mov",
+    mediaUrl: "https://ik.imagekit.io/strangerCafeData/Stranger%20Cafe/valorant.mov",
     coverImage: getCoverImage("valorant.jpg")
   },
   {
@@ -111,7 +111,7 @@ const GAMES_DATA = [
     isPopular: true,
     platforms: ['pc-arena', 'ps5-vip-55'],
     description: "Intense battle royale shooter where 100 players fight for survival on sprawling tactical maps.",
-    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419696/pubg.mov",
+    mediaUrl: "https://ik.imagekit.io/strangerCafeData/Stranger%20Cafe/pubg.mov",
     coverImage: getCoverImage("pubg.jpg")
   },
   {
@@ -122,7 +122,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['car-simulator', 'truck-simulator'],
     description: "High-speed open-world racing game featuring breathtaking Mexican landscapes and ultimate supercar drives.",
-    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419644/forza.mov",
+    mediaUrl: "https://ik.imagekit.io/strangerCafeData/Stranger%20Cafe/forza.mov",
     coverImage: getCoverImage("forza.jpg")
   },
   {
@@ -133,7 +133,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['car-simulator'],
     description: "Ultra-realistic driving simulator delivering authentic motorsport racing across real-world circuits.",
-    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419699/gran_tourismo.mov",
+    mediaUrl: "https://ik.imagekit.io/strangerCafeData/Stranger%20Cafe/gran_tourismo.mov",
     coverImage: getCoverImage("gran-tourismo.jpg")
   },
   {
@@ -144,7 +144,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['truck-simulator'],
     description: "Drive heavy trucks across European highways, deliver cargo, and expand your freight company.",
-    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419698/Euro_Truck_Simulator.mov",
+    mediaUrl: "https://ik.imagekit.io/strangerCafeData/Stranger%20Cafe/Euro_Truck_Simulator.mov",
     coverImage: getCoverImage("ets2.jpg")
   },
   {
@@ -155,7 +155,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['ps5-vip-55', 'ps5-reg-43', 'ps4'],
     description: "Premier football simulation featuring world-class clubs and competitive local multiplayer matches.",
-    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419700/fc.mov",
+    mediaUrl: "https://ik.imagekit.io/strangerCafeData/Stranger%20Cafe/fc.mov",
     coverImage: getCoverImage("fc26.jpg")
   },
   {
@@ -166,7 +166,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['ps5-vip-55', 'ps5-reg-43'],
     description: "Authentic professional cricket simulation featuring deep career modes, licensed teams, and stadium action.",
-    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419640/Cricket.mov",
+    mediaUrl: "https://ik.imagekit.io/strangerCafeData/Stranger%20Cafe/Cricket.mov",
     coverImage: getCoverImage("cricket24.jpg")
   },
   {
@@ -177,7 +177,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['ps4'],
     description: "Nostalgic arcade wrestling classic featuring legendary WWE superstars and chaotic ring action.",
-    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419713/wwe_htwp.mov",
+    mediaUrl: "https://ik.imagekit.io/strangerCafeData/Stranger%20Cafe/wwe_htwp.mov",
     coverImage: getCoverImage("wwe-pain.avif")
   },
   {
@@ -188,7 +188,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['ps5-vip-55', 'ps5-reg-43'],
     description: "Modern professional wrestling simulator built with realistic combat physics and stunning visuals.",
-    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419718/wwe_2k26.mov",
+    mediaUrl: "https://ik.imagekit.io/strangerCafeData/Stranger%20Cafe/wwe_2k26.mov",
     coverImage: getCoverImage("wwe.jpg")
   },
   {
@@ -199,7 +199,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['ps5-vip-55', 'ps5-reg-43'],
     description: "Visceral 1v1 fighter featuring cinematic Fatalities, Kameo assistance, and a rebooted universe story.",
-    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419708/mortal_kombat.mov",
+    mediaUrl: "https://ik.imagekit.io/strangerCafeData/Stranger%20Cafe/mortal_kombat.mov",
     coverImage: getCoverImage("mortal.avif")
   },
   {
@@ -210,7 +210,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['ps5-vip-55'],
     description: "Action-packed tactical shooter with thrilling stealth combat, military campaign, and zombie survival.",
-    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419717/Call_of_Duty.mov",
+    mediaUrl: "https://ik.imagekit.io/strangerCafeData/Stranger%20Cafe/Call_of_Duty.mov",
     coverImage: getCoverImage("call-of-duty.jpg")
   },
   {
@@ -221,7 +221,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['pc-arena', 'ps5-vip-55', 'ps4'],
     description: "Modern military shooter delivering high-speed gunfights, campaign missions, and multiplayer warfare.",
-    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419717/Call_of_Duty.mov",
+    mediaUrl: "https://ik.imagekit.io/strangerCafeData/Stranger%20Cafe/Call_of_Duty.mov",
     coverImage: getCoverImage("call_of_duty_mw3.webp")
   },
   {
@@ -232,7 +232,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['pc-arena', 'ps4'],
     description: "Iconic crime saga where CJ navigates gang warfare, drive-bys, and story missions across San Andreas.",
-    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419704/gta_sa.mov",
+    mediaUrl: "https://ik.imagekit.io/strangerCafeData/Stranger%20Cafe/gta_sa.mov",
     coverImage: getCoverImage("gta-sa.jpg")
   },
   {
@@ -243,7 +243,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['ps4'],
     description: "80s-themed crime adventure following Tommy Vercetti's rise through neon-lit Vice City.",
-    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419701/gta_vc.mov",
+    mediaUrl: "https://ik.imagekit.io/strangerCafeData/Stranger%20Cafe/gta_vc.mov",
     coverImage: getCoverImage("gtavc.png")
   },
   {
@@ -254,7 +254,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['pc-arena', 'ps5-vip-55'],
     description: "Join a guerrilla revolution to liberate a tropical paradise from a ruthless modern dictator.",
-    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419710/Far_Cry.mov",
+    mediaUrl: "https://ik.imagekit.io/strangerCafeData/Stranger%20Cafe/Far_Cry.mov",
     coverImage: getCoverImage("far cry 6.jpg")
   },
   {
@@ -265,7 +265,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['pc-arena', 'ps5-vip-55'],
     description: "Become Eivor, a legendary Viking raider, and lead your clan to build a new home in Dark Age England.",
-    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419689/Assassins_Creed.mov",
+    mediaUrl: "https://ik.imagekit.io/strangerCafeData/Stranger%20Cafe/Assassins_Creed.mov",
     coverImage: getCoverImage("assasian.jpg")
   },
   {
@@ -276,7 +276,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['ps5-reg-43', 'ps4'],
     description: "Pure cooperative platformer adventure designed strictly for two players to solve creative puzzles.",
-    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419703/it_takes_two.mov",
+    mediaUrl: "https://ik.imagekit.io/strangerCafeData/Stranger%20Cafe/it_takes_two.mov",
     coverImage: getCoverImage("it2.webp")
   },
   {
@@ -287,7 +287,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['ps5-reg-43'],
     description: "Split-screen story adventure centered around two inmates attempting a daring prison breakout.",
-    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419697/A_Way_Out.mov",
+    mediaUrl: "https://ik.imagekit.io/strangerCafeData/Stranger%20Cafe/A_Way_Out.mov",
     coverImage: getCoverImage("a_way_out.jpg")
   },
   {
@@ -298,7 +298,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['ps4'],
     description: "Classic hack-and-slash adventure featuring Kratos' vengeance against the Greek Olympian gods.",
-    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419707/god_of_war_3_remastered.mov",
+    mediaUrl: "https://ik.imagekit.io/strangerCafeData/Stranger%20Cafe/god_of_war_3_remastered.mov",
     coverImage: getCoverImage("god2.jpg")
   },
   {
@@ -309,7 +309,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['ps5-vip-55'],
     description: "Forge a new path and wage an unconventional war for the freedom of Tsushima as samurai Jin Sakai.",
-    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419643/ghost.mov",
+    mediaUrl: "https://ik.imagekit.io/strangerCafeData/Stranger%20Cafe/ghost.mov",
     coverImage: getCoverImage("ghost of tsushima.png")
   },
   {
@@ -320,7 +320,7 @@ const GAMES_DATA = [
     isPopular: false,
     platforms: ['ps5-vip-55', 'ps5-reg-43'],
     description: "Seek fortune and leave your mark on the map in thrilling cinematic treasure-hunting adventures.",
-    mediaUrl: "https://res.cloudinary.com/fxg5jmee/video/upload/v1792419710/unchartered.mov",
+    mediaUrl: "https://ik.imagekit.io/strangerCafeData/Stranger%20Cafe/unchartered.mov",
     coverImage: getCoverImage("uncharted.jpg")
   }
 ];
@@ -328,11 +328,11 @@ const GAMES_DATA = [
 const isVideoUrl = (url) => {
   if (!url) return false;
   const str = String(url).toLowerCase();
-  return str.includes('.mp4') || str.includes('.mov') || str.includes('cloudinary');
+  return str.includes('.mp4') || str.includes('.mov') || str.includes('imagekit.io') || str.includes('cloudinary');
 };
 
-// Modal Video Player Component with Loading Spinner
-const ModalVideoPlayer = ({ mediaUrl, gameName }) => {
+// Modal Video Player Component
+const ModalVideoPlayer = ({ mediaUrl, gameName, coverImage }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   return (
@@ -345,11 +345,13 @@ const ModalVideoPlayer = ({ mediaUrl, gameName }) => {
       )}
       {isVideoUrl(mediaUrl) ? (
         <video
-          src={mediaUrl}
+          src={`${mediaUrl}?tr=orig-true`}
+          poster={coverImage}
           autoPlay
           loop
           muted
           playsInline
+          preload="metadata"
           onLoadedData={() => setIsLoading(false)}
           onPlaying={() => setIsLoading(false)}
           className="w-full h-full object-cover pointer-events-none"
@@ -680,7 +682,11 @@ export const GamesLibrary = () => {
             </button>
 
             <div className="relative w-full">
-              <ModalVideoPlayer mediaUrl={activeModalGame.mediaUrl} gameName={activeModalGame.name} />
+              <ModalVideoPlayer 
+              mediaUrl={activeModalGame.mediaUrl} 
+              gameName={activeModalGame.name}
+              coverImage={activeModalGame.coverImage} 
+              />
             </div>
 
             <div className="p-4 sm:p-6 space-y-3.5 sm:space-y-4 overflow-y-auto">

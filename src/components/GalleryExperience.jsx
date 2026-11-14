@@ -9,10 +9,10 @@ import teaCoffeeImage from '../assets/library/tea-coffe.jpg';
 const isVideoUrl = (url) => {
   if (!url) return false;
   const str = String(url).toLowerCase();
-  return str.includes('.mp4') || str.includes('.mov') || str.includes('cloudinary');
+  return str.includes('.mp4') || str.includes('.mov') || str.includes('imagekit.io') || str.includes('cloudinary');
 };
 
-// Modal Video Player Component (Unmuted Audio)
+// Modal Video Player Component (Optimized Streaming)
 const ModalVideoPlayer = ({ mediaUrl, title }) => {
   const [isLoading, setIsLoading] = useState(true);
 
@@ -28,11 +28,11 @@ const ModalVideoPlayer = ({ mediaUrl, title }) => {
       )}
       {isVideoUrl(mediaUrl) ? (
         <video
-          src={mediaUrl}
+          src={`${mediaUrl}?tr=orig-true`}
           autoPlay
           controls
           playsInline
-          preload="auto"
+          preload="metadata"
           onLoadedData={() => setIsLoading(false)}
           onPlaying={() => setIsLoading(false)}
           className="w-full h-full object-cover"
@@ -80,7 +80,7 @@ export const GalleryExperience = () => {
     {
       type: 'video',
       title: 'Stranger\'s Gaming Cafe Cinematic Walkthrough',
-      url: 'https://res.cloudinary.com/fxg5jmee/video/upload/v1794078661/Walking-cafe.mp4', 
+      url: 'https://ik.imagekit.io/strangerCafeData/Stranger%20Cafe/Walking-cafe.mp4', 
       badge: 'CAFE TOUR',
       desc: 'Explore Akola\'s premier gaming destination with zero-lag competitive play setups.'
     },
@@ -230,12 +230,12 @@ export const GalleryExperience = () => {
 
                     {isVideo ? (
                       <video
-                        src={item.url}
+                        src={`${item.url}?tr=orig-true`}
                         autoPlay
                         muted
                         loop
                         playsInline
-                        preload="auto"
+                        preload="metadata"
                         className="w-full h-full object-cover pointer-events-none"
                       />
                     ) : (

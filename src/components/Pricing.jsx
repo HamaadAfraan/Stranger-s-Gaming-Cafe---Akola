@@ -209,8 +209,8 @@ export const Pricing = ({ onOpenBooking }) => {
             </h3>
             <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm font-bold font-mono">
               <div className="flex justify-between border-b border-gray-800/60 py-2"><span>10 MINUTES</span><span className="text-[#ccff00]">₹50</span></div>
-              <div className="flex justify-between border-b border-gray-800/60 py-2"><span>30 MINUTES</span><span className="text-[#ccff00]">₹120</span></div>
-              <div className="flex justify-between border-b border-gray-800/60 py-2"><span>1 HOUR</span><span className="text-[#ccff00]">₹200</span></div>
+              <div className="flex justify-between border-b border-gray-800/60 py-2"><span>30 MINUTES</span><span className="text-[#ccff00]">₹150</span></div>
+              <div className="flex justify-between border-b border-gray-800/60 py-2"><span>1 HOUR</span><span className="text-[#ccff00]">₹250</span></div>
             </div>
           </div>
         </div>
