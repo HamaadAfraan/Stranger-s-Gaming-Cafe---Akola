@@ -558,7 +558,7 @@ const getDates = () => {
                   <div key={block} className="flex flex-col items-center min-w-[16px]">
                     <div className="h-3 flex items-center justify-center">
                       {isFullHour && (
-                        <span className="text-[9px] font-bold text-[#ccff00] font-mono">
+                        <span className="text-[9px] font-bold text-[#ccff00] font-mono whitespace-nowrap -ml-3">
                           {minutesToTimeString(block).replace(':00', '')}
                         </span>
                       )}
