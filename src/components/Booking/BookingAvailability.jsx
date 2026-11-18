@@ -59,7 +59,7 @@ const BookingAvailability = ({
         const selectedD = new Date(bookingDate);
         if (isNaN(selectedD.getTime())) return;
 
-        const dayIndex = selectedD.getDay(); 
+        const dayIndex = selectedD.getDay();
         const targetId = dayIndex === 0 ? "7" : dayIndex.toString();
 
         const docRef = doc(db, 'cafe_settings', targetId);
@@ -107,7 +107,7 @@ const BookingAvailability = ({
     if (bookingDate === "2026-11-19") {
       const now = new Date();
       const isToday19th = now.getFullYear() === 2026 && now.getMonth() === 10 && now.getDate() === 19;
-      
+
       if (isToday19th) {
         const currentMinsOfDay = now.getHours() * 60 + now.getMinutes();
         if (currentMinsOfDay < 720) return true;
@@ -130,7 +130,7 @@ const BookingAvailability = ({
     }
   }, [selectedCategory, selectedGame, setSelectedTeam]);
 
-const getDates = () => {
+  const getDates = () => {
     const chronoDates = [];
     // Aaj (12 Nov) se lekar 18 Nov tak total 7 din (12, 13, 14, 15, 16, 17, 18) dikhane ke liye
     for (let i = 0; i < 7; i++) {
@@ -200,7 +200,7 @@ const getDates = () => {
       const isVIP = selectedScreen?.includes('55"');
       const hrRate = isVIP ? 250 : 200;
       const min30Rate = isVIP ? 150 : 120;
-      
+
       const fullHours = Math.floor(durationMins / 60);
       const remainingMins = durationMins % 60;
       let regularPrice = fullHours * hrRate;
@@ -506,7 +506,7 @@ const getDates = () => {
                   : 'bg-[#181922] text-zinc-300 border-white/10 hover:border-white/30'
                   }`}
               >
-                🔥 GTA 6 
+                🔥 GTA 6
               </button>
             )}
           </div>
@@ -664,13 +664,13 @@ const getDates = () => {
 
       {/* Bottom Sticky Action Bar */}
       {startTime !== null && endTime !== null && (
-        <div className="sticky bottom-3 mt-6 bg-[#181922]/95 backdrop-blur-md border border-white/15 p-3 rounded-2xl z-40 flex items-center justify-between shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
+        <div className="sticky bottom-6 mb-6 bg-[#181922]/95 backdrop-blur-md border border-white/15 p-3 rounded-2xl z-40 flex items-center justify-between shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
           <div>
             <div className="text-[9px] font-mono text-zinc-400 uppercase leading-none mb-1">Selected Slot</div>
             <div className="text-[11px] font-bold font-orbitron text-[#ccff00] leading-tight">
               {minutesToTimeString(startTime)} - {minutesToTimeString(endTime)}
             </div>
-            
+
             <div className="flex items-center gap-2 mt-0.5">
               {originalComparisonPrice ? (
                 <>

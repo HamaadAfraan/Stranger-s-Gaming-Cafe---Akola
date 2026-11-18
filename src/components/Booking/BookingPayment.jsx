@@ -40,7 +40,7 @@ const BookingPayment = ({
       const isVIP = selectedScreen?.includes('55"');
       const hrRate = isVIP ? 250 : 200;
       const min30Rate = isVIP ? 150 : 120;
-      
+
       const fullHours = Math.floor(durationMins / 60);
       const remainingMins = durationMins % 60;
       let regularPrice = fullHours * hrRate;
@@ -53,21 +53,21 @@ const BookingPayment = ({
   const originalComparisonPrice = getOriginalComparisonPrice();
 
   return (
-    <div className="w-full text-white pb-6 font-sans relative">
+    <div className="w-full text-white pb-28 font-sans relative">
       <button
         type="button"
         onClick={onBack}
-        className="flex items-center gap-1.5 text-xs font-mono text-zinc-400 hover:text-[#ccff00] cursor-pointer mb-3 transition-colors"
+        className="flex items-center gap-1.5 text-xs font-mono text-zinc-400 hover:text-[#ccff00] cursor-pointer mb-2.5 transition-colors"
       >
         <ArrowLeft className="w-3.5 h-3.5 text-[#ccff00]" /> Back to slot selection
       </button>
 
       <div>
-        <h3 className="text-lg sm:text-xl font-black font-orbitron text-white uppercase tracking-wide">
+        <h3 className="text-base sm:text-lg font-black font-orbitron text-white uppercase tracking-wide">
           PAYMENT & <span className="text-[#ccff00]">DETAILS</span>
         </h3>
 
-        <p className="text-[10px] sm:text-xs text-zinc-400 mt-0.5 font-mono">
+        <p className="text-[10px] text-zinc-400 mt-0.5 font-mono">
           Booking Date:{' '}
           <span className="text-[#ccff00] font-bold">
             {bookingDate}
@@ -75,13 +75,13 @@ const BookingPayment = ({
         </p>
 
         {errorMessage && (
-          <div className="mt-3 p-2.5 bg-red-950/80 border border-red-500/60 rounded-xl text-xs font-mono text-red-300 font-bold">
+          <div className="mt-2.5 p-2 bg-red-950/80 border border-red-500/60 rounded-xl text-xs font-mono text-red-300 font-bold">
             ⚠️ {errorMessage}
           </div>
         )}
 
         {/* BOOKING SUMMARY */}
-        <div className="mt-3.5 p-3 rounded-xl bg-[#181922] border border-white/10 space-y-2 text-xs font-mono shadow-md">
+        <div className="mt-3 p-3 rounded-xl bg-[#181922] border border-white/15 space-y-2 text-xs font-mono shadow-md">
           <div className="flex justify-between text-zinc-300">
             <span className="text-zinc-400">Platform / Zone:</span>
             <span className="font-bold text-[#ccff00] font-orbitron truncate ml-2">
@@ -137,19 +137,19 @@ const BookingPayment = ({
           </div>
 
           {showPlatformChargeHelp && (
-            <div className="text-[10px] text-zinc-400 bg-[#0a0a0c] p-2 rounded-lg border border-white/10 mt-1 font-mono">
-              Platform Charges !
+            <div className="text-[10px] text-zinc-400 bg-[#0a0a0c] p-2 rounded-lg border border-white/10 font-mono">
+              Platform & maintenance charges for secure booking processing.
             </div>
           )}
 
-          <div className="border-t border-white/10 pt-2 flex justify-between items-center text-sm font-bold font-orbitron text-[#ccff00]">
+          <div className="border-t border-white/10 pt-2 flex justify-between items-center text-xs font-bold font-orbitron text-[#ccff00]">
             <span>Total Amount:</span>
             <span>₹{finalTotalAmount}</span>
           </div>
         </div>
 
         {/* CUSTOMER FORM */}
-        <div className="mt-3.5 p-3.5 rounded-xl bg-[#181922] border border-white/10 space-y-3 shadow-md">
+        <div className="mt-3 p-3 rounded-xl bg-[#181922] border border-white/15 space-y-2.5 shadow-md">
           <h4 className="text-xs font-mono uppercase text-[#ccff00] font-bold">Player Details</h4>
           <div>
             <label className="text-xs text-zinc-400 font-mono block mb-1">
@@ -160,13 +160,12 @@ const BookingPayment = ({
               placeholder="Letters only (e.g. John Doe)"
               value={formData.name}
               onChange={handleNameChange}
-              className={`w-full py-2.5 px-3 rounded-xl bg-[#0a0a0c] border text-xs text-white placeholder:text-zinc-600 outline-none font-mono transition-all ${
-                formData.name.length > 0 && !isNameValid
+              className={`w-full py-2 px-3 rounded-xl bg-[#0a0a0c] border text-xs text-white placeholder:text-zinc-600 outline-none font-mono transition-all ${formData.name.length > 0 && !isNameValid
                   ? 'border-amber-500/80'
                   : isNameValid
-                  ? 'border-[#ccff00] focus:border-[#ccff00] bg-[#ccff00]/5'
-                  : 'border-white/10 focus:border-[#ccff00]'
-              }`}
+                    ? 'border-[#ccff00] focus:border-[#ccff00] bg-[#ccff00]/5'
+                    : 'border-white/10 focus:border-[#ccff00]'
+                }`}
             />
           </div>
 
@@ -185,19 +184,18 @@ const BookingPayment = ({
               placeholder="Exact 10-digit mobile number"
               value={formData.phone}
               onChange={handlePhoneChange}
-              className={`w-full py-2.5 px-3 rounded-xl bg-[#0a0a0c] border text-xs text-white placeholder:text-zinc-600 outline-none font-mono tracking-wider transition-all ${
-                formData.phone.length > 0 && !isPhoneValid
+              className={`w-full py-2 px-3 rounded-xl bg-[#0a0a0c] border text-xs text-white placeholder:text-zinc-600 outline-none font-mono tracking-wider transition-all ${formData.phone.length > 0 && !isPhoneValid
                   ? 'border-amber-500/80 focus:border-amber-500'
                   : isPhoneValid
-                  ? 'border-[#ccff00] focus:border-[#ccff00] bg-[#ccff00]/5'
-                  : 'border-white/10 focus:border-[#ccff00]'
-              }`}
+                    ? 'border-[#ccff00] focus:border-[#ccff00] bg-[#ccff00]/5'
+                    : 'border-white/10 focus:border-[#ccff00]'
+                }`}
             />
           </div>
         </div>
 
         {/* PAYMENT METHOD SELECTION */}
-        <div className="mt-4">
+        <div className="mt-3">
           <label className="text-xs text-[#ccff00] font-mono font-bold block mb-2 uppercase tracking-wider">
             ⚡ Select Payment Method
           </label>
@@ -205,11 +203,10 @@ const BookingPayment = ({
             <button
               type="button"
               onClick={() => setPaymentMethod('upi')}
-              className={`py-2.5 px-3 rounded-xl font-orbitron text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-2 ${
-                paymentMethod === 'upi'
+              className={`py-2 px-3 rounded-xl font-orbitron text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-2 ${paymentMethod === 'upi'
                   ? 'bg-[#ccff00] text-black border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.45)]'
-                  : 'bg-[#181922] text-zinc-400 border-white/10 hover:bg-white/10'
-              }`}
+                  : 'bg-[#181922] text-zinc-400 border-white/15 hover:bg-white/10'
+                }`}
             >
               <span>💳</span> Razorpay / Online
             </button>
@@ -217,11 +214,10 @@ const BookingPayment = ({
             <button
               type="button"
               onClick={() => setPaymentMethod('diamonds')}
-              className={`py-2.5 px-3 rounded-xl font-orbitron text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-2 ${
-                paymentMethod === 'diamonds'
+              className={`py-2 px-3 rounded-xl font-orbitron text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-2 ${paymentMethod === 'diamonds'
                   ? 'bg-[#ccff00] text-black border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.45)]'
-                  : 'bg-[#181922] text-[#ccff00] border-white/10 hover:bg-white/10'
-              }`}
+                  : 'bg-[#181922] text-[#ccff00] border-white/15 hover:bg-white/10'
+                }`}
             >
               <span>💎</span> Diamonds ({userRedeemableDiamonds})
             </button>
@@ -229,15 +225,15 @@ const BookingPayment = ({
         </div>
 
         {paymentMethod === 'diamonds' && (
-          <div className="mt-3.5 bg-[#181922] p-3.5 rounded-xl border border-[#ccff00]/30 text-center space-y-2.5 shadow-md">
-            <div className="text-xl animate-bounce">💎</div>
+          <div className="mt-3 bg-[#181922] p-3 rounded-xl border border-[#ccff00]/30 text-center space-y-2 shadow-md">
+            <div className="text-lg">💎</div>
             <h4 className="font-orbitron font-bold text-[#ccff00] text-xs">
               Redeemable Diamonds Payment
             </h4>
             <p className="text-xs text-zinc-300 font-mono">
               You are paying <span className="text-[#ccff00] font-bold">₹{finalPayAmount}</span> using your redeemable diamonds balance.
             </p>
-            <div className="py-2 px-3 bg-[#0a0a0c] rounded-lg border border-white/10 flex justify-between items-center text-xs font-mono">
+            <div className="py-1.5 px-3 bg-[#0a0a0c] rounded-lg border border-white/10 flex justify-between items-center text-xs font-mono">
               <span className="text-zinc-400">Your Balance:</span>
               <span className="text-[#ccff00] font-bold">{userRedeemableDiamonds} Diamonds</span>
             </div>
@@ -249,7 +245,14 @@ const BookingPayment = ({
           </div>
         )}
 
-        <div className="mt-5">
+        {/* BOTTOM STICKY ACTION BAR FOR PAYMENT */}
+        <div className="sticky bottom-6 mb-6 bg-[#181922]/95 backdrop-blur-md border border-white/15 p-3 rounded-2xl z-40 flex items-center justify-between shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
+          <div>
+            <div className="text-[9px] font-mono text-zinc-400 uppercase leading-none mb-1">Total Payable</div>
+            <div className="text-sm font-black font-orbitron text-[#ccff00]">
+              ₹{finalPayAmount}
+            </div>
+          </div>
           <button
             type="button"
             disabled={
@@ -266,13 +269,13 @@ const BookingPayment = ({
                 utrValue: 'ONLINE_RAZORPAY',
               })
             }
-            className="w-full py-3.5 bg-[#ccff00] hover:bg-[#b8e600] text-black font-black font-orbitron text-xs uppercase tracking-widest rounded-xl shadow-[0_0_15px_rgba(204,255,0,0.4)] cursor-pointer transition-all active:scale-95 disabled:opacity-50"
+            className="px-5 py-2.5 bg-[#ccff00] hover:bg-[#b8e600] text-black font-black font-orbitron text-[11px] uppercase tracking-wider rounded-xl shadow-[0_0_15px_rgba(204,255,0,0.4)] cursor-pointer transition-all active:scale-95 disabled:opacity-50 shrink-0"
           >
             {isSubmitting
               ? 'PROCESSING...'
               : paymentMethod === 'diamonds'
-              ? 'REDEEM & CONFIRM'
-              : `PAY ₹{finalPayAmount} VIA RAZORPAY`}
+                ? 'REDEEM & CONFIRM'
+                : `PAY ₹{finalPayAmount}`}
           </button>
         </div>
       </div>
