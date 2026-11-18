@@ -664,7 +664,7 @@ const BookingAvailability = ({
 
       {/* Bottom Sticky Action Bar */}
       {startTime !== null && endTime !== null && (
-        <div className="sticky bottom-6 mb-6 bg-[#181922]/95 backdrop-blur-md border border-white/15 p-3 rounded-2xl z-40 flex items-center justify-between shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
+        <div className="sticky bottom-4 mb-2 bg-[#181922]/95 backdrop-blur-md border border-white/15 p-3 rounded-2xl z-40 flex items-center justify-between shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
           <div>
             <div className="text-[9px] font-mono text-zinc-400 uppercase leading-none mb-1">Selected Slot</div>
             <div className="text-[11px] font-bold font-orbitron text-[#ccff00] leading-tight">

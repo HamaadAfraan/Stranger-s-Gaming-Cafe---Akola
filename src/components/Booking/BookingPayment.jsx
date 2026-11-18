@@ -161,10 +161,10 @@ const BookingPayment = ({
               value={formData.name}
               onChange={handleNameChange}
               className={`w-full py-2 px-3 rounded-xl bg-[#0a0a0c] border text-xs text-white placeholder:text-zinc-600 outline-none font-mono transition-all ${formData.name.length > 0 && !isNameValid
-                  ? 'border-amber-500/80'
-                  : isNameValid
-                    ? 'border-[#ccff00] focus:border-[#ccff00] bg-[#ccff00]/5'
-                    : 'border-white/10 focus:border-[#ccff00]'
+                ? 'border-amber-500/80'
+                : isNameValid
+                  ? 'border-[#ccff00] focus:border-[#ccff00] bg-[#ccff00]/5'
+                  : 'border-white/10 focus:border-[#ccff00]'
                 }`}
             />
           </div>
@@ -185,10 +185,10 @@ const BookingPayment = ({
               value={formData.phone}
               onChange={handlePhoneChange}
               className={`w-full py-2 px-3 rounded-xl bg-[#0a0a0c] border text-xs text-white placeholder:text-zinc-600 outline-none font-mono tracking-wider transition-all ${formData.phone.length > 0 && !isPhoneValid
-                  ? 'border-amber-500/80 focus:border-amber-500'
-                  : isPhoneValid
-                    ? 'border-[#ccff00] focus:border-[#ccff00] bg-[#ccff00]/5'
-                    : 'border-white/10 focus:border-[#ccff00]'
+                ? 'border-amber-500/80 focus:border-amber-500'
+                : isPhoneValid
+                  ? 'border-[#ccff00] focus:border-[#ccff00] bg-[#ccff00]/5'
+                  : 'border-white/10 focus:border-[#ccff00]'
                 }`}
             />
           </div>
@@ -204,8 +204,8 @@ const BookingPayment = ({
               type="button"
               onClick={() => setPaymentMethod('upi')}
               className={`py-2 px-3 rounded-xl font-orbitron text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-2 ${paymentMethod === 'upi'
-                  ? 'bg-[#ccff00] text-black border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.45)]'
-                  : 'bg-[#181922] text-zinc-400 border-white/15 hover:bg-white/10'
+                ? 'bg-[#ccff00] text-black border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.45)]'
+                : 'bg-[#181922] text-zinc-400 border-white/15 hover:bg-white/10'
                 }`}
             >
               <span>💳</span> Razorpay / Online
@@ -215,8 +215,8 @@ const BookingPayment = ({
               type="button"
               onClick={() => setPaymentMethod('diamonds')}
               className={`py-2 px-3 rounded-xl font-orbitron text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-2 ${paymentMethod === 'diamonds'
-                  ? 'bg-[#ccff00] text-black border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.45)]'
-                  : 'bg-[#181922] text-[#ccff00] border-white/15 hover:bg-white/10'
+                ? 'bg-[#ccff00] text-black border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.45)]'
+                : 'bg-[#181922] text-[#ccff00] border-white/15 hover:bg-white/10'
                 }`}
             >
               <span>💎</span> Diamonds ({userRedeemableDiamonds})
@@ -246,7 +246,7 @@ const BookingPayment = ({
         )}
 
         {/* BOTTOM STICKY ACTION BAR FOR PAYMENT */}
-        <div className="sticky bottom-6 mb-6 bg-[#181922]/95 backdrop-blur-md border border-white/15 p-3 rounded-2xl z-40 flex items-center justify-between shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
+        <div className="sticky mt-3 bottom-4 mb-2 bg-[#181922]/95 backdrop-blur-md border border-white/15 p-3 rounded-2xl z-40 flex items-center justify-between shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
           <div>
             <div className="text-[9px] font-mono text-zinc-400 uppercase leading-none mb-1">Total Payable</div>
             <div className="text-sm font-black font-orbitron text-[#ccff00]">
@@ -275,7 +275,7 @@ const BookingPayment = ({
               ? 'PROCESSING...'
               : paymentMethod === 'diamonds'
                 ? 'REDEEM & CONFIRM'
-                : `PAY ₹{finalPayAmount}`}
+                : `PAY ₹${finalPayAmount}`}
           </button>
         </div>
       </div>
